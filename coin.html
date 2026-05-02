@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click the Coin – Krypton Arcade</title>
+  <style>
+    body {
+      margin: 0;
+      background: #050509;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 { margin: 16px 0 4px; }
+    p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #ff7b00;
+      color: #050509;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #coinArea {
+      position: relative;
+      width: 260px;
+      height: 120px;
+      margin-top: 16px;
+      border-radius: 12px;
+      background: #111;
+      border: 2px solid #333;
+      overflow: hidden;
+    }
+    #coin {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: gold;
+      border-radius: 50%;
+      display: none;
+      box-shadow: 0 0 10px rgba(255,215,0,0.7);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Click the Coin</h1>
+  <p>Tap “Start” then tap the coin as many times as you can in 10 seconds.</p>
+  <p>Score: <span id="coinScore">0</span></p>
+  <button onclick="startCoinGame()">Start</button>
+
+  <div id="coinArea">
+    <div id="coin"></div>
+  </div>
+
+  <script>
+    let coinScore = 0;
+    let coinTime = 10;
+    let coinInterval;
+    const coin = document.getElementById("coin");
+    const coinScoreEl = document.getElementById("coinScore");
+    const coinArea = document.getElementById("coinArea");
+
+    function startCoinGame() {
+      coinScore = 0;
+      coinTime = 10;
+      coinScoreEl.textContent = coinScore;
+      coin.style.display = "block";
+      moveCoin();
+
+      clearInterval(coinInterval);
+      coinInterval = setInterval(() => {
+        coinTime--;
+        if (coinTime <= 0) {
+          clearInterval(coinInterval);
+          coin.style.display = "none";
+          alert("Time's up! Your score: " + coinScore);
+        }
+      }, 1000);
+    }
+
+    function moveCoin() {
+      const areaRect = coinArea.getBoundingClientRect();
+      const maxX = areaRect.width - 40;
+      const maxY = areaRect.height - 40;
+      const x = Math.random() * maxX;
+      const y = Math.random() * maxY;
+      coin.style.left = x + "px";
+      coin.style.top = y + "px";
+    }
+
+    function hitCoin(e) {
+      e.preventDefault();
+      coinScore++;
+      coinScoreEl.textContent = coinScore;
+      moveCoin();
+    }
+
+    coin.addEventListener("click", hitCoin);
+    coin.addEventListener("touchstart", hitCoin, { passive: false });
+  </script>
+</body>
+</html>

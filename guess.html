@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Number Guessing – Krypton Arcade</title>
+  <style>
+    body {
+      margin: 0;
+      background: #050509;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 { margin: 16px 0 4px; }
+    p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+    input {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #444;
+      background: #111;
+      color: #fff;
+      width: 120px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    button {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #ff7b00;
+      color: #050509;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    #guessResult {
+      min-height: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Number Guessing</h1>
+  <p>Guess a number between 1 and 10.</p>
+  <input id="guessInput" type="number" min="1" max="10" />
+  <button onclick="checkGuess()">Check</button>
+  <p id="guessResult"></p>
+
+  <script>
+    function checkGuess() {
+      const num = Math.floor(Math.random() * 10) + 1;
+      const guess = Number(document.getElementById("guessInput").value);
+      const result = document.getElementById("guessResult");
+
+      if (!guess) {
+        result.textContent = "Enter a number first.";
+        result.style.color = "yellow";
+        return;
+      }
+
+      if (guess === num) {
+        result.textContent = "Correct!";
+        result.style.color = "lime";
+      } else {
+        result.textContent = "Wrong! The number was " + num;
+        result.style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>

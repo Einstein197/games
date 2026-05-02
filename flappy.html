@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Bird – Krypton Arcade</title>
+  <style>
+    body {
+      margin: 0;
+      background: #050509;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 { margin: 16px 0 4px; }
+    p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+    canvas {
+      background: #111;
+      border: 2px solid #333;
+      margin-top: 10px;
+      width: 90vw;
+      max-width: 320px;
+      height: auto;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Flappy Bird</h1>
+  <p>Tap or press SPACE to flap. Tap canvas to start.</p>
+  <canvas id="flappyCanvas" width="240" height="320"></canvas>
+
+  <script>
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space") e.preventDefault();
+    }, { passive: false });
+
+    const flappyCanvas = document.getElementById("flappyCanvas");
+    const flappyCtx = flappyCanvas.getContext("2d");
+
+    let birdY, birdVel, pipes, score, highScore, running = false, lastTime = 0;
+    highScore = Number(localStorage.getItem("flappyHighScore")) || 0;
+
+    function startFlappy() {
+      birdY = 150;
+      birdVel = 0;
+      pipes = [];
+      score = 0;
+      running = true;
+      pipes.push(makePipe(240));
+      lastTime = performance.now();
+      requestAnimationFrame(loopFlappy);
+    }
+
+    function makePipe(x) {
+      return {
+        x,
+        width: 40,
+        gap: 140,
+        top: Math.random() * 140 + 20,
+        scored: false
+      };
+    }
+
+    function loopFlappy(ts) {
+      if (!running) return;
+      const dt = (ts - lastTime) / 16.67;
+      lastTime = ts;
+      updateFlappy(dt);
+      drawFlappy();
+      requestAnimationFrame(loopFlappy);
+    }
+
+    function updateFlappy(dt) {
+      birdVel += 0.25 * dt;
+      if (birdVel > 4) birdVel = 4;
+      birdY += birdVel * dt;
+
+      pipes.forEach(p => p.x -= 1.5 * dt);
+      if (pipes[pipes.length - 1].x < 120) pipes.push(makePipe(240));
+      if (pipes[0].x < -50) pipes.shift();
+
+      pipes.forEach(p => {
+        if (!p.scored && p.x + p.width < 50) {
+          p.scored = true;
+          score++;
+        }
+      });
+
+      pipes.forEach(p => {
+        if (50 < p.x + p.width && 70 > p.x &&
+            (birdY < p.top || birdY + 20 > p.top + p.gap)) {
+          endFlappy();
+        }
+      });
+
+      if (birdY < 0 || birdY > 300) endFlappy();
+    }
+
+    function drawFlappy() {
+      flappyCtx.fillStyle = "#111";
+      flappyCtx.fillRect(0,0,240,320);
+
+      flappyCtx.fillStyle = "yellow";
+      flappyCtx.fillRect(50, birdY, 20, 20);
+
+      flappyCtx.fillStyle = "green";
+      pipes.forEach(p => {
+        flappyCtx.fillRect(p.x, 0, p.width, p.top);
+        flappyCtx.fillRect(p.x, p.top + p.gap, p.width, 320);
+      });
+
+      flappyCtx.fillStyle = "white";
+      flappyCtx.font = "18px Arial";
+      flappyCtx.fillText("Score: " + score, 10, 25);
+      flappyCtx.fillText("Best: " + highScore, 150, 25);
+    }
+
+    function endFlappy() {
+      running = false;
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("flappyHighScore", highScore);
+      }
+      flappyCtx.fillStyle = "white";
+      flappyCtx.font = "24px Arial";
+      flappyCtx.fillText("Game Over!", 60, 150);
+      flappyCtx.font = "18px Arial";
+      flappyCtx.fillText("Tap to Restart", 65, 190);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space") {
+        if (!running) startFlappy();
+        else birdVel = -4.5;
+      }
+    });
+
+    flappyCanvas.addEventListener("touchstart", e => {
+      e.preventDefault();
+      if (!running) startFlappy();
+      else birdVel = -4.5;
+    }, { passive: false });
+
+    flappyCanvas.addEventListener("click", () => {
+      if (!running) startFlappy();
+      else birdVel = -4.5;
+    });
+  </script>
+</body>
+</html>

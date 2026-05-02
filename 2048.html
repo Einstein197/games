@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2048 – Krypton Arcade</title>
+  <style>
+    body {
+      margin: 0;
+      background: #050509;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 { margin: 16px 0 4px; }
+    p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+    canvas {
+      background: #111;
+      border: 2px solid #333;
+      margin-top: 10px;
+      width: 90vw;
+      max-width: 320px;
+      height: auto;
+      touch-action: none;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #ff7b00;
+      color: #050509;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>2048</h1>
+  <p>Use arrow keys (or swipe) to move tiles. Tap “New Game”.</p>
+  <button onclick="start2048()">New Game</button>
+  <canvas id="game2048" width="240" height="240"></canvas>
+
+  <script>
+    const canvas2048 = document.getElementById("game2048");
+    const ctx2048 = canvas2048.getContext("2d");
+    let grid, size = 4;
+
+    function start2048() {
+      grid = Array.from({length: size}, () => Array(size).fill(0));
+      addTile(); addTile();
+      draw2048();
+    }
+
+    function addTile() {
+      const empty = [];
+      for (let r=0;r<size;r++)
+        for (let c=0;c<size;c++)
+          if (grid[r][c] === 0) empty.push({r,c});
+      if (!empty.length) return;
+      const spot = empty[Math.floor(Math.random()*empty.length)];
+      grid[spot.r][spot.c] = 2;
+    }
+
+    function draw2048() {
+      ctx2048.fillStyle = "#111";
+      ctx2048.fillRect(0,0,240,240);
+      for (let r=0;r<size;r++) {
+        for (let c=0;c<size;c++) {
+          const val = grid[r][c];
+          ctx2048.fillStyle = val ? "#ff7b00" : "#333";
+          ctx2048.fillRect(c*60+3, r*60+3, 54, 54);
+          if (val) {
+            ctx2048.fillStyle = "#fff";
+            ctx2048.font = "18px Arial";
+            ctx2048.textAlign = "center";
+            ctx2048.textBaseline = "middle";
+            ctx2048.fillText(val, c*60+30, r*60+30);
+          }
+        }
+      }
+    }
+
+    function move2048(dir) {
+      let g = grid.map(row => row.slice());
+
+      const rotateLeft = m => {
+        const res = Array.from({length:size}, () => Array(size).fill(0));
+        for (let r=0;r<size;r++)
+          for (let c=0;c<size;c++)
+            res[size-1-c][r] = m[r][c];
+        return res;
+      };
+
+      const rotateRight = m => {
+        const res = Array.from({length:size}, () => Array(size).fill(0));
+        for (let r=0;r<size;r++)
+          for (let c=0;c<size;c++)
+            res[c][size-1-r] = m[r][c];
+        return res;
+      };
+
+      const rotateUp = m => {
+        const res = Array.from({length:size}, () => Array(size).fill(0));
+        for (let r=0;r<size;r++)
+          for (let c=0;c<size;c++)
+            res[c][r] = m[r][c];
+        return res;
+      };
+
+      const rotateDown = m => {
+        const res = Array.from({length:size}, () => Array(size).fill(0));
+        for (let r=0;r<size;r++)
+          for (let c=0;c<size;c++)
+            res[size-1-c][size-1-r] = m[r][c];
+        return res;
+      };
+
+      if (dir === "left") g = g;
+      if (dir === "right") g = rotateLeft(rotateLeft(g));
+      if (dir === "up") g = rotateLeft(g);
+      if (dir === "down") g = rotateRight(g);
+
+      for (let r=0;r<size;r++) {
+        let row = g[r].filter(v => v);
+        for (let i=0;i<row.length-1;i++) {
+          if (row[i] === row[i+1]) {
+            row[i] *= 2;
+            row.splice(i+1,1);
+          }
+        }
+        while (row.length < size) row.push(0);
+        g[r] = row;
+      }
+
+      if (dir === "right") g = rotateLeft(rotateLeft(g));
+      if (dir === "up") g = rotateRight(g);
+      if (dir === "down") g = rotateLeft(g);
+
+      const changed = JSON.stringify(grid) !== JSON.stringify(g);
+      grid = g;
+      return changed;
+    }
+
+    document.addEventListener("keydown", e => {
+      let dir = null;
+      if (e.key === "ArrowLeft") dir = "left";
+      if (e.key === "ArrowRight") dir = "right";
+      if (e.key === "ArrowUp") dir = "up";
+      if (e.key === "ArrowDown") dir = "down";
+      if (!dir) return;
+      const moved = move2048(dir);
+      if (moved) {
+        addTile();
+        draw2048();
+      }
+    });
+
+    let sx=0, sy=0;
+    canvas2048.addEventListener("touchstart", e => {
+      const t = e.touches[0];
+      sx = t.clientX;
+      sy = t.clientY;
+    });
+    canvas2048.addEventListener("touchend", e => {
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx;
+      const dy = t.clientY - sy;
+      let dir = null;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) dir = "right";
+        else dir = "left";
+      } else {
+        if (dy > 0) dir = "down";
+        else dir = "up";
+      }
+      if (!dir) return;
+      const moved = move2048(dir);
+      if (moved) {
+        addTile();
+        draw2048();
+      }
+    });
+
+    start2048();
+  </script>
+</body>
+</html>

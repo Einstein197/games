@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dodge – Krypton Arcade</title>
+  <style>
+    body {
+      margin: 0;
+      background: #050509;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 { margin: 16px 0 4px; }
+    p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+    canvas {
+      background: #111;
+      border: 2px solid #333;
+      margin-top: 10px;
+      width: 90vw;
+      max-width: 320px;
+      height: auto;
+      touch-action: none;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #ff7b00;
+      color: #050509;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dodge the Block</h1>
+  <p>Tap left/right side or use arrows. Tap “Start” to play.</p>
+  <button onclick="startDodgeGame()">Start</button>
+  <canvas id="dodgeGame" width="240" height="160"></canvas>
+
+  <script>
+    const dodgeCanvas = document.getElementById("dodgeGame");
+    const dodgeCtx = dodgeCanvas.getContext("2d");
+
+    let player = { x: 110, y: 130, size: 20 };
+    let block = { x: 0, y: -40, size: 20 };
+    let dodgeRunning = false;
+
+    function startDodgeGame() {
+      dodgeRunning = true;
+      player.x = 110;
+      block.y = -40;
+      block.x = Math.random() * 220;
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (!dodgeRunning) return;
+      if (e.key === "ArrowLeft" && player.x > 0) player.x -= 10;
+      if (e.key === "ArrowRight" && player.x < 220) player.x += 10;
+    });
+
+    dodgeCanvas.addEventListener("touchstart", e => {
+      const rect = dodgeCanvas.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      if (x < dodgeCanvas.width / 2) player.x -= 20;
+      else player.x += 20;
+    });
+
+    function dodgeLoop() {
+      dodgeCtx.fillStyle = "#111";
+      dodgeCtx.fillRect(0, 0, 240, 160);
+
+      dodgeCtx.fillStyle = "cyan";
+      dodgeCtx.fillRect(player.x, player.y, player.size, player.size);
+
+      if (dodgeRunning) {
+        dodgeCtx.fillStyle = "red";
+        dodgeCtx.fillRect(block.x, block.y, block.size, block.size);
+
+        block.y += 3;
+        if (block.y > 160) {
+          block.y = -40;
+          block.x = Math.random() * 220;
+        }
+
+        if (
+          block.x < player.x + player.size &&
+          block.x + block.size > player.x &&
+          block.y < player.y + player.size &&
+          block.y + block.size > player.y
+        ) {
+          alert("You got hit! Game Over");
+          dodgeRunning = false;
+          block.y = -40;
+        }
+      }
+
+      requestAnimationFrame(dodgeLoop);
+    }
+    dodgeLoop();
+  </script>
+</body>
+</html>
