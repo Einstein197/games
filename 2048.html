@@ -66,23 +66,46 @@
     }
 
     function draw2048() {
-      ctx2048.fillStyle = "#111";
-      ctx2048.fillRect(0,0,240,240);
-      for (let r=0;r<size;r++) {
-        for (let c=0;c<size;c++) {
-          const val = grid[r][c];
-          ctx2048.fillStyle = val ? "#ff7b00" : "#333";
-          ctx2048.fillRect(c*60+3, r*60+3, 54, 54);
-          if (val) {
-            ctx2048.fillStyle = "#fff";
-            ctx2048.font = "18px Arial";
-            ctx2048.textAlign = "center";
-            ctx2048.textBaseline = "middle";
-            ctx2048.fillText(val, c*60+30, r*60+30);
-          }
-        }
+  ctx2048.fillStyle = "#111";
+  ctx2048.fillRect(0,0,240,240);
+
+  const colors = {
+  0:    "#333333",
+
+  2:    "#ff7b00",  // neon orange
+  4:    "#ffae00",  // amber
+  8:    "#ffe600",  // bright yellow
+
+  16:   "#c8ff00",  // lime
+  32:   "#7dff00",  // neon green
+  64:   "#00ff66",  // mint green
+
+  128:  "#00ffd5",  // aqua
+  256:  "#00c8ff",  // sky blue
+  512:  "#0084ff",  // deep blue
+
+  1024: "#6a00ff",  // purple
+  2048: "#b300ff",  // magenta
+  4096: "#ff00aa",  // hot pink
+  8192: "#ff0033"   // neon red
+};
+
+  for (let r=0;r<size;r++) {
+    for (let c=0;c<size;c++) {
+      const val = grid[r][c];
+      ctx2048.fillStyle = colors[val] || "#fff"; // fallback for huge tiles
+      ctx2048.fillRect(c*60+3, r*60+3, 54, 54);
+
+      if (val) {
+        ctx2048.fillStyle = "#050509";
+        ctx2048.font = "18px Arial";
+        ctx2048.textAlign = "center";
+        ctx2048.textBaseline = "middle";
+        ctx2048.fillText(val, c*60+30, r*60+30);
       }
     }
+  }
+}
 
     function move2048(dir) {
       let g = grid.map(row => row.slice());
