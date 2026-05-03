@@ -372,17 +372,18 @@ const API = "https://snake-leaderboard.shadownetcg-f2f.workers.dev";
 async function loadLeaderboard() {
   const box = document.getElementById("leaderboardBox");
 
-  let html = "<h3>SNAKE TOP SCORE</h3>";
+  let html = "<h3>SNAKE LEADERBOARD</h3>";
 
   try {
     const res = await fetch(API + "/leaderboard");
     const board = await res.json();
 
-    if (!board.length) {
+    if (!Array.isArray(board) || !board.length) {
       html += "<p>No scores yet.</p>";
     } else {
-      const top = board[0];
-      html += `<div>1. ${top.name.slice(0, 20)} — ${top.score}</div>`;
+      board.forEach((entry, i) => {
+        html += `<div>${i + 1}. ${entry.name.slice(0, 20)} — ${entry.score}</div>`;
+      });
     }
   } catch (err) {
     html += "<p>Failed to load leaderboard.</p>";
@@ -407,17 +408,16 @@ async function resetScores() {
     return;
   }
 
-  // Reset by overwriting leaderboard with empty array
-  await fetch(API + "/submit", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: "ADMIN_RESET", score: -999999 })
+  // TRUE RESET — calls special reset endpoint
+  await fetch(API + "/reset", {
+    method: "POST"
   });
 
   alert("Leaderboard reset.");
   loadLeaderboard();
 }
 </script>
+
 
 </body>
 </html>
