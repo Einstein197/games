@@ -69,6 +69,46 @@
       font-size: 12px;
       opacity: 0.8;
     }
+
+    /* GAME VIEWER */
+    #gameContainer {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+      animation: fadeIn 0.25s ease;
+    }
+    #gameFrame {
+      width: 480px;
+      height: 720px;
+      max-width: 95vw;
+      max-height: 85vh;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 18px;
+      box-shadow: 0 0 22px rgba(0,0,0,0.7);
+      background: #000;
+    }
+    #closeBtn {
+      margin-top: 14px;
+      padding: 10px 22px;
+      background: rgba(0,0,0,0.55);
+      border: 2px solid #ff9a2b;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    #closeBtn:hover {
+      background: rgba(0,0,0,0.75);
+      transform: translateY(-2px);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
     @media (max-width: 480px) {
       h1 { font-size: 30px; }
       .icon-wrap { width: 70px; height: 70px; }
@@ -76,8 +116,9 @@
   </style>
 </head>
 <body>
+
   <h1>Krypton Arcade</h1>
-  <p class="subtitle">Tap a game to launch it in a separate window. Main page stays open with rewards.</p>
+  <p class="subtitle">Tap a game to launch it. Close it to return to the arcade.</p>
 
   <div class="ad-wrap">
     <iframe
@@ -89,7 +130,8 @@
     </iframe>
   </div>
 
-  <div class="grid">
+  <!-- GAME GRID -->
+  <div class="grid" id="gameGrid">
 
     <!-- Snake -->
     <div class="card" onclick="openGame('snake.html')">
@@ -223,7 +265,7 @@
       <div class="card-sub">1 to 10</div>
     </div>
 
-    <!-- Gravity Warp (NOW INSIDE GRID) -->
+    <!-- Gravity Warp -->
     <div class="card" onclick="openGame('gravitywarp.html')">
       <div class="icon-wrap">
         <svg viewBox="0 0 100 100">
@@ -247,13 +289,23 @@
 
   </div> <!-- end grid -->
 
+  <!-- INLINE GAME VIEWER -->
+  <div id="gameContainer">
+    <iframe id="gameFrame"></iframe>
+    <button id="closeBtn" onclick="closeGame()">Close Game</button>
+  </div>
+
   <script>
     function openGame(path) {
-      window.open(
-        path,
-        "kryptonPopup",
-        "width=480,height=720,menubar=no,toolbar=no,location=no,status=no"
-      );
+      document.getElementById("gameGrid").style.display = "none";
+      document.getElementById("gameContainer").style.display = "flex";
+      document.getElementById("gameFrame").src = path;
+    }
+
+    function closeGame() {
+      document.getElementById("gameFrame").src = "";
+      document.getElementById("gameContainer").style.display = "none";
+      document.getElementById("gameGrid").style.display = "grid";
     }
 
     // Refresh A-Ads every 90 seconds
