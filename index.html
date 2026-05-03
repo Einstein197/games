@@ -332,7 +332,7 @@ function openGame(path) {
   document.getElementById("gameFrame").src = path;
 
   if (path === "snake.html") {
-    loadLeaderboard("snake");
+    loadLeaderboard();
     document.getElementById("leaderboardBox").style.display = "block";
   } else {
     document.getElementById("leaderboardBox").style.display = "none";
@@ -366,19 +366,28 @@ function setPlayerName() {
   }
 }
 
-function loadLeaderboard(game) {
-  const board = JSON.parse(localStorage.getItem("leaderboard_" + game)) || [];
-  let html = "<h3>" + game.toUpperCase() + " Top Score</h3>";
+/* CLOUDFLARE LEADERBOARD */
+const API = "https://snake-leaderboard.shadownetcg-f2f.workers.dev";
 
-  if (board.length === 0) {
-    html += "<p>No scores yet.</p>";
-  } else {
-    board.sort((a, b) => b.score - a.score);
-    const top = board[0];
-    html += `<div>1. ${top.name} — ${top.score}</div>`;
+async function loadLeaderboard() {
+  const box = document.getElementById("leaderboardBox");
+
+  let html = "<h3>SNAKE TOP SCORE</h3>";
+
+  try {
+    const res = await fetch(API + "/leaderboard");
+    const board = await res.json();
+
+    if (!board.length) {
+      html += "<p>No scores yet.</p>";
+    } else {
+      const top = board[0];
+      html += `<div>1. ${top.name.slice(0, 20)} — ${top.score}</div>`;
+    }
+  } catch (err) {
+    html += "<p>Failed to load leaderboard.</p>";
   }
 
-  // ADMIN RESET BUTTON (visible to everyone, usable only by you)
   html += `
     <button onclick="resetScores()"
       style="margin-top:12px; width:100%; padding:6px; border-radius:6px;
@@ -387,21 +396,27 @@ function loadLeaderboard(game) {
     </button>
   `;
 
-  document.getElementById("leaderboardBox").innerHTML = html;
+  box.innerHTML = html;
 }
 
-function resetScores() {
+/* ADMIN RESET — clears Cloudflare KV */
+async function resetScores() {
   const pass = prompt("Enter admin password:");
-  if (pass === "Fl@shAdmin197") {
-    localStorage.removeItem("leaderboard_snake");
-    alert("Leaderboard reset.");
-    loadLeaderboard("snake");
-  } else {
+  if (pass !== "Fl@shAdmin197") {
     alert("Incorrect password.");
+    return;
   }
+
+  // Reset by overwriting leaderboard with empty array
+  await fetch(API + "/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "ADMIN_RESET", score: -999999 })
+  });
+
+  alert("Leaderboard reset.");
+  loadLeaderboard();
 }
-
-
 </script>
 
 </body>

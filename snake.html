@@ -77,23 +77,22 @@
       localStorage.setItem("playerName", localStorage.getItem("playerID"));
     }
 
-    /* SAVE SCORE */
-    function saveScore(score) {
-      const entry = {
-        id: localStorage.getItem("playerID"),
-        name: localStorage.getItem("playerName"),
-        score: score,
-        time: Date.now()
-      };
-
-      let board = JSON.parse(localStorage.getItem("leaderboard_snake")) || [];
-      board.push(entry);
-
-      board.sort((a, b) => b.score - a.score);
-      board = board.slice(0, 20);
-
-      localStorage.setItem("leaderboard_snake", JSON.stringify(board));
+    /* SAVE SCORE TO CLOUDFLARE */
+    async function saveScore(score) {
+      try {
+        await fetch("https://snake-leaderboard.shadownetcg-f2f.workers.dev/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: localStorage.getItem("playerName"),
+            score: score
+          })
+        });
+      } catch (err) {
+        console.log("Score upload failed:", err);
+      }
     }
+
 
     /* GAME VARS */
     const snakeCanvas = document.getElementById("snakeCanvas");
