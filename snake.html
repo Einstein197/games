@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Snake – Krypton Arcade</title>
+
   <style>
     body {
       margin: 0;
@@ -15,6 +16,7 @@
       align-items: center;
       min-height: 100vh;
     }
+
     h1 { margin: 16px 0 4px; }
     p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
 
@@ -65,33 +67,73 @@
   <canvas id="snakeCanvas" width="240" height="240"></canvas>
 
   <script>
-    // Prevent space from scrolling page
-    window.addEventListener("keydown", e => {
-      if (e.code === "Space") e.preventDefault();
-    }, { passive: false });
+    /* PLAYER ID + NAME SYSTEM */
+    if (!localStorage.getItem("playerID")) {
+      const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
+      localStorage.setItem("playerID", id);
+    }
 
+    if (!localStorage.getItem("playerName")) {
+      localStorage.setItem("playerName", localStorage.getItem("playerID"));
+    }
+
+    /* SAVE SCORE */
+    function saveScore(score) {
+      const entry = {
+        id: localStorage.getItem("playerID"),
+        name: localStorage.getItem("playerName"),
+        score: score,
+        time: Date.now()
+      };
+
+      let board = JSON.parse(localStorage.getItem("leaderboard_snake")) || [];
+      board.push(entry);
+
+      board.sort((a, b) => b.score - a.score);
+      board = board.slice(0, 20);
+
+      localStorage.setItem("leaderboard_snake", JSON.stringify(board));
+    }
+
+    /* GAME VARS */
     const snakeCanvas = document.getElementById("snakeCanvas");
     const snakeCtx = snakeCanvas.getContext("2d");
     const scoreBox = document.getElementById("score");
 
-    // Krypton logo as food
     const kryptonImg = new Image();
     kryptonImg.src = "krypton.png";
 
     let snake, food, dx, dy, snakeInterval, score;
 
+    /* COLOR CYCLE */
+    const snakeColors = [
+      "#32cd32", // green
+      "#00e5ff", // cyan
+      "#ffee58", // yellow
+      "#ba68c8", // purple
+      "#ff6eb4"  // pink
+    ];
+
+    let currentColorIndex = 0;
+    let segmentsGrown = 0;
+
     function startSnake() {
       snake = [
-        {x:120, y:120},
-        {x:110, y:120},
-        {x:100, y:120}
+        {x:120, y:120, color:"#32cd32"},
+        {x:110, y:120, color:"#32cd32"},
+        {x:100, y:120, color:"#32cd32"}
       ];
+
       dx = 10; dy = 0;
       score = 0;
+      segmentsGrown = 0;
+      currentColorIndex = 0;
+
       updateScore();
       food = {x: 80, y: 80};
+
       clearInterval(snakeInterval);
-      snakeInterval = setInterval(updateSnake, 200);
+      snakeInterval = setInterval(updateSnake, 150);
     }
 
     function updateScore() {
@@ -99,64 +141,82 @@
     }
 
     function updateSnake() {
-      let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+      /* REAL FIX:
+         New head inherits the OLD head's color (snake[1]),
+         NOT the new head's overwritten color (snake[0]).
+      */
+      let head = {
+        x: snake[0].x + dx,
+        y: snake[0].y + dy,
+        color: snake[1] ? snake[1].color : snake[0].color
+      };
+
       snake.unshift(head);
 
-      // Eat food
       if (head.x === food.x && head.y === food.y) {
         score++;
         updateScore();
+
+        segmentsGrown++;
+
+        // Every 10 segments → next color
+        if (segmentsGrown % 10 === 0) {
+          currentColorIndex = (currentColorIndex + 1) % snakeColors.length;
+        }
+
+        // NEW SEGMENT gets the NEW color
+        snake[0].color = snakeColors[currentColorIndex];
+
+        // Move food
         food.x = Math.floor(Math.random()*24)*10;
         food.y = Math.floor(Math.random()*24)*10;
+
       } else {
         snake.pop();
       }
 
-      // Clear board
       snakeCtx.fillStyle = "#111";
       snakeCtx.fillRect(0,0,240,240);
 
       drawSnake();
       drawFood();
 
-      // Collision
       if (head.x < 0 || head.x >= 240 || head.y < 0 || head.y >= 240 ||
           snake.slice(1).some(p => p.x === head.x && p.y === head.y)) {
         alert("Game Over! Final Score: " + score);
         clearInterval(snakeInterval);
+        saveScore(score);
       }
     }
 
     function drawSnake() {
-      // BODY segments (excluding head and tail)
+      /* BODY */
       for (let i = 1; i < snake.length - 1; i++) {
-        snakeCtx.fillStyle = "#32cd32";
+        snakeCtx.fillStyle = snake[i].color;
         snakeCtx.beginPath();
         snakeCtx.roundRect(snake[i].x, snake[i].y, 10, 10, 3);
         snakeCtx.fill();
       }
 
-      // TAIL – arrow pointing AWAY from snake
+      /* TAIL */
       if (snake.length >= 2) {
         let tail = snake[snake.length - 1];
         let beforeTail = snake[snake.length - 2];
 
-        // Center of tail segment
         let tx = tail.x + 5;
         let ty = tail.y + 5;
 
-        // Direction from body toward tail (tail should point away from body)
         let angleTail = Math.atan2(tail.y - beforeTail.y, tail.x - beforeTail.x);
 
         snakeCtx.save();
         snakeCtx.translate(tx, ty);
         snakeCtx.rotate(angleTail);
 
-        snakeCtx.fillStyle = "#2eb82e";
+        snakeCtx.fillStyle = tail.color;
         snakeCtx.beginPath();
-        // Base near body
         snakeCtx.moveTo(0, -4);
-        snakeCtx.lineTo(8, 0);   // tip pointing away
+        snakeCtx.lineTo(8, 0);
         snakeCtx.lineTo(0, 4);
         snakeCtx.closePath();
         snakeCtx.fill();
@@ -164,33 +224,28 @@
         snakeCtx.restore();
       }
 
-      // HEAD – rotates with direction, tongue too
+      /* HEAD */
       let head = snake[0];
-      let neck = snake[1] || head; // fallback if very short
+      let neck = snake[1] || head;
 
-      // Center of head
       let hx = head.x + 5;
       let hy = head.y + 5;
 
-      // Direction from neck to head (movement direction)
       let angleHead = Math.atan2(head.y - neck.y, head.x - neck.x);
 
       snakeCtx.save();
       snakeCtx.translate(hx, hy);
       snakeCtx.rotate(angleHead);
 
-      // Head block (centered)
-      snakeCtx.fillStyle = "#39ff14";
+      snakeCtx.fillStyle = head.color;
       snakeCtx.beginPath();
       snakeCtx.roundRect(-5, -5, 10, 10, 3);
       snakeCtx.fill();
 
-      // Eyes (front side is +x)
       snakeCtx.fillStyle = "#000";
       snakeCtx.fillRect(1, -3, 2, 2);
       snakeCtx.fillRect(1, 1, 2, 2);
 
-      // Tongue (extends forward in movement direction)
       snakeCtx.fillStyle = "red";
       snakeCtx.fillRect(5, -1, 3, 4);
 
@@ -206,7 +261,7 @@
       }
     }
 
-    // Keyboard controls
+    /* CONTROLS */
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowUp" && dy === 0) {dx=0; dy=-10;}
       if (e.key === "ArrowDown" && dy === 0) {dx=0; dy=10;}
@@ -214,7 +269,6 @@
       if (e.key === "ArrowRight" && dx === 0) {dx=10; dy=0;}
     });
 
-    // Touch controls
     let sx = 0, sy = 0;
     snakeCanvas.addEventListener("touchstart", e => {
       const t = e.touches[0];

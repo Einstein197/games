@@ -27,12 +27,6 @@
       margin: 0 0 20px;
       opacity: 0.9;
     }
-    .ad-wrap {
-      margin: 16px 0 24px;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
     .grid {
       width: 100%;
       max-width: 900px;
@@ -76,7 +70,8 @@
     #gameContainer {
       display: none;
       width: 100%;
-      display: none;
+      flex-direction: row;
+      gap: 20px;
       justify-content: center;
       margin-top: 20px;
     }
@@ -89,8 +84,6 @@
       max-height: 70vh;
     }
 
-
-
     #gameFrame {
       width: 100%;
       height: 100%;
@@ -100,8 +93,6 @@
       background: #000;
     }
 
-
-    /* RED X BUTTON (top-right inside game window) */
     #closeX {
       position: absolute;
       top: 10px;
@@ -125,199 +116,293 @@
       transform: scale(1.1);
     }
 
-    @media (max-width: 480px) {
-      h1 { font-size: 30px; }
-      .icon-wrap { width: 70px; height: 70px; }
+    /* FOUR CORNER ADS */
+    .ad-corner {
+      position: fixed;
+      width: 200px;
+      max-width: 30vw;
+      height: auto;
+      z-index: 99999;
     }
+
+    .ad-top-left { top: 10px; left: 10px; }
+    .ad-top-right { top: 10px; right: 10px; }
+    .ad-bottom-left { bottom: 10px; left: 10px; }
+    .ad-bottom-right { bottom: 10px; right: 10px; }
+
   </style>
 </head>
 <body>
 
-  <h1>Krypton Arcade</h1>
-  <p class="subtitle">Tap a game to launch it. Close it to return to the arcade.</p>
+<h1>Krypton Arcade</h1>
 
-  <div class="ad-wrap">
-    <iframe
-      id="aads"
-      data-aa="2436395"
-      src="https://acceptable.a-ads.com/2436395?size=728x90"
-      style="border:0; width:728px; max-width:100%; height:90px; display:block;"
-      loading="lazy">
-    </iframe>
+<button onclick="setPlayerName()"
+style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; color:#050509; font-weight:600; cursor:pointer;">
+  Set Player Name
+</button>
+
+<p class="subtitle">Tap a game to launch it. Close it to return to the arcade.</p>
+
+<!-- ADS -->
+<div class="ad-corner ad-top-left">
+  <iframe data-aa="2436395" src="https://acceptable.a-ads.com/2436395?size=728x90"
+  style="border:0; width:728px; max-width:100%; height:90px; display:block;" loading="lazy"></iframe>
+</div>
+
+<div class="ad-corner ad-top-right">
+  <iframe data-aa="2436395" src="https://acceptable.a-ads.com/2436395?size=728x90"
+  style="border:0; width:728px; max-width:100%; height:90px; display:block;" loading="lazy"></iframe>
+</div>
+
+<div class="ad-corner ad-bottom-left">
+  <iframe data-aa="2436395" src="https://acceptable.a-ads.com/2436395?size=728x90"
+  style="border:0; width:728px; max-width:100%; height:90px; display:block;" loading="lazy"></iframe>
+</div>
+
+<div class="ad-corner ad-bottom-right">
+  <iframe data-aa="2436395" src="https://acceptable.a-ads.com/2436395?size=728x90"
+  style="border:0; width:728px; max-width:100%; height:90px; display:block;" loading="lazy"></iframe>
+</div>
+
+<!-- GAME GRID -->
+<div class="grid" id="gameGrid">
+
+  <!-- Snake -->
+  <div class="card" onclick="openGame('snake.html')">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 100 100">
+        <defs><radialGradient id="snakeGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffb366"/>
+          <stop offset="60%" stop-color="#ff7b00"/>
+          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+        </radialGradient></defs>
+        <circle cx="50" cy="50" r="40" fill="#050509"/>
+        <circle cx="50" cy="50" r="40" fill="url(#snakeGlow)"/>
+        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
+        <path d="M30 60 Q40 40 50 50 T70 40" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="68" cy="38" r="2" fill="#ffffff"/>
+      </svg>
+    </div>
+    <div class="card-title">Snake</div>
+    <div class="card-sub">Swipe or arrows</div>
   </div>
 
-  <!-- GAME GRID -->
-  <div class="grid" id="gameGrid">
-
-    <!-- Snake -->
-    <div class="card" onclick="openGame('snake.html')">
-      <div class="icon-wrap">
-        <svg viewBox="0 0 100 100">
-          <defs><radialGradient id="snakeGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffb366"/>
-            <stop offset="60%" stop-color="#ff7b00"/>
-            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-          </radialGradient></defs>
-          <circle cx="50" cy="50" r="40" fill="#050509"/>
-          <circle cx="50" cy="50" r="40" fill="url(#snakeGlow)"/>
-          <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-          <path d="M30 60 Q40 40 50 50 T70 40" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
-          <circle cx="68" cy="38" r="2" fill="#ffffff"/>
-        </svg>
-      </div>
-      <div class="card-title">Snake</div>
-      <div class="card-sub">Swipe or arrows</div>
+  <!-- Flappy -->
+  <div class="card" onclick="openGame('flappy.html')">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 100 100">
+        <defs><radialGradient id="flappyGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffb366"/>
+          <stop offset="60%" stop-color="#ff7b00"/>
+          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+        </radialGradient></defs>
+        <circle cx="50" cy="50" r="40" fill="#050509"/>
+        <circle cx="50" cy="50" r="40" fill="url(#flappyGlow)"/>
+        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
+        <path d="M30 55 Q40 35 60 40 Q70 43 65 50 Q60 57 50 55 Z" fill="#ffffff"/>
+        <circle cx="56" cy="44" r="2" fill="#050509"/>
+      </svg>
     </div>
-
-    <!-- Flappy -->
-    <div class="card" onclick="openGame('flappy.html')">
-      <div class="icon-wrap">
-        <svg viewBox="0 0 100 100">
-          <defs><radialGradient id="flappyGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffb366"/>
-            <stop offset="60%" stop-color="#ff7b00"/>
-            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-          </radialGradient></defs>
-          <circle cx="50" cy="50" r="40" fill="#050509"/>
-          <circle cx="50" cy="50" r="40" fill="url(#flappyGlow)"/>
-          <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-          <path d="M30 55 Q40 35 60 40 Q70 43 65 50 Q60 57 50 55 Z" fill="#ffffff"/>
-          <circle cx="56" cy="44" r="2" fill="#050509"/>
-        </svg>
-      </div>
-      <div class="card-title">Flappy Bird</div>
-      <div class="card-sub">Tap to flap</div>
-    </div>
-
-    <!-- Dodge -->
-    <div class="card" onclick="openGame('dodge.html')">
-      <div class="icon-wrap">
-        <svg viewBox="0 0 100 100">
-          <defs><radialGradient id="dodgeGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffb366"/>
-            <stop offset="60%" stop-color="#ff7b00"/>
-            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-          </radialGradient></defs>
-          <circle cx="50" cy="50" r="40" fill="#050509"/>
-          <circle cx="50" cy="50" r="40" fill="url(#dodgeGlow)"/>
-          <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-          <rect x="30" y="60" width="18" height="10" fill="#ffffff"/>
-          <rect x="55" y="30" width="12" height="12" fill="#ffffff"/>
-          <line x1="61" y1="42" x2="61" y2="55" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3"/>
-        </svg>
-      </div>
-      <div class="card-title">Dodge</div>
-      <div class="card-sub">Avoid the block</div>
-    </div>
-
-    <!-- 2048 -->
-    <div class="card" onclick="openGame('2048.html')">
-      <div class="icon-wrap">
-        <svg viewBox="0 0 100 100">
-          <defs><radialGradient id="g2048Glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffb366"/>
-            <stop offset="60%" stop-color="#ff7b00"/>
-            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-          </radialGradient></defs>
-          <circle cx="50" cy="50" r="40" fill="#050509"/>
-          <circle cx="50" cy="50" r="40" fill="url(#g2048Glow)"/>
-          <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-          <rect x="30" y="35" width="40" height="30" rx="6" fill="#ff9a2b"/>
-          <text x="50" y="55" text-anchor="middle" fill="#ffffff" font-size="16" font-family="system-ui">2048</text>
-        </svg>
-      </div>
-      <div class="card-title">2048</div>
-      <div class="card-sub">Swipe or arrows</div>
-    </div>
-
-    <!-- Coin -->
-    <div class="card" onclick="openGame('coin.html')">
-      <div class="icon-wrap">
-        <svg viewBox="0 0 100 100">
-          <defs><radialGradient id="coinGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffb366"/>
-            <stop offset="60%" stop-color="#ff7b00"/>
-            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-          </radialGradient></defs>
-          <circle cx="50" cy="50" r="40" fill="#050509"/>
-          <circle cx="50" cy="50" r="40" fill="url(#coinGlow)"/>
-          <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-          <circle cx="50" cy="50" r="16" fill="#ffcc4d" stroke="#ffe38a" stroke-width="2"/>
-          <circle cx="50" cy="50" r="10" fill="#ffb700"/>
-        </svg>
-      </div>
-      <div class="card-title">Click the Coin</div>
-      <div class="card-sub">Tap fast for score</div>
-    </div>
-
-    <!-- Guess -->
-    <div class="card" onclick="openGame('guess.html')">
-      <div class="icon-wrap">
-        <svg viewBox="0 0 100 100">
-          <defs><radialGradient id="guessGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffb366"/>
-            <stop offset="60%" stop-color="#ff7b00"/>
-            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-          </radialGradient></defs>
-          <circle cx="50" cy="50" r="40" fill="#050509"/>
-          <circle cx="50" cy="50" r="40" fill="url(#guessGlow)"/>
-          <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-          <text x="50" y="56" text-anchor="middle" fill="#ffffff" font-size="30" font-family="system-ui">?</text>
-        </svg>
-      </div>
-      <div class="card-title">Number Guessing</div>
-      <div class="card-sub">1 to 10</div>
-    </div>
-
-    <!-- Gravity Warp -->
-    <div class="card" onclick="openGame('gravitywarp.html')">
-      <div class="icon-wrap">
-        <svg viewBox="0 0 100 100">
-          <defs><radialGradient id="warpGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffb366"/>
-            <stop offset="60%" stop-color="#ff7b00"/>
-            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-          </radialGradient></defs>
-          <circle cx="50" cy="50" r="40" fill="#050509"/>
-          <circle cx="50" cy="50" r="40" fill="url(#warpGlow)"/>
-          <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-          <circle cx="50" cy="50" r="10" fill="#ffffff"/>
-          <circle cx="50" cy="50" r="4" fill="#ff7b00"/>
-        </svg>
-      </div>
-      <div class="card-title">Gravity Warp</div>
-      <div class="card-sub">Direct control</div>
-    </div>
-
-  </div> <!-- end grid -->
-
-  <!-- INLINE GAME VIEWER -->
-  <div id="gameContainer">
-    <div id="gameWrapper">
-      <button id="closeX" onclick="closeGame()">✕</button>
-      <iframe id="gameFrame"></iframe>
-    </div>
+    <div class="card-title">Flappy Bird</div>
+    <div class="card-sub">Tap to flap</div>
   </div>
 
-  <script>
-    function openGame(path) {
-      document.getElementById("gameGrid").style.display = "none";
-      document.getElementById("gameContainer").style.display = "flex";
-      document.getElementById("gameFrame").src = path;
-    }
+  <!-- Dodge -->
+  <div class="card" onclick="openGame('dodge.html')">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 100 100">
+        <defs><radialGradient id="dodgeGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffb366"/>
+          <stop offset="60%" stop-color="#ff7b00"/>
+          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+        </radialGradient></defs>
+        <circle cx="50" cy="50" r="40" fill="#050509"/>
+        <circle cx="50" cy="50" r="40" fill="url(#dodgeGlow)"/>
+        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
+        <rect x="30" y="60" width="18" height="10" fill="#ffffff"/>
+        <rect x="55" y="30" width="12" height="12" fill="#ffffff"/>
+        <line x1="61" y1="42" x2="61" y2="55" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3"/>
+      </svg>
+    </div>
+    <div class="card-title">Dodge</div>
+    <div class="card-sub">Avoid the block</div>
+  </div>
 
-    function closeGame() {
-      document.getElementById("gameFrame").src = "";
-      document.getElementById("gameContainer").style.display = "none";
-      document.getElementById("gameGrid").style.display = "grid";
-    }
+  <!-- 2048 -->
+  <div class="card" onclick="openGame('2042048.html')">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 100 100">
+        <defs><radialGradient id="g2048Glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffb366"/>
+          <stop offset="60%" stop-color="#ff7b00"/>
+          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+        </radialGradient></defs>
+        <circle cx="50" cy="50" r="40" fill="#050509"/>
+        <circle cx="50" cy="50" r="40" fill="url(#g2048Glow)"/>
+        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
+        <rect x="30" y="35" width="40" height="30" rx="6" fill="#ff9a2b"/>
+        <text x="50" y="55" text-anchor="middle" fill="#ffffff" font-size="16" font-family="system-ui">2048</text>
+      </svg>
+    </div>
+    <div class="card-title">2048</div>
+    <div class="card-sub">Swipe or arrows</div>
+  </div>
 
-    // Refresh A-Ads every 90 seconds
-    setInterval(() => {
-      const ad = document.getElementById("aads");
-      ad.src = ad.src;
-    }, 90000);
-  </script>
+  <!-- Coin -->
+  <div class="card" onclick="openGame('coin.html')">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 100 100">
+        <defs><radialGradient id="coinGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffb366"/>
+          <stop offset="60%" stop-color="#ff7b00"/>
+          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+        </radialGradient></defs>
+        <circle cx="50" cy="50" r="40" fill="#050509"/>
+        <circle cx="50" cy="50" r="40" fill="url(#coinGlow)"/>
+        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
+        <circle cx="50" cy="50" r="16" fill="#ffcc4d" stroke="#ffe38a" stroke-width="2"/>
+        <circle cx="50" cy="50" r="10" fill="#ffb700"/>
+      </svg>
+    </div>
+    <div class="card-title">Click the Coin</div>
+    <div class="card-sub">Tap fast for score</div>
+  </div>
+
+  <!-- Guess -->
+  <div class="card" onclick="openGame('guess.html')">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 100 100">
+        <defs><radialGradient id="guessGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffb366"/>
+          <stop offset="60%" stop-color="#ff7b00"/>
+          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+        </radialGradient></defs>
+        <circle cx="50" cy="50" r="40" fill="#050509"/>
+        <circle cx="50" cy="50" r="40" fill="url(#guessGlow)"/>
+        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
+        <text x="50" y="56" text-anchor="middle" fill="#ffffff" font-size="30" font-family="system-ui">?</text>
+      </svg>
+    </div>
+    <div class="card-title">Number Guessing</div>
+    <div class="card-sub">1 to 10</div>
+  </div>
+
+  <!-- Gravity Warp -->
+  <div class="card" onclick="openGame('gravitywarp.html')">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 100 100">
+        <defs><radialGradient id="warpGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffb366"/>
+          <stop offset="60%" stop-color="#ff7b00"/>
+          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+        </radialGradient></defs>
+        <circle cx="50" cy="50" r="40" fill="#050509"/>
+        <circle cx="50" cy="50" r="40" fill="url(#warpGlow)"/>
+        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
+        <circle cx="50" cy="50" r="10" fill="#ffffff"/>
+        <circle cx="50" cy="50" r="4" fill="#ff7b00"/>
+      </svg>
+    </div>
+    <div class="card-title">Gravity Warp</div>
+    <div class="card-sub">Direct control</div>
+  </div>
+
+</div> <!-- end grid -->
+
+<!-- INLINE GAME VIEWER -->
+<div id="gameContainer">
+
+  <!-- GAME WINDOW -->
+  <div id="gameWrapper">
+    <button id="closeX" onclick="closeGame()">✕</button>
+    <iframe id="gameFrame"></iframe>
+  </div>
+
+  <!-- LEADERBOARD (right side) -->
+  <div id="leaderboardBox"
+       style="width:200px; background:#111; padding:12px; border-radius:10px; border:2px solid #333; color:white; display:none;">
+  </div>
+
+</div>
+
+<script>
+function openGame(path) {
+  document.getElementById("gameGrid").style.display = "none";
+  document.getElementById("gameContainer").style.display = "flex";
+  document.getElementById("gameFrame").src = path;
+
+  if (path === "snake.html") {
+    loadLeaderboard("snake");
+    document.getElementById("leaderboardBox").style.display = "block";
+  } else {
+    document.getElementById("leaderboardBox").style.display = "none";
+  }
+}
+
+function closeGame() {
+  document.getElementById("gameFrame").src = "";
+  document.getElementById("gameContainer").style.display = "none";
+  document.getElementById("gameGrid").style.display = "grid";
+  document.getElementById("leaderboardBox").style.display = "none";
+}
+
+// Create or load unique player ID
+if (!localStorage.getItem("playerID")) {
+  const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
+  localStorage.setItem("playerID", id);
+}
+
+// Load or set default name
+if (!localStorage.getItem("playerName")) {
+  localStorage.setItem("playerName", localStorage.getItem("playerID"));
+}
+
+// Function to set a custom name
+function setPlayerName() {
+  const newName = prompt("Enter your player name:");
+  if (newName && newName.trim() !== "") {
+    localStorage.setItem("playerName", newName.trim());
+    alert("Name updated to: " + newName);
+  }
+}
+
+function loadLeaderboard(game) {
+  const board = JSON.parse(localStorage.getItem("leaderboard_" + game)) || [];
+  let html = "<h3>" + game.toUpperCase() + " Top Score</h3>";
+
+  if (board.length === 0) {
+    html += "<p>No scores yet.</p>";
+  } else {
+    board.sort((a, b) => b.score - a.score);
+    const top = board[0];
+    html += `<div>1. ${top.name} — ${top.score}</div>`;
+  }
+
+  // ADMIN RESET BUTTON (visible to everyone, usable only by you)
+  html += `
+    <button onclick="resetScores()"
+      style="margin-top:12px; width:100%; padding:6px; border-radius:6px;
+             background:#d62828; color:white; border:1px solid #ff9a2b;">
+      Reset Scoreboard
+    </button>
+  `;
+
+  document.getElementById("leaderboardBox").innerHTML = html;
+}
+
+function resetScores() {
+  const pass = prompt("Enter admin password:");
+  if (pass === "Fl@shAdmin197") {
+    localStorage.removeItem("leaderboard_snake");
+    alert("Leaderboard reset.");
+    loadLeaderboard("snake");
+  } else {
+    alert("Incorrect password.");
+  }
+}
+
+
+</script>
 
 </body>
 </html>
