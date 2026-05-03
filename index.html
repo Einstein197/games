@@ -90,6 +90,7 @@
   </div>
 
   <div class="grid">
+
     <!-- Snake -->
     <div class="card" onclick="openGame('snake.html')">
       <div class="icon-wrap">
@@ -221,7 +222,30 @@
       <div class="card-title">Number Guessing</div>
       <div class="card-sub">1 to 10</div>
     </div>
-  </div>
+
+    <!-- Gravity Warp (NOW INSIDE GRID) -->
+    <div class="card" onclick="openGame('gravitywarp.html')">
+      <div class="icon-wrap">
+        <svg viewBox="0 0 100 100">
+          <defs>
+            <radialGradient id="warpGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffb366"/>
+              <stop offset="60%" stop-color="#ff7b00"/>
+              <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="40" fill="#050509"/>
+          <circle cx="50" cy="50" r="40" fill="url(#warpGlow)"/>
+          <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
+          <circle cx="50" cy="50" r="10" fill="#ffffff"/>
+          <circle cx="50" cy="50" r="4" fill="#ff7b00"/>
+        </svg>
+      </div>
+      <div class="card-title">Gravity Warp</div>
+      <div class="card-sub">Direct control</div>
+    </div>
+
+  </div> <!-- end grid -->
 
   <script>
     function openGame(path) {
@@ -235,10 +259,9 @@
     // Refresh A-Ads every 90 seconds
     setInterval(() => {
       const ad = document.getElementById("aads");
-      ad.src = ad.src; // reloads iframe → new impression
+      ad.src = ad.src;
     }, 90000);
   </script>
-
 
 </body>
 </html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Krypton Gravity Warp</title>
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #ff7b00 0%, #050509 55%, #120020 100%);
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    h1 {
+      margin: 12px 0 2px;
+      font-size: 26px;
+      text-shadow: 0 0 16px rgba(0,0,0,0.8);
+    }
+    p {
+      margin: 0 0 8px;
+      font-size: 13px;
+      opacity: 0.85;
+      text-align: center;
+    }
+    #info {
+      margin-bottom: 4px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    #scorebar {
+      margin-top: 4px;
+      font-size: 13px;
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    #daily {
+      margin-top: 4px;
+      font-size: 12px;
+      opacity: 0.85;
+      text-align: center;
+    }
+    #powerups {
+      margin-top: 4px;
+      font-size: 11px;
+      opacity: 0.8;
+      text-align: center;
+    }
+    canvas {
+      margin-top: 10px;
+      background: #050509;
+      border-radius: 18px;
+      box-shadow: 0 0 24px rgba(0,0,0,0.8);
+      border: 2px solid rgba(255,123,0,0.4);
+      touch-action: none;
+    }
+    #hint {
+      margin-top: 8px;
+      font-size: 11px;
+      opacity: 0.7;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gravity Warp</h1>
+  <p>Direct control mode — move the orb with arrows or taps.</p>
+  <div id="info">Desktop: ← → ↓ • Mobile: tap left / right / bottom</div>
+  <div id="scorebar">
+    <span>Score: <span id="score">0</span></span>
+    <span>Best: <span id="best">0</span></span>
+    <span>Skin: <span id="skinLabel">Default</span></span>
+  </div>
+  <div id="daily"></div>
+  <div id="powerups">Active: <span id="powerStatus">None</span></div>
+  <canvas id="gwCanvas" width="260" height="420"></canvas>
+  <div id="hint">Tap or press any arrow to start. Instant restart on game over.</div>
+
+  <script>
+    const canvas = document.getElementById("gwCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("score");
+    const bestEl = document.getElementById("best");
+    const skinLabelEl = document.getElementById("skinLabel");
+    const dailyEl = document.getElementById("daily");
+    const powerStatusEl = document.getElementById("powerStatus");
+
+    let orb, obstacles, running, lastTime, speed, score, bestScore;
+    let particles = [];
+    let powerUps = [];
+    let activePower = null;
+    let powerTimer = 0;
+    let widenBonus = 0;
+    let freezeWalls = false;
+    let slowMoFactor = 1;
+
+    // Skins
+    const skins = [
+      { name: "Default", color: "#ffffff", glow: "#ff7b00", unlockAt: 0 },
+      { name: "Solar Core", color: "#ffdd55", glow: "#ffb700", unlockAt: 40 },
+      { name: "Plasma Violet", color: "#f0a6ff", glow: "#c94bff", unlockAt: 80 },
+      { name: "Dark Matter", color: "#00f6ff", glow: "#00f6ff", unlockAt: 140 }
+    ];
+    let currentSkin = skins[0];
+
+    // Daily challenge
+    const today = new Date();
+    const dailyTarget = 40 + (today.getDate() * 7) % 60;
+    dailyEl.textContent = `Daily challenge: reach score ${dailyTarget}.`;
+
+    // Best score
+    bestScore = Number(localStorage.getItem("gravityWarpBest")) || 0;
+    bestEl.textContent = bestScore;
+
+    function pickSkin() {
+      let chosen = skins[0];
+      for (const s of skins) {
+        if (bestScore >= s.unlockAt) chosen = s;
+      }
+      currentSkin = chosen;
+      skinLabelEl.textContent = chosen.name;
+    }
+    pickSkin();
+
+    function resetGame() {
+      orb = { x: canvas.width / 2, y: 60, r: 9, vx: 0, vy: 0 };
+      obstacles = [];
+      particles = [];
+      powerUps = [];
+      activePower = null;
+      powerTimer = 0;
+      widenBonus = 0;
+      freezeWalls = false;
+      slowMoFactor = 1;
+      running = false;
+      speed = 0.4;
+      score = 0;
+      scoreEl.textContent = score;
+      lastTime = performance.now();
+      spawnInitialObstacles();
+      powerStatusEl.textContent = "None";
+      drawFrame();
+    }
+
+    function spawnInitialObstacles() {
+      for (let i = 0; i < 6; i++) {
+        spawnObstacle(i * 150 + 120); // MUCH farther apart
+      }
+    }
+
+    function spawnObstacle(yPos) {
+      const margin = 20;
+
+      // Slower shrink
+      const shrink = Math.min(score / 70, 28);
+
+      const baseGap = 110 - shrink + widenBonus;
+      const gapWidth = Math.max(55, baseGap);
+
+      const gapX = margin + Math.random() * (canvas.width - 2 * margin - gapWidth);
+
+      obstacles.push({
+        y: yPos,
+        gapX,
+        gapWidth,
+        thickness: 14
+      });
+
+      // Random power-up spawn
+      if (Math.random() < 0.22) {
+        const type = Math.random();
+        let kind = "slow";
+        if (type < 0.33) kind = "slow";
+        else if (type < 0.66) kind = "widen";
+        else kind = "freeze";
+        powerUps.push({
+          x: gapX + gapWidth / 2,
+          y: yPos,
+          r: 6,
+          kind,
+          taken: false
+        });
+      }
+    }
+
+    function startRun() {
+      if (!running) {
+        running = true;
+        lastTime = performance.now();
+        requestAnimationFrame(loop);
+      }
+    }
+
+    function loop(ts) {
+      if (!running) return;
+      let dt = Math.min((ts - lastTime) / 16.67, 2);
+      lastTime = ts;
+
+      dt *= slowMoFactor;
+
+      update(dt);
+      drawFrame();
+
+      requestAnimationFrame(loop);
+    }
+
+    function update(dt) {
+      // Slower score gain
+      score += dt * 0.25;
+      scoreEl.textContent = Math.floor(score);
+
+      if (score > bestScore) {
+        bestScore = Math.floor(score);
+        bestEl.textContent = bestScore;
+        localStorage.setItem("gravityWarpBest", bestScore);
+        pickSkin();
+      }
+
+      // Slower difficulty ramp
+      speed = 0.4 + score / 220;
+
+      if (activePower) {
+        powerTimer -= dt;
+        if (powerTimer <= 0) {
+          activePower = null;
+          widenBonus = 0;
+          freezeWalls = false;
+          slowMoFactor = 1;
+          powerStatusEl.textContent = "None";
+        }
+      }
+
+      // Direct control movement
+      orb.x += orb.vx * dt;
+      orb.y += orb.vy * dt;
+
+      // Friction
+      orb.vx *= 0.985;
+      orb.vy *= 0.985;
+
+      // Max speed cap
+      const maxSpeed = 4;
+      orb.vx = Math.max(-maxSpeed, Math.min(maxSpeed, orb.vx));
+      orb.vy = Math.max(-maxSpeed, Math.min(maxSpeed, orb.vy));
+
+      // Bounds
+      if (orb.x - orb.r < 0) orb.x = orb.r;
+      if (orb.x + orb.r > canvas.width) orb.x = canvas.width - orb.r;
+      if (orb.y - orb.r < 0) orb.y = orb.r;
+      if (orb.y + orb.r > canvas.height) orb.y = canvas.height - orb.r;
+
+      // Obstacles
+      const obstacleSpeed = freezeWalls ? 0.2 : 0.55 * speed;
+      obstacles.forEach(o => o.y -= obstacleSpeed * dt * 2);
+      powerUps.forEach(p => p.y -= obstacleSpeed * dt * 2);
+
+      // Random spacing
+      if (obstacles.length && obstacles[0].y < -40) {
+        obstacles.shift();
+        const lastY = obstacles[obstacles.length - 1].y;
+        const spacing = 110 + Math.random() * 80; // 110–190 px
+        spawnObstacle(lastY + spacing);
+      }
+
+      powerUps = powerUps.filter(p => p.y > -20 && !p.taken);
+
+      // Collision with obstacles
+      for (const o of obstacles) {
+        const top = o.y - o.thickness / 2;
+        const bottom = o.y + o.thickness / 2;
+        if (orb.y + orb.r > top && orb.y - orb.r < bottom) {
+          if (orb.x - orb.r < o.gapX || orb.x + orb.r > o.gapX + o.gapWidth) {
+            return gameOver();
+          }
+        }
+      }
+
+      // Collision with power-ups
+      for (const p of powerUps) {
+        const dx = orb.x - p.x;
+        const dy = orb.y - p.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < orb.r + p.r + 2 && !p.taken) {
+          p.taken = true;
+          activatePower(p.kind);
+        }
+      }
+
+      spawnParticles();
+      updateParticles(dt);
+    }
+
+    function activatePower(kind) {
+      activePower = kind;
+      powerTimer = 60;
+      if (kind === "slow") {
+        slowMoFactor = 0.45;
+        powerStatusEl.textContent = "Slow‑mo";
+      } else if (kind === "widen") {
+        widenBonus = 30;
+        powerStatusEl.textContent = "Wide gaps";
+      } else if (kind === "freeze") {
+        freezeWalls = true;
+        powerStatusEl.textContent = "Frozen walls";
+      }
+    }
+
+    function spawnParticles() {
+      for (let i = 0; i < 2; i++) {
+        particles.push({
+          x: orb.x + (Math.random() - 0.5) * 4,
+          y: orb.y + (Math.random() - 0.5) * 4,
+          vx: (Math.random() - 0.5) * 0.6,
+          vy: (Math.random() - 0.5) * 0.6,
+          life: 20 + Math.random() * 10
+        });
+      }
+    }
+
+    function updateParticles(dt) {
+      particles.forEach(p => {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+      });
+      particles = particles.filter(p => p.life > 0);
+    }
+
+    function gameOver() {
+      running = false;
+
+      let coins = 0;
+      const finalScore = Math.floor(score);
+      if (finalScore >= dailyTarget) coins += 5;
+      if (finalScore >= 20) coins += Math.floor(finalScore / 20);
+
+      try {
+        if (typeof onRunComplete === "function") {
+          onRunComplete(finalScore, bestScore, coins);
+        }
+      } catch {}
+
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.7)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ff7b00";
+      ctx.font = "20px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 18);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "13px system-ui";
+      ctx.fillText(`Score: ${finalScore}  •  Best: ${bestScore}`, canvas.width / 2, canvas.height / 2 + 2);
+      ctx.fillText("Tap or press any arrow to restart", canvas.width / 2, canvas.height / 2 + 22);
+      ctx.restore();
+    }
+
+    function drawFrame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const grad = ctx.createRadialGradient(
+        canvas.width / 2, 80, 10,
+        canvas.width / 2, 80, 220
+      );
+      grad.addColorStop(0, "rgba(255,123,0,0.35)");
+      grad.addColorStop(1, "rgba(0,0,0,1)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      obstacles.forEach(o => {
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.fillRect(0, o.y - o.thickness / 2, canvas.width, o.thickness);
+
+        ctx.fillStyle = "rgba(255,123,0,0.9)";
+        ctx.fillRect(0, o.y - o.thickness / 2, o.gapX, o.thickness);
+        ctx.fillRect(o.gapX + o.gapWidth, o.y - o.thickness / 2,
+                     canvas.width - (o.gapX + o.gapWidth), o.thickness);
+      });
+
+      powerUps.forEach(p => {
+        if (p.taken) return;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.beginPath();
+        ctx.arc(0, 0, p.r + 2, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0,0,0,0.8)";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+        if (p.kind === "slow") ctx.fillStyle = "#66d9ff";
+        else if (p.kind === "widen") ctx.fillStyle = "#7dff6b";
+        else ctx.fillStyle = "#ff5c93";
+        ctx.fill();
+        ctx.restore();
+      });
+
+      particles.forEach(p => {
+        const alpha = Math.max(0, p.life / 25);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = currentSkin.glow;
+        ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
+        ctx.restore();
+      });
+
+      ctx.save();
+      ctx.shadowColor = currentSkin.glow;
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
+      ctx.fillStyle = currentSkin.color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // DIRECT CONTROL INPUT
+    document.addEventListener("keydown", e => {
+      if (!running && score > 0) resetGame();
+      startRun();
+
+      if (e.key === "ArrowLeft") orb.vx -= 0.9;
+      if (e.key === "ArrowRight") orb.vx += 0.9;
+      if (e.key === "ArrowDown") orb.vy += 0.9;
+    });
+
+    canvas.addEventListener("touchstart", e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      const y = e.touches[0].clientY - rect.top;
+
+      if (!running && score > 0) resetGame();
+      startRun();
+
+      if (y > canvas.height * 0.7) orb.vy += 0.9;
+      else if (x < canvas.width / 2) orb.vx -= 0.9;
+      else orb.vx += 0.9;
+    }, { passive: false });
+
+    canvas.addEventListener("click", () => {
+      if (!running && score > 0) {
+        resetGame();
+        startRun();
+      } else {
+        startRun();
+      }
+    });
+
+    function onRunComplete(score, best, coins) {
+      console.log("Run complete:", { score, best, coins });
+    }
+
+    resetGame();
+  </script>
+</body>
+</html>
