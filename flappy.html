@@ -29,9 +29,11 @@
   </style>
 </head>
 <body>
+
   <h1>Flappy Bird</h1>
   <p>Tap or press SPACE to flap. Tap canvas to start.</p>
-  <canvas id="flappyCanvas" width="240" height="320"></canvas>
+
+  <canvas id="flappyCanvas" width="240" height="300"></canvas>
 
   <script>
     window.addEventListener("keydown", e => {
@@ -42,6 +44,12 @@
     const flappyCtx = flappyCanvas.getContext("2d");
 
     let birdY, birdVel, pipes, score, highScore, running = false, lastTime = 0;
+
+    // Bird animation
+    let birdAngle = 0;
+    let wingAngle = 0;
+    let wingDir = 1;
+
     highScore = Number(localStorage.getItem("flappyHighScore")) || 0;
 
     function startFlappy() {
@@ -75,8 +83,8 @@
     }
 
     function updateFlappy(dt) {
-      birdVel += 0.25 * dt;
-      if (birdVel > 4) birdVel = 4;
+      birdVel += 0.18 * dt;
+      if (birdVel > 3) birdVel = 3;
       birdY += birdVel * dt;
 
       pipes.forEach(p => p.x -= 1.5 * dt);
@@ -98,21 +106,99 @@
       });
 
       if (birdY < 0 || birdY > 300) endFlappy();
+
+      // Wing flap
+      wingAngle += wingDir * 0.15 * dt;
+      if (wingAngle > 0.7) { wingAngle = 0.7; wingDir = -1; }
+      if (wingAngle < -0.7) { wingAngle = -0.7; wingDir = 1; }
+
+      // Rotation
+      if (birdVel < -1) birdAngle = -20;
+      else {
+        birdAngle += 2 * dt;
+        if (birdAngle > 60) birdAngle = 60;
+      }
     }
 
     function drawFlappy() {
       flappyCtx.fillStyle = "#111";
       flappyCtx.fillRect(0,0,240,320);
 
-      flappyCtx.fillStyle = "yellow";
-      flappyCtx.fillRect(50, birdY, 20, 20);
+      const cx = 50 + 12;
+      const cy = birdY + 12;
 
+      flappyCtx.save();
+      flappyCtx.translate(cx, cy);
+      flappyCtx.rotate(birdAngle * Math.PI / 180);
+
+      // BODY (thin + long)
+      flappyCtx.fillStyle = "#e8e6df";
+      flappyCtx.beginPath();
+      flappyCtx.ellipse(0, 0, 16, 6, 0, 0, Math.PI * 2);
+      flappyCtx.fill();
+
+      // HEAD (rounder)
+      flappyCtx.fillStyle = "#f2f0e9";
+      flappyCtx.beginPath();
+      flappyCtx.ellipse(12, -2, 6, 6, 0, 0, Math.PI * 2);
+      flappyCtx.fill();
+
+      // BEAK (sharp)
+      flappyCtx.fillStyle = "#ffb347";
+      flappyCtx.beginPath();
+      flappyCtx.moveTo(18, -2);
+      flappyCtx.lineTo(24, -3);
+      flappyCtx.lineTo(18, 0);
+      flappyCtx.closePath();
+      flappyCtx.fill();
+
+      // EYE
+      flappyCtx.fillStyle = "#ffffff";
+      flappyCtx.beginPath();
+      flappyCtx.arc(13, -4, 2.2, 0, Math.PI * 2);
+      flappyCtx.fill();
+      flappyCtx.fillStyle = "#000000";
+      flappyCtx.beginPath();
+      flappyCtx.arc(13.5, -4, 1.1, 0, Math.PI * 2);
+      flappyCtx.fill();
+
+      // LEFT WING (longer, dove-like)
+      flappyCtx.save();
+      flappyCtx.rotate(-wingAngle);
+      flappyCtx.fillStyle = "#e8e6df";
+      flappyCtx.beginPath();
+      flappyCtx.ellipse(-10, 0, 10, 4, 0, 0, Math.PI * 2);
+      flappyCtx.fill();
+      flappyCtx.restore();
+
+      // RIGHT WING
+      flappyCtx.save();
+      flappyCtx.rotate(wingAngle);
+      flappyCtx.fillStyle = "#e8e6df";
+      flappyCtx.beginPath();
+      flappyCtx.ellipse(10, 0, 10, 4, 0, 0, Math.PI * 2);
+      flappyCtx.fill();
+      flappyCtx.restore();
+
+      // TAIL (thin + pointed)
+      flappyCtx.fillStyle = "#dcdad3";
+      flappyCtx.beginPath();
+      flappyCtx.moveTo(-16, 0);
+      flappyCtx.lineTo(-22, -2 + wingAngle * 3);
+      flappyCtx.lineTo(-16, 2);
+      flappyCtx.closePath();
+      flappyCtx.fill();
+
+      flappyCtx.restore();
+
+      // Pipes
       flappyCtx.fillStyle = "green";
       pipes.forEach(p => {
         flappyCtx.fillRect(p.x, 0, p.width, p.top);
         flappyCtx.fillRect(p.x, p.top + p.gap, p.width, 320);
       });
 
+      // Score
       flappyCtx.fillStyle = "white";
       flappyCtx.font = "18px Arial";
       flappyCtx.fillText("Score: " + score, 10, 25);
@@ -150,5 +236,6 @@
       else birdVel = -4.5;
     });
   </script>
+
 </body>
 </html>

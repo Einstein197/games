@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Krypton Arcade</title>
+  <link rel="icon" type="image/png" href="krypton.png">
+
   <style>
     body {
       margin: 0;
@@ -73,40 +75,54 @@
     /* GAME VIEWER */
     #gameContainer {
       display: none;
-      flex-direction: column;
-      align-items: center;
+      width: 100%;
+      display: none;
+      justify-content: center;
       margin-top: 20px;
-      animation: fadeIn 0.25s ease;
     }
+
+    #gameWrapper {
+      position: relative;
+      width: 420px;
+      height: 600px;
+      max-width: 90vw;
+      max-height: 70vh;
+    }
+
+
+
     #gameFrame {
-      width: 480px;
-      height: 720px;
-      max-width: 95vw;
-      max-height: 85vh;
+      width: 100%;
+      height: 100%;
       border: 3px solid rgba(255,255,255,0.3);
       border-radius: 18px;
       box-shadow: 0 0 22px rgba(0,0,0,0.7);
       background: #000;
     }
-    #closeBtn {
-      margin-top: 14px;
-      padding: 10px 22px;
-      background: rgba(0,0,0,0.55);
+
+
+    /* RED X BUTTON (top-right inside game window) */
+    #closeX {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      background: #d62828;
       border: 2px solid #ff9a2b;
-      border-radius: 12px;
-      color: #fff;
-      font-size: 15px;
+      border-radius: 8px;
       cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 0 10px rgba(0,0,0,0.6);
       transition: 0.2s;
     }
-    #closeBtn:hover {
-      background: rgba(0,0,0,0.75);
-      transform: translateY(-2px);
-    }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
+    #closeX:hover {
+      background: #b71c1c;
+      transform: scale(1.1);
     }
 
     @media (max-width: 480px) {
@@ -137,13 +153,11 @@
     <div class="card" onclick="openGame('snake.html')">
       <div class="icon-wrap">
         <svg viewBox="0 0 100 100">
-          <defs>
-            <radialGradient id="snakeGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#ffb366"/>
-              <stop offset="60%" stop-color="#ff7b00"/>
-              <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
+          <defs><radialGradient id="snakeGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffb366"/>
+            <stop offset="60%" stop-color="#ff7b00"/>
+            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+          </radialGradient></defs>
           <circle cx="50" cy="50" r="40" fill="#050509"/>
           <circle cx="50" cy="50" r="40" fill="url(#snakeGlow)"/>
           <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
@@ -159,13 +173,11 @@
     <div class="card" onclick="openGame('flappy.html')">
       <div class="icon-wrap">
         <svg viewBox="0 0 100 100">
-          <defs>
-            <radialGradient id="flappyGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#ffb366"/>
-              <stop offset="60%" stop-color="#ff7b00"/>
-              <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
+          <defs><radialGradient id="flappyGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffb366"/>
+            <stop offset="60%" stop-color="#ff7b00"/>
+            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+          </radialGradient></defs>
           <circle cx="50" cy="50" r="40" fill="#050509"/>
           <circle cx="50" cy="50" r="40" fill="url(#flappyGlow)"/>
           <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
@@ -181,13 +193,11 @@
     <div class="card" onclick="openGame('dodge.html')">
       <div class="icon-wrap">
         <svg viewBox="0 0 100 100">
-          <defs>
-            <radialGradient id="dodgeGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#ffb366"/>
-              <stop offset="60%" stop-color="#ff7b00"/>
-              <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
+          <defs><radialGradient id="dodgeGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffb366"/>
+            <stop offset="60%" stop-color="#ff7b00"/>
+            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+          </radialGradient></defs>
           <circle cx="50" cy="50" r="40" fill="#050509"/>
           <circle cx="50" cy="50" r="40" fill="url(#dodgeGlow)"/>
           <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
@@ -204,13 +214,11 @@
     <div class="card" onclick="openGame('2048.html')">
       <div class="icon-wrap">
         <svg viewBox="0 0 100 100">
-          <defs>
-            <radialGradient id="g2048Glow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#ffb366"/>
-              <stop offset="60%" stop-color="#ff7b00"/>
-              <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
+          <defs><radialGradient id="g2048Glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffb366"/>
+            <stop offset="60%" stop-color="#ff7b00"/>
+            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+          </radialGradient></defs>
           <circle cx="50" cy="50" r="40" fill="#050509"/>
           <circle cx="50" cy="50" r="40" fill="url(#g2048Glow)"/>
           <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
@@ -226,13 +234,11 @@
     <div class="card" onclick="openGame('coin.html')">
       <div class="icon-wrap">
         <svg viewBox="0 0 100 100">
-          <defs>
-            <radialGradient id="coinGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#ffb366"/>
-              <stop offset="60%" stop-color="#ff7b00"/>
-              <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
+          <defs><radialGradient id="coinGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffb366"/>
+            <stop offset="60%" stop-color="#ff7b00"/>
+            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+          </radialGradient></defs>
           <circle cx="50" cy="50" r="40" fill="#050509"/>
           <circle cx="50" cy="50" r="40" fill="url(#coinGlow)"/>
           <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
@@ -248,13 +254,11 @@
     <div class="card" onclick="openGame('guess.html')">
       <div class="icon-wrap">
         <svg viewBox="0 0 100 100">
-          <defs>
-            <radialGradient id="guessGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#ffb366"/>
-              <stop offset="60%" stop-color="#ff7b00"/>
-              <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
+          <defs><radialGradient id="guessGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffb366"/>
+            <stop offset="60%" stop-color="#ff7b00"/>
+            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+          </radialGradient></defs>
           <circle cx="50" cy="50" r="40" fill="#050509"/>
           <circle cx="50" cy="50" r="40" fill="url(#guessGlow)"/>
           <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
@@ -269,13 +273,11 @@
     <div class="card" onclick="openGame('gravitywarp.html')">
       <div class="icon-wrap">
         <svg viewBox="0 0 100 100">
-          <defs>
-            <radialGradient id="warpGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#ffb366"/>
-              <stop offset="60%" stop-color="#ff7b00"/>
-              <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
+          <defs><radialGradient id="warpGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffb366"/>
+            <stop offset="60%" stop-color="#ff7b00"/>
+            <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
+          </radialGradient></defs>
           <circle cx="50" cy="50" r="40" fill="#050509"/>
           <circle cx="50" cy="50" r="40" fill="url(#warpGlow)"/>
           <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
@@ -291,8 +293,10 @@
 
   <!-- INLINE GAME VIEWER -->
   <div id="gameContainer">
-    <iframe id="gameFrame"></iframe>
-    <button id="closeBtn" onclick="closeGame()">Close Game</button>
+    <div id="gameWrapper">
+      <button id="closeX" onclick="closeGame()">✕</button>
+      <iframe id="gameFrame"></iframe>
+    </div>
   </div>
 
   <script>
