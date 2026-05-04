@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Shooter – Krypton Arcade</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: #050509;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 { margin: 16px 0 4px; }
+    p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+
+    #spaceScore {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ff7b00;
+      margin-bottom: 4px;
+    }
+
+    #spaceLives {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    #spaceHealth {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ff7b00;
+      margin-bottom: 10px;
+    }
+
+    canvas {
+      background: radial-gradient(circle at top, #222 0, #050509 60%);
+      border: 2px solid #333;
+      margin-top: 10px;
+      width: 90vw;
+      max-width: 320px;
+      height: auto;
+      touch-action: none;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #ff7b00;
+      color: #050509;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Space Shooter</h1>
+  <p>Dodge debris, fight enemy ships, collect power-ups.</p>
+
+  <div id="spaceScore">Score: 0</div>
+  <div id="spaceLives">❤️❤️❤️</div>
+  <div id="spaceHealth">Health: 100</div>
+
+  <button onclick="startSpaceGame()">Start</button>
+
+  <canvas id="spaceCanvas" width="240" height="320"></canvas>
+
+  <script>
+    /* PLAYER ID + NAME */
+    if (!localStorage.getItem("playerID")) {
+      const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
+      localStorage.setItem("playerID", id);
+    }
+    if (!localStorage.getItem("playerName")) {
+      localStorage.setItem("playerName", localStorage.getItem("playerID"));
+    }
+
+    const canvas = document.getElementById("spaceCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let ship, bullets, enemies, stars, powerups, debris, enemyBullets;
+    let spaceScore = 0;
+    let lives = 3;
+    let health = 100;
+    let running = false;
+    let lastTime = 0;
+    let shootCooldown = 0;
+    let difficulty = 1;
+
+    // ⭐ PERMANENT STACKING BOOSTERS
+    let power = {
+      rapid: 0,       // permanent rapid fire
+      multishot: 1,   // 1=single, 2=double, 3=triple
+      shield: 0       // absorbs hits
+    };
+
+    function updateLives() {
+      document.getElementById("spaceLives").textContent = "❤️".repeat(lives);
+    }
+
+    function updateHealth() {
+      document.getElementById("spaceHealth").textContent = "Health: " + Math.floor(health);
+    }
+
+    function updateSpaceScore() {
+      document.getElementById("spaceScore").textContent = "Score: " + spaceScore;
+    }
+
+    function resetSpaceGame() {
+      ship = {
+        x: canvas.width / 2 - 12,
+        y: canvas.height - 40,
+        w: 24,
+        h: 24,
+        speed: 4,
+        invincible: 0
+      };
+
+      bullets = [];
+      enemies = [];
+      stars = [];
+      powerups = [];
+      debris = [];
+      enemyBullets = [];
+
+      spaceScore = 0;
+      lives = 3;
+      health = 100;
+      difficulty = 1;
+
+      power = { rapid: 0, multishot: 1, shield: 0 };
+
+      updateLives();
+      updateHealth();
+      updateSpaceScore();
+
+      for (let i = 0; i < 40; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          s: Math.random() * 1.5 + 0.5
+        });
+      }
+    }
+
+    function drawEmoji(x, y, emoji, size = 18) {
+      ctx.font = size + "px serif";
+      ctx.textAlign = "center";
+      ctx.fillText(emoji, x + size / 2, y + size);
+    }
+
+    function spawnEnemy() {
+      const w = 20;
+      const x = Math.random() * (canvas.width - w);
+
+      // ⭐ Score-based difficulty scaling
+      let scoreFactor = 1 + (spaceScore / 300); // every 300 score = +100% difficulty
+
+      enemies.push({
+        x: x,
+        y: -30,
+        w: w,
+        h: 24,
+
+        // ⭐ Speed increases with score
+        speed: (0.6 + Math.random() * 0.6) * scoreFactor,
+
+        // ⭐ HP increases with score
+        hp: 1 + Math.floor(spaceScore / 200)
+      });
+    }
+
+
+    function shoot() {
+      if (!running) return;
+      if (shootCooldown > 0) return;
+
+      let shots = power.multishot;
+
+      for (let i = 0; i < shots; i++) {
+        let offset = (i - (shots - 1) / 2) * 6;
+        bullets.push({
+          x: ship.x + ship.w / 2 - 2 + offset,
+          y: ship.y,
+          w: 4,
+          h: 8,
+          speed: 4
+        });
+      }
+
+      shootCooldown = power.rapid > 0 ? 2 : 10;
+    }
+
+    function damage(amount) {
+      if (ship.invincible > 0) return false;
+
+      // ⭐ Shield absorbs hits
+      if (power.shield > 0) {
+        power.shield--;
+        return false;
+      }
+
+      health -= amount;
+      updateHealth();
+
+      if (health <= 0) {
+        lives--;
+        updateLives();
+
+        if (lives <= 0) {
+          endSpaceGame();
+          return true;
+        }
+
+        health = 100;
+        updateHealth();
+      }
+
+      ship.invincible = 40;
+      return false;
+    }
+
+    function startSpaceGame() {
+      resetSpaceGame();
+      running = true;
+      lastTime = performance.now();
+      requestAnimationFrame(spaceLoop);
+    }
+
+    function spaceLoop(ts) {
+      if (!running) return;
+      const dt = (ts - lastTime) / 16.67;
+      lastTime = ts;
+
+      updateSpace(dt);
+      drawSpace();
+      requestAnimationFrame(spaceLoop);
+    }
+
+    function updateSpace(dt) {
+      shootCooldown = Math.max(0, shootCooldown - dt);
+
+      // ⭐ ALWAYS SHOOTING
+      shoot();
+
+      difficulty += 0.00015 * dt;
+
+      if (ship.invincible > 0) ship.invincible -= dt;
+
+      // ⭐ Stars
+      stars.forEach(s => {
+        s.y += s.s * dt;
+        if (s.y > canvas.height) {
+          s.y = -2;
+          s.x = Math.random() * canvas.width;
+        }
+      });
+
+      // ⭐ Smooth early-game spawn curve
+      let spawnRate = 0.002 + (difficulty * 0.004);
+
+      // Cap early game to prevent too many enemies
+      if (spaceScore < 100) spawnRate *= 0.4;
+      if (spaceScore < 200) spawnRate *= 0.7;
+
+      if (Math.random() < spawnRate * dt) spawnEnemy();
+
+
+      enemies.forEach(e => e.y += e.speed * dt);
+      enemies.forEach(e => {
+        if (e.y > canvas.height + 40) {
+          // Respawn enemy at top
+          e.y = -30;
+          e.x = Math.random() * (canvas.width - e.w);
+
+          // Make returning enemies stronger
+          e.speed *= 1.25;
+        }
+      });
+
+
+      // ⭐ Debris
+      if (Math.random() < 0.003 * dt) {
+        debris.push({
+          x: Math.random() * (canvas.width - 10),
+          y: -20,
+          w: 10,
+          h: 10,
+          speed: 0.6 + Math.random() * 0.4
+        });
+      }
+      debris.forEach(d => d.y += d.speed * dt);
+      debris = debris.filter(d => d.y < canvas.height + 20);
+
+      // ⭐ Player bullets
+      bullets.forEach(b => b.y -= b.speed * dt);
+      bullets = bullets.filter(b => b.y + b.h > 0);
+
+      // ⭐ Powerups (shield, rapid, multishot, life)
+      if (Math.random() < 0.005 * dt) {
+        // Weighted powerups
+        const roll = Math.random();
+
+        let type;
+        if (roll < 0.40) type = "shield";      // 40%
+        else if (roll < 0.75) type = "rapid";  // 35%
+        else if (roll < 0.95) type = "double"; // 5%
+        else type = "life";                    // 5%
+
+
+        powerups.push({
+          x: Math.random() * (canvas.width - 12),
+          y: -20,
+          w: 12,
+          h: 12,
+          type: type
+        });
+
+      }
+      powerups.forEach(p => p.y += 1.2 * dt);
+      powerups = powerups.filter(p => p.y < canvas.height + 20);
+
+      // ⭐ Enemy bullets
+      enemies.forEach(e => {
+        if (Math.random() < 0.003 * dt) {
+          enemyBullets.push({
+            x: e.x + e.w / 2 - 2,
+            y: e.y + e.h,
+            w: 4,
+            h: 8,
+            speed: 2
+          });
+        }
+      });
+      enemyBullets.forEach(b => b.y += b.speed * dt);
+      enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 20);
+
+      // ⭐ Bullet vs enemy
+      bullets.forEach((b, bi) => {
+        enemies.forEach((e, ei) => {
+          if (
+            b.x < e.x + e.w &&
+            b.x + b.w > e.x &&
+            b.y < e.y + e.h &&
+            b.y + b.h > e.y
+          ) {
+            bullets.splice(bi, 1);
+
+            // ⭐ Reduce HP
+            e.hp--;
+
+            // ⭐ Kill enemy if HP reaches 0
+            if (e.hp <= 0) {
+              enemies.splice(ei, 1);
+              spaceScore += 10;
+              updateSpaceScore();
+            }
+          }
+        });
+      });
+
+
+      // ⭐ Powerup pickup
+      powerups.forEach((p, i) => {
+        if (
+          p.x < ship.x + ship.w &&
+          p.x + p.w > ship.x &&
+          p.y < ship.y + ship.h &&
+          p.y + p.h > ship.y
+        ) {
+          if (p.type === "shield") {
+            power.shield++;
+          }
+
+          if (p.type === "rapid") {
+            power.rapid++;
+          }
+
+          if (p.type === "double") {
+            power.multishot = Math.min(3, power.multishot + 1);
+          }
+
+          if (p.type === "life") {
+            lives++;
+            updateLives();
+          }
+
+          powerups.splice(i, 1);
+        }
+      });
+
+      // ⭐ Enemy bullets vs ship
+      for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const b = enemyBullets[i];
+        if (
+          b.x < ship.x + ship.w &&
+          b.x + b.w > ship.x &&
+          b.y < ship.y + ship.h &&
+          b.y + b.h > ship.y
+        ) {
+          enemyBullets.splice(i, 1);
+          if (damage(20)) return;
+        }
+      }
+
+      // ⭐ Debris vs ship
+      for (let i = debris.length - 1; i >= 0; i--) {
+        const d = debris[i];
+        if (
+          d.x < ship.x + ship.w &&
+          d.x + d.w > ship.x &&
+          d.y < ship.y + ship.h &&
+          d.y + d.h > ship.y
+        ) {
+          debris.splice(i, 1);
+          if (damage(15)) return;
+        }
+      }
+
+      // ⭐ Enemy body vs ship
+      for (const e of enemies) {
+        if (
+          e.x < ship.x + ship.w &&
+          e.x + e.w > ship.x &&
+          e.y < ship.y + ship.h &&
+          e.y + e.h > ship.y
+        ) {
+          if (damage(35)) return;
+        }
+      }
+    }
+
+        function drawShip() {
+      ctx.save();
+      ctx.translate(ship.x + ship.w / 2, ship.y + ship.h / 2);
+
+      if (ship.invincible > 0 && Math.floor(ship.invincible) % 2 === 0) {
+        ctx.restore();
+        return;
+      }
+
+      // Player ship (faces upward)
+      ctx.fillStyle = "#4fd5ff";
+      ctx.beginPath();
+      ctx.moveTo(0, -14);
+      ctx.lineTo(14, 12);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-14, 12);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#00ffa8";
+      ctx.beginPath();
+      ctx.ellipse(0, -4, 6, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(255, 180, 0, 0.9)";
+      ctx.beginPath();
+      ctx.moveTo(-5, 12);
+      ctx.lineTo(0, 20);
+      ctx.lineTo(5, 12);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawEnemyShip(e) {
+      ctx.save();
+      ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
+
+      // Enemy ship (faces downward)
+      ctx.fillStyle = "#ff4b81";
+      ctx.beginPath();
+      ctx.moveTo(0, 14);
+      ctx.lineTo(14, -12);
+      ctx.lineTo(0, -8);
+      ctx.lineTo(-14, -12);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#ffd1e0";
+      ctx.beginPath();
+      ctx.ellipse(0, 4, 6, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(255, 80, 80, 0.8)";
+      ctx.beginPath();
+      ctx.moveTo(-5, -12);
+      ctx.lineTo(0, -20);
+      ctx.lineTo(5, -12);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawSpace() {
+      ctx.fillStyle = "#050509";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Stars
+      stars.forEach(s => {
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.fillRect(s.x, s.y, s.s, s.s);
+      });
+
+      // Debris
+      ctx.fillStyle = "#777";
+      debris.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h));
+
+      // Player ship
+      drawShip();
+
+      // Player bullets
+      ctx.fillStyle = "#ffea00";
+      bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+
+      // Enemies
+      enemies.forEach(e => drawEnemyShip(e));
+
+      // Enemy bullets
+      ctx.fillStyle = "#ff4444";
+      enemyBullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
+
+      // Powerups (emoji)
+      powerups.forEach(p => {
+        if (p.type === "shield") drawEmoji(p.x, p.y, "🛡️");
+        if (p.type === "rapid") drawEmoji(p.x, p.y, "⚡");
+        if (p.type === "double") drawEmoji(p.x, p.y, "🔫");
+        if (p.type === "life") drawEmoji(p.x, p.y, "❤️");
+      });
+
+      // Game Over screen
+      if (!running) {
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "20px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 10);
+        ctx.font = "14px system-ui";
+        ctx.fillText("Score: " + spaceScore, canvas.width / 2, canvas.height / 2 + 10);
+        ctx.fillText("Press Start to play again", canvas.width / 2, canvas.height / 2 + 30);
+      }
+    }
+
+    function endSpaceGame() {
+      running = false;
+      submitSpaceShooterScore(spaceScore);
+      drawSpace();
+    }
+
+    // ⭐ Keyboard controls
+    document.addEventListener("keydown", e => {
+      if (!running) return;
+
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") {
+        ship.x -= ship.speed * 3;
+        if (ship.x < 0) ship.x = 0;
+      }
+      if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") {
+        ship.x += ship.speed * 3;
+        if (ship.x + ship.w > canvas.width) ship.x = canvas.width - ship.w;
+      }
+    }, { passive: false });
+
+    // ⭐ Mobile tap controls
+    canvas.addEventListener("touchstart", e => {
+      e.preventDefault();
+      if (!running) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+
+      if (x < ship.x + ship.w / 2) {
+        ship.x -= ship.speed * 4;
+      } else {
+        ship.x += ship.speed * 4;
+      }
+
+      if (ship.x < 0) ship.x = 0;
+      if (ship.x + ship.w > canvas.width) ship.x = canvas.width - ship.w;
+    }, { passive: false });
+
+    // ⭐ Leaderboard submit
+    async function submitSpaceShooterScore(score) {
+      try {
+        await fetch("https://leaderboard.shadownetcg-f2f.workers.dev/submit?game=spaceshooter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: localStorage.getItem("playerName"),
+            score: score
+          })
+        });
+      } catch (err) {
+        console.log("Score upload failed:", err);
+      }
+    }
+
+    resetSpaceGame();
+    drawSpace();
+  </script>
+</body>
+</html>

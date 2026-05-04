@@ -303,6 +303,42 @@
     <div class="card-sub">Direct control</div>
   </div>
 
+
+  <!-- Space Shooter -->
+  <div class="card" onclick="openGame('spaceshooter.html', 'spaceshooter')">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <radialGradient id="shipGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#4fd5ff"/>
+            <stop offset="60%" stop-color="#00aaff"/>
+            <stop offset="100%" stop-color="#00aaff" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <!-- Background glow -->
+        <circle cx="50" cy="50" r="40" fill="#050509"/>
+        <circle cx="50" cy="50" r="40" fill="url(#shipGlow)"/>
+        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#4fd5ff" stroke-width="3"/>
+
+        <!-- ⭐ SPACESHIP ICON ⭐ -->
+        <g transform="translate(50 50)">
+          <!-- Body -->
+          <path d="M0 -20 L10 10 L0 5 L-10 10 Z" fill="#4fd5ff"/>
+          <!-- Cockpit -->
+          <ellipse cx="0" cy="-10" rx="4" ry="6" fill="#00ffa8"/>
+          <!-- Thruster flame -->
+          <path d="M-4 10 L0 18 L4 10 Z" fill="#ffb300"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="card-title">Space Shooter</div>
+    <div class="card-sub">Arcade survival</div>
+  </div>
+
+
+
 </div> <!-- end grid -->
 
 <!-- INLINE GAME VIEWER -->
