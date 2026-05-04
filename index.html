@@ -346,18 +346,16 @@ function closeGame() {
   document.getElementById("leaderboardBox").style.display = "none";
 }
 
-// Create or load unique player ID
+/* PLAYER ID + NAME */
 if (!localStorage.getItem("playerID")) {
   const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
   localStorage.setItem("playerID", id);
 }
 
-// Load or set default name
 if (!localStorage.getItem("playerName")) {
   localStorage.setItem("playerName", localStorage.getItem("playerID"));
 }
 
-// Function to set a custom name
 function setPlayerName() {
   const newName = prompt("Enter your player name:");
   if (newName && newName.trim() !== "") {
@@ -367,7 +365,7 @@ function setPlayerName() {
 }
 
 /* CLOUDFLARE LEADERBOARD */
-const API = "https://snake-leaderboard.shadownetcg-f2f.workers.dev";
+const API = "https://leaderboard.shadownetcg-f2f.workers.dev";
 
 async function loadLeaderboard() {
   const box = document.getElementById("leaderboardBox");
@@ -375,12 +373,16 @@ async function loadLeaderboard() {
   let html = "<h3>SNAKE LEADERBOARD</h3>";
 
   try {
-    const res = await fetch(API + "/leaderboard");
-    const board = await res.json();
+    const res = await fetch(API + "/leaderboard?game=snake");
+    let board = await res.json();
 
-    if (!Array.isArray(board) || !board.length) {
+    if (!board.length) {
       html += "<p>No scores yet.</p>";
     } else {
+      // Sort highest score → lowest score
+      board.sort((a, b) => b.score - a.score);
+
+      // Display ALL records
       board.forEach((entry, i) => {
         html += `<div>${i + 1}. ${entry.name.slice(0, 20)} — ${entry.score}</div>`;
       });
@@ -400,7 +402,8 @@ async function loadLeaderboard() {
   box.innerHTML = html;
 }
 
-/* ADMIN RESET — clears Cloudflare KV */
+
+/* ADMIN RESET — clears Cloudflare KV for SNAKE */
 async function resetScores() {
   const pass = prompt("Enter admin password:");
   if (pass !== "Fl@shAdmin197") {
@@ -408,8 +411,7 @@ async function resetScores() {
     return;
   }
 
-  // TRUE RESET — calls special reset endpoint
-  await fetch(API + "/reset", {
+  await fetch(API + "/reset?game=snake", {
     method: "POST"
   });
 

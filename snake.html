@@ -80,7 +80,7 @@
     /* SAVE SCORE TO CLOUDFLARE */
     async function saveScore(score) {
       try {
-        await fetch("https://snake-leaderboard.shadownetcg-f2f.workers.dev/submit", {
+        await fetch("https://leaderboard.shadownetcg-f2f.workers.dev/submit?game=snake", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
