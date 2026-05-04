@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2048 – Krypton Arcade</title>
+
   <style>
     body {
       margin: 0;
@@ -15,8 +16,17 @@
       align-items: center;
       min-height: 100vh;
     }
+
     h1 { margin: 16px 0 4px; }
     p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+
+    #score2048 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ff7b00;
+      margin-bottom: 6px;
+    }
+
     canvas {
       background: #111;
       border: 2px solid #333;
@@ -26,6 +36,7 @@
       height: auto;
       touch-action: none;
     }
+
     button {
       margin-top: 10px;
       padding: 8px 16px;
@@ -39,18 +50,40 @@
   </style>
 </head>
 <body>
+
   <h1>2048</h1>
   <p>Use arrow keys (or swipe) to move tiles. Tap “New Game”.</p>
+
+  <div id="score2048">Score: 0</div>
+
   <button onclick="start2048()">New Game</button>
+
   <canvas id="game2048" width="240" height="240"></canvas>
 
   <script>
+    /* PLAYER NAME */
+    if (!localStorage.getItem("playerID")) {
+      const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
+      localStorage.setItem("playerID", id);
+    }
+    if (!localStorage.getItem("playerName")) {
+      localStorage.setItem("playerName", localStorage.getItem("playerID"));
+    }
+
+    /* GAME VARS */
     const canvas2048 = document.getElementById("game2048");
     const ctx2048 = canvas2048.getContext("2d");
     let grid, size = 4;
+    let score2048 = 0;
+
+    function updateScore2048() {
+      document.getElementById("score2048").textContent = "Score: " + score2048;
+    }
 
     function start2048() {
       grid = Array.from({length: size}, () => Array(size).fill(0));
+      score2048 = 0;
+      updateScore2048();
       addTile(); addTile();
       draw2048();
     }
@@ -66,46 +99,42 @@
     }
 
     function draw2048() {
-  ctx2048.fillStyle = "#111";
-  ctx2048.fillRect(0,0,240,240);
+      ctx2048.fillStyle = "#111";
+      ctx2048.fillRect(0,0,240,240);
 
-  const colors = {
-  0:    "#333333",
+      const colors = {
+        0: "#333333",
+        2: "#ff7b00",
+        4: "#ffae00",
+        8: "#ffe600",
+        16: "#c8ff00",
+        32: "#7dff00",
+        64: "#00ff66",
+        128: "#00ffd5",
+        256: "#00c8ff",
+        512: "#0084ff",
+        1024: "#6a00ff",
+        2048: "#b300ff",
+        4096: "#ff00aa",
+        8192: "#ff0033"
+      };
 
-  2:    "#ff7b00",  // neon orange
-  4:    "#ffae00",  // amber
-  8:    "#ffe600",  // bright yellow
+      for (let r=0;r<size;r++) {
+        for (let c=0;c<size;c++) {
+          const val = grid[r][c];
+          ctx2048.fillStyle = colors[val] || "#fff";
+          ctx2048.fillRect(c*60+3, r*60+3, 54, 54);
 
-  16:   "#c8ff00",  // lime
-  32:   "#7dff00",  // neon green
-  64:   "#00ff66",  // mint green
-
-  128:  "#00ffd5",  // aqua
-  256:  "#00c8ff",  // sky blue
-  512:  "#0084ff",  // deep blue
-
-  1024: "#6a00ff",  // purple
-  2048: "#b300ff",  // magenta
-  4096: "#ff00aa",  // hot pink
-  8192: "#ff0033"   // neon red
-};
-
-  for (let r=0;r<size;r++) {
-    for (let c=0;c<size;c++) {
-      const val = grid[r][c];
-      ctx2048.fillStyle = colors[val] || "#fff"; // fallback for huge tiles
-      ctx2048.fillRect(c*60+3, r*60+3, 54, 54);
-
-      if (val) {
-        ctx2048.fillStyle = "#050509";
-        ctx2048.font = "18px Arial";
-        ctx2048.textAlign = "center";
-        ctx2048.textBaseline = "middle";
-        ctx2048.fillText(val, c*60+30, r*60+30);
+          if (val) {
+            ctx2048.fillStyle = "#050509";
+            ctx2048.font = "18px Arial";
+            ctx2048.textAlign = "center";
+            ctx2048.textBaseline = "middle";
+            ctx2048.fillText(val, c*60+30, r*60+30);
+          }
+        }
       }
     }
-  }
-}
 
     function move2048(dir) {
       let g = grid.map(row => row.slice());
@@ -126,22 +155,6 @@
         return res;
       };
 
-      const rotateUp = m => {
-        const res = Array.from({length:size}, () => Array(size).fill(0));
-        for (let r=0;r<size;r++)
-          for (let c=0;c<size;c++)
-            res[c][r] = m[r][c];
-        return res;
-      };
-
-      const rotateDown = m => {
-        const res = Array.from({length:size}, () => Array(size).fill(0));
-        for (let r=0;r<size;r++)
-          for (let c=0;c<size;c++)
-            res[size-1-c][size-1-r] = m[r][c];
-        return res;
-      };
-
       if (dir === "left") g = g;
       if (dir === "right") g = rotateLeft(rotateLeft(g));
       if (dir === "up") g = rotateLeft(g);
@@ -152,6 +165,8 @@
         for (let i=0;i<row.length-1;i++) {
           if (row[i] === row[i+1]) {
             row[i] *= 2;
+            score2048 += row[i];
+            updateScore2048();
             row.splice(i+1,1);
           }
         }
@@ -168,6 +183,17 @@
       return changed;
     }
 
+    function isGameOver() {
+      for (let r=0;r<size;r++) {
+        for (let c=0;c<size;c++) {
+          if (grid[r][c] === 0) return false;
+          if (c < size-1 && grid[r][c] === grid[r][c+1]) return false;
+          if (r < size-1 && grid[r][c] === grid[r+1][c]) return false;
+        }
+      }
+      return true;
+    }
+
     document.addEventListener("keydown", e => {
       let dir = null;
       if (e.key === "ArrowLeft") dir = "left";
@@ -175,10 +201,16 @@
       if (e.key === "ArrowUp") dir = "up";
       if (e.key === "ArrowDown") dir = "down";
       if (!dir) return;
+
       const moved = move2048(dir);
       if (moved) {
         addTile();
         draw2048();
+      }
+
+      if (isGameOver()) {
+        alert("Game Over! Final Score: " + score2048);
+        submit2048Score(score2048);
       }
     });
 
@@ -188,27 +220,48 @@
       sx = t.clientX;
       sy = t.clientY;
     });
+
     canvas2048.addEventListener("touchend", e => {
       const t = e.changedTouches[0];
       const dx = t.clientX - sx;
       const dy = t.clientY - sy;
       let dir = null;
+
       if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 0) dir = "right";
-        else dir = "left";
+        dir = dx > 0 ? "right" : "left";
       } else {
-        if (dy > 0) dir = "down";
-        else dir = "up";
+        dir = dy > 0 ? "down" : "up";
       }
-      if (!dir) return;
+
       const moved = move2048(dir);
       if (moved) {
         addTile();
         draw2048();
       }
+
+      if (isGameOver()) {
+        alert("Game Over! Final Score: " + score2048);
+        submit2048Score(score2048);
+      }
     });
+
+    async function submit2048Score(score) {
+      try {
+        await fetch("https://leaderboard.shadownetcg-f2f.workers.dev/submit?game=2048", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: localStorage.getItem("playerName"),
+            score: score
+          })
+        });
+      } catch (err) {
+        console.log("Score upload failed:", err);
+      }
+    }
 
     start2048();
   </script>
+
 </body>
 </html>

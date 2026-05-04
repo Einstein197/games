@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Click the Coin – Krypton Arcade</title>
+
   <style>
     body {
       margin: 0;
@@ -15,8 +16,17 @@
       align-items: center;
       min-height: 100vh;
     }
+
     h1 { margin: 16px 0 4px; }
     p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+
+    #coinScore {
+      font-size: 20px;
+      font-weight: 600;
+      color: #ff7b00;
+      margin-bottom: 6px;
+    }
+
     button {
       margin-top: 10px;
       padding: 8px 16px;
@@ -27,6 +37,7 @@
       font-weight: 600;
       cursor: pointer;
     }
+
     #coinArea {
       position: relative;
       width: 260px;
@@ -37,6 +48,7 @@
       border: 2px solid #333;
       overflow: hidden;
     }
+
     #coin {
       position: absolute;
       width: 40px;
@@ -50,9 +62,12 @@
   </style>
 </head>
 <body>
+
   <h1>Click the Coin</h1>
   <p>Tap “Start” then tap the coin as many times as you can in 10 seconds.</p>
-  <p>Score: <span id="coinScore">0</span></p>
+
+  <div id="coinScore">Score: 0</div>
+
   <button onclick="startCoinGame()">Start</button>
 
   <div id="coinArea">
@@ -60,17 +75,33 @@
   </div>
 
   <script>
+    /* PLAYER NAME */
+    if (!localStorage.getItem("playerID")) {
+      const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
+      localStorage.setItem("playerID", id);
+    }
+    if (!localStorage.getItem("playerName")) {
+      localStorage.setItem("playerName", localStorage.getItem("playerID"));
+    }
+
+    /* GAME VARS */
     let coinScore = 0;
     let coinTime = 10;
     let coinInterval;
+
     const coin = document.getElementById("coin");
     const coinScoreEl = document.getElementById("coinScore");
     const coinArea = document.getElementById("coinArea");
 
+    function updateCoinScore() {
+      coinScoreEl.textContent = "Score: " + coinScore;
+    }
+
     function startCoinGame() {
       coinScore = 0;
       coinTime = 10;
-      coinScoreEl.textContent = coinScore;
+      updateCoinScore();
+
       coin.style.display = "block";
       moveCoin();
 
@@ -81,6 +112,7 @@
           clearInterval(coinInterval);
           coin.style.display = "none";
           alert("Time's up! Your score: " + coinScore);
+          submitCoinScore(coinScore);
         }
       }, 1000);
     }
@@ -98,12 +130,29 @@
     function hitCoin(e) {
       e.preventDefault();
       coinScore++;
-      coinScoreEl.textContent = coinScore;
+      updateCoinScore();
       moveCoin();
     }
 
     coin.addEventListener("click", hitCoin);
     coin.addEventListener("touchstart", hitCoin, { passive: false });
+
+    /* SUBMIT SCORE TO CLOUDFLARE */
+    async function submitCoinScore(score) {
+      try {
+        await fetch("https://leaderboard.shadownetcg-f2f.workers.dev/submit?game=coin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: localStorage.getItem("playerName"),
+            score: score
+          })
+        });
+      } catch (err) {
+        console.log("Score upload failed:", err);
+      }
+    }
   </script>
+
 </body>
 </html>

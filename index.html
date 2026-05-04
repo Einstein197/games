@@ -136,10 +136,6 @@
 
 <h1>Krypton Arcade</h1>
 
-<button onclick="setPlayerName()"
-style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; color:#050509; font-weight:600; cursor:pointer;">
-  Set Player Name
-</button>
 
 <p class="subtitle">Tap a game to launch it. Close it to return to the arcade.</p>
 
@@ -168,7 +164,7 @@ style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; col
 <div class="grid" id="gameGrid">
 
   <!-- Snake -->
-  <div class="card" onclick="openGame('snake.html')">
+  <div class="card" onclick="openGame('snake.html', 'snake')">
     <div class="icon-wrap">
       <svg viewBox="0 0 100 100">
         <defs><radialGradient id="snakeGlow" cx="50%" cy="50%" r="50%">
@@ -188,7 +184,7 @@ style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; col
   </div>
 
   <!-- Flappy -->
-  <div class="card" onclick="openGame('flappy.html')">
+  <div class="card" onclick="openGame('flappy.html', 'flappy')">
     <div class="icon-wrap">
       <svg viewBox="0 0 100 100">
         <defs><radialGradient id="flappyGlow" cx="50%" cy="50%" r="50%">
@@ -208,7 +204,7 @@ style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; col
   </div>
 
   <!-- Dodge -->
-  <div class="card" onclick="openGame('dodge.html')">
+  <div class="card" onclick="openGame('dodge.html', 'dodge')">
     <div class="icon-wrap">
       <svg viewBox="0 0 100 100">
         <defs><radialGradient id="dodgeGlow" cx="50%" cy="50%" r="50%">
@@ -229,7 +225,7 @@ style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; col
   </div>
 
   <!-- 2048 -->
-  <div class="card" onclick="openGame('2042048.html')">
+  <div class="card" onclick="openGame('2048.html', '2048')">
     <div class="icon-wrap">
       <svg viewBox="0 0 100 100">
         <defs><radialGradient id="g2048Glow" cx="50%" cy="50%" r="50%">
@@ -249,7 +245,7 @@ style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; col
   </div>
 
   <!-- Coin -->
-  <div class="card" onclick="openGame('coin.html')">
+  <div class="card" onclick="openGame('coin.html', 'coin')">
     <div class="icon-wrap">
       <svg viewBox="0 0 100 100">
         <defs><radialGradient id="coinGlow" cx="50%" cy="50%" r="50%">
@@ -269,7 +265,7 @@ style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; col
   </div>
 
   <!-- Guess -->
-  <div class="card" onclick="openGame('guess.html')">
+  <div class="card" onclick="openGame('guess.html', 'guess')">
     <div class="icon-wrap">
       <svg viewBox="0 0 100 100">
         <defs><radialGradient id="guessGlow" cx="50%" cy="50%" r="50%">
@@ -288,7 +284,7 @@ style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; col
   </div>
 
   <!-- Gravity Warp -->
-  <div class="card" onclick="openGame('gravitywarp.html')">
+  <div class="card" onclick="openGame('gravitywarp.html', 'gravitywarp')">
     <div class="icon-wrap">
       <svg viewBox="0 0 100 100">
         <defs><radialGradient id="warpGlow" cx="50%" cy="50%" r="50%">
@@ -326,13 +322,13 @@ style="padding:8px 16px; border-radius:8px; border:none; background:#ff7b00; col
 </div>
 
 <script>
-function openGame(path) {
+function openGame(path, gameName) {
   document.getElementById("gameGrid").style.display = "none";
   document.getElementById("gameContainer").style.display = "flex";
   document.getElementById("gameFrame").src = path;
 
-  if (path === "snake.html") {
-    loadLeaderboard();
+  if (gameName) {
+    loadLeaderboard(gameName);
     document.getElementById("leaderboardBox").style.display = "block";
   } else {
     document.getElementById("leaderboardBox").style.display = "none";
@@ -346,43 +342,46 @@ function closeGame() {
   document.getElementById("leaderboardBox").style.display = "none";
 }
 
-/* PLAYER ID + NAME */
+/* PLAYER ID + NAME (REQUIRED BEFORE PLAYING) */
 if (!localStorage.getItem("playerID")) {
   const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
   localStorage.setItem("playerID", id);
 }
 
-if (!localStorage.getItem("playerName")) {
-  localStorage.setItem("playerName", localStorage.getItem("playerID"));
+if (!localStorage.getItem("playerNameSet")) {
+  askForNameOnce();
 }
 
-function setPlayerName() {
-  const newName = prompt("Enter your player name:");
-  if (newName && newName.trim() !== "") {
-    localStorage.setItem("playerName", newName.trim());
-    alert("Name updated to: " + newName);
+function askForNameOnce() {
+  const name = prompt("Welcome! Enter your player name:");
+
+  if (name && name.trim() !== "") {
+    localStorage.setItem("playerName", name.trim());
+    localStorage.setItem("playerNameSet", "true");
+  } else {
+    // Force them to enter a name
+    askForNameOnce();
   }
 }
 
-/* CLOUDFLARE LEADERBOARD */
+
+/* UNIVERSAL LEADERBOARD */
 const API = "https://leaderboard.shadownetcg-f2f.workers.dev";
 
-async function loadLeaderboard() {
+async function loadLeaderboard(game) {
   const box = document.getElementById("leaderboardBox");
 
-  let html = "<h3>SNAKE LEADERBOARD</h3>";
+  let html = `<h3>${game.toUpperCase()} LEADERBOARD</h3>`;
 
   try {
-    const res = await fetch(API + "/leaderboard?game=snake");
+    const res = await fetch(`${API}/leaderboard?game=${game}`);
     let board = await res.json();
 
     if (!board.length) {
       html += "<p>No scores yet.</p>";
     } else {
-      // Sort highest score → lowest score
       board.sort((a, b) => b.score - a.score);
 
-      // Display ALL records
       board.forEach((entry, i) => {
         html += `<div>${i + 1}. ${entry.name.slice(0, 20)} — ${entry.score}</div>`;
       });
@@ -392,7 +391,7 @@ async function loadLeaderboard() {
   }
 
   html += `
-    <button onclick="resetScores()"
+    <button onclick="resetScores('${game}')"
       style="margin-top:12px; width:100%; padding:6px; border-radius:6px;
              background:#d62828; color:white; border:1px solid #ff9a2b;">
       Reset Scoreboard
@@ -402,24 +401,22 @@ async function loadLeaderboard() {
   box.innerHTML = html;
 }
 
-
-/* ADMIN RESET — clears Cloudflare KV for SNAKE */
-async function resetScores() {
+/* UNIVERSAL RESET */
+async function resetScores(game) {
   const pass = prompt("Enter admin password:");
   if (pass !== "Fl@shAdmin197") {
     alert("Incorrect password.");
     return;
   }
 
-  await fetch(API + "/reset?game=snake", {
+  await fetch(`${API}/reset?game=${game}`, {
     method: "POST"
   });
 
-  alert("Leaderboard reset.");
-  loadLeaderboard();
+  alert(`${game.toUpperCase()} leaderboard reset.`);
+  loadLeaderboard(game);
 }
 </script>
-
 
 </body>
 </html>

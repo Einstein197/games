@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Number Guessing – Krypton Arcade</title>
+
   <style>
     body {
       margin: 0;
@@ -15,8 +16,17 @@
       align-items: center;
       min-height: 100vh;
     }
+
     h1 { margin: 16px 0 4px; }
     p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+
+    #guessScore {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ff7b00;
+      margin-bottom: 6px;
+    }
+
     input {
       padding: 6px 10px;
       border-radius: 999px;
@@ -27,6 +37,7 @@
       text-align: center;
       margin-bottom: 8px;
     }
+
     button {
       padding: 8px 16px;
       border-radius: 999px;
@@ -37,6 +48,7 @@
       cursor: pointer;
       margin-bottom: 10px;
     }
+
     #guessResult {
       min-height: 20px;
       font-size: 14px;
@@ -44,13 +56,34 @@
   </style>
 </head>
 <body>
+
   <h1>Number Guessing</h1>
   <p>Guess a number between 1 and 10.</p>
+
+  <div id="guessScore">Score: 0</div>
+
   <input id="guessInput" type="number" min="1" max="10" />
   <button onclick="checkGuess()">Check</button>
+
   <p id="guessResult"></p>
 
   <script>
+    /* PLAYER NAME */
+    if (!localStorage.getItem("playerID")) {
+      const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
+      localStorage.setItem("playerID", id);
+    }
+    if (!localStorage.getItem("playerName")) {
+      localStorage.setItem("playerName", localStorage.getItem("playerID"));
+    }
+
+    /* GAME VARS */
+    let guessScore = 0;
+
+    function updateGuessScore() {
+      document.getElementById("guessScore").textContent = "Score: " + guessScore;
+    }
+
     function checkGuess() {
       const num = Math.floor(Math.random() * 10) + 1;
       const guess = Number(document.getElementById("guessInput").value);
@@ -65,11 +98,31 @@
       if (guess === num) {
         result.textContent = "Correct!";
         result.style.color = "lime";
+        guessScore++;
+        updateGuessScore();
+        submitGuessScore(guessScore);
       } else {
         result.textContent = "Wrong! The number was " + num;
         result.style.color = "red";
       }
     }
+
+    /* SUBMIT SCORE TO CLOUDFLARE */
+    async function submitGuessScore(score) {
+      try {
+        await fetch("https://leaderboard.shadownetcg-f2f.workers.dev/submit?game=guess", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: localStorage.getItem("playerName"),
+            score: score
+          })
+        });
+      } catch (err) {
+        console.log("Score upload failed:", err);
+      }
+    }
   </script>
+
 </body>
 </html>

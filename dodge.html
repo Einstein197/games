@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dodge – Krypton Arcade</title>
+
   <style>
     body {
       margin: 0;
@@ -15,8 +16,17 @@
       align-items: center;
       min-height: 100vh;
     }
+
     h1 { margin: 16px 0 4px; }
     p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+
+    #dodgeScore {
+      font-size: 20px;
+      font-weight: 600;
+      color: #ff7b00;
+      margin-bottom: 6px;
+    }
+
     canvas {
       background: #111;
       border: 2px solid #333;
@@ -26,6 +36,7 @@
       height: auto;
       touch-action: none;
     }
+
     button {
       margin-top: 10px;
       padding: 8px 16px;
@@ -39,26 +50,50 @@
   </style>
 </head>
 <body>
+
   <h1>Dodge the Block</h1>
-  <p>Tap left/right side or use arrows. Tap “Start” to play.</p>
+  <p>Tap left/right or use arrows. Tap “Start” to play.</p>
+
+  <div id="dodgeScore">Score: 0</div>
+
   <button onclick="startDodgeGame()">Start</button>
+
   <canvas id="dodgeGame" width="240" height="160"></canvas>
 
   <script>
+    /* PLAYER NAME */
+    if (!localStorage.getItem("playerID")) {
+      const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
+      localStorage.setItem("playerID", id);
+    }
+    if (!localStorage.getItem("playerName")) {
+      localStorage.setItem("playerName", localStorage.getItem("playerID"));
+    }
+
+    /* GAME VARS */
     const dodgeCanvas = document.getElementById("dodgeGame");
     const dodgeCtx = dodgeCanvas.getContext("2d");
 
     let player = { x: 110, y: 130, size: 20 };
     let block = { x: 0, y: -40, size: 20 };
     let dodgeRunning = false;
+    let dodgeScore = 0;
+
+    function updateDodgeScore() {
+      document.getElementById("dodgeScore").textContent = "Score: " + dodgeScore;
+    }
 
     function startDodgeGame() {
       dodgeRunning = true;
+      dodgeScore = 0;
+      updateDodgeScore();
+
       player.x = 110;
       block.y = -40;
       block.x = Math.random() * 220;
     }
 
+    /* CONTROLS */
     document.addEventListener("keydown", (e) => {
       if (!dodgeRunning) return;
       if (e.key === "ArrowLeft" && player.x > 0) player.x -= 10;
@@ -66,37 +101,49 @@
     });
 
     dodgeCanvas.addEventListener("touchstart", e => {
+      if (!dodgeRunning) return;
       const rect = dodgeCanvas.getBoundingClientRect();
       const x = e.touches[0].clientX - rect.left;
       if (x < dodgeCanvas.width / 2) player.x -= 20;
       else player.x += 20;
     });
 
+    /* GAME LOOP */
     function dodgeLoop() {
       dodgeCtx.fillStyle = "#111";
       dodgeCtx.fillRect(0, 0, 240, 160);
 
+      // Player
       dodgeCtx.fillStyle = "cyan";
       dodgeCtx.fillRect(player.x, player.y, player.size, player.size);
 
       if (dodgeRunning) {
+        // Block
         dodgeCtx.fillStyle = "red";
         dodgeCtx.fillRect(block.x, block.y, block.size, block.size);
 
         block.y += 3;
+
+        // Score increases as you survive
+        dodgeScore++;
+        updateDodgeScore();
+
+        // Respawn block
         if (block.y > 160) {
           block.y = -40;
           block.x = Math.random() * 220;
         }
 
+        // Collision detection
         if (
           block.x < player.x + player.size &&
           block.x + block.size > player.x &&
           block.y < player.y + player.size &&
           block.y + block.size > player.y
         ) {
-          alert("You got hit! Game Over");
           dodgeRunning = false;
+          alert("You got hit! Final Score: " + dodgeScore);
+          submitDodgeScore(dodgeScore);
           block.y = -40;
         }
       }
@@ -104,6 +151,23 @@
       requestAnimationFrame(dodgeLoop);
     }
     dodgeLoop();
+
+    /* SUBMIT SCORE TO CLOUDFLARE */
+    async function submitDodgeScore(score) {
+      try {
+        await fetch("https://leaderboard.shadownetcg-f2f.workers.dev/submit?game=dodge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: localStorage.getItem("playerName"),
+            score: score
+          })
+        });
+      } catch (err) {
+        console.log("Score upload failed:", err);
+      }
+    }
   </script>
+
 </body>
 </html>

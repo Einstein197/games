@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flappy Bird – Krypton Arcade</title>
+
   <style>
     body {
       margin: 0;
@@ -15,8 +16,10 @@
       align-items: center;
       min-height: 100vh;
     }
+
     h1 { margin: 16px 0 4px; }
     p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
+
     canvas {
       background: #111;
       border: 2px solid #333;
@@ -36,6 +39,16 @@
   <canvas id="flappyCanvas" width="240" height="300"></canvas>
 
   <script>
+    /* PLAYER NAME */
+    if (!localStorage.getItem("playerID")) {
+      const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
+      localStorage.setItem("playerID", id);
+    }
+    if (!localStorage.getItem("playerName")) {
+      localStorage.setItem("playerName", localStorage.getItem("playerID"));
+    }
+
+    /* PREVENT SPACE SCROLL */
     window.addEventListener("keydown", e => {
       if (e.code === "Space") e.preventDefault();
     }, { passive: false });
@@ -131,19 +144,19 @@
       flappyCtx.translate(cx, cy);
       flappyCtx.rotate(birdAngle * Math.PI / 180);
 
-      // BODY (thin + long)
+      // BODY
       flappyCtx.fillStyle = "#e8e6df";
       flappyCtx.beginPath();
       flappyCtx.ellipse(0, 0, 16, 6, 0, 0, Math.PI * 2);
       flappyCtx.fill();
 
-      // HEAD (rounder)
+      // HEAD
       flappyCtx.fillStyle = "#f2f0e9";
       flappyCtx.beginPath();
       flappyCtx.ellipse(12, -2, 6, 6, 0, 0, Math.PI * 2);
       flappyCtx.fill();
 
-      // BEAK (sharp)
+      // BEAK
       flappyCtx.fillStyle = "#ffb347";
       flappyCtx.beginPath();
       flappyCtx.moveTo(18, -2);
@@ -162,7 +175,7 @@
       flappyCtx.arc(13.5, -4, 1.1, 0, Math.PI * 2);
       flappyCtx.fill();
 
-      // LEFT WING (longer, dove-like)
+      // LEFT WING
       flappyCtx.save();
       flappyCtx.rotate(-wingAngle);
       flappyCtx.fillStyle = "#e8e6df";
@@ -180,7 +193,7 @@
       flappyCtx.fill();
       flappyCtx.restore();
 
-      // TAIL (thin + pointed)
+      // TAIL
       flappyCtx.fillStyle = "#dcdad3";
       flappyCtx.beginPath();
       flappyCtx.moveTo(-16, 0);
@@ -207,10 +220,14 @@
 
     function endFlappy() {
       running = false;
+
       if (score > highScore) {
         highScore = score;
         localStorage.setItem("flappyHighScore", highScore);
       }
+
+      submitFlappyScore(score);
+
       flappyCtx.fillStyle = "white";
       flappyCtx.font = "24px Arial";
       flappyCtx.fillText("Game Over!", 60, 150);
@@ -218,6 +235,23 @@
       flappyCtx.fillText("Tap to Restart", 65, 190);
     }
 
+    /* SUBMIT SCORE TO CLOUDFLARE */
+    async function submitFlappyScore(score) {
+      try {
+        await fetch("https://leaderboard.shadownetcg-f2f.workers.dev/submit?game=flappy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: localStorage.getItem("playerName"),
+            score: score
+          })
+        });
+      } catch (err) {
+        console.log("Score upload failed:", err);
+      }
+    }
+
+    /* CONTROLS */
     document.addEventListener("keydown", e => {
       if (e.code === "Space") {
         if (!running) startFlappy();

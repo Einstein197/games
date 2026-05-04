@@ -334,6 +334,7 @@
 
     function gameOver() {
       running = false;
+      submitGravityWarpScore(score);
 
       let coins = 0;
       const finalScore = Math.floor(score);
@@ -456,6 +457,22 @@
     }
 
     resetGame();
+
+    async function submitGravityWarpScore(score) {
+      try {
+        await fetch("https://leaderboard.shadownetcg-f2f.workers.dev/submit?game=gravitywarp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: localStorage.getItem("playerName"),
+            score: score
+          })
+        });
+      } catch (err) {
+        console.log("Score upload failed:", err);
+      }
+    }
+
   </script>
 </body>
 </html>
