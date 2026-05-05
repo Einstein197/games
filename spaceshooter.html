@@ -41,6 +41,8 @@
       display: none;
     }
 
+
+
     canvas {
       background: radial-gradient(circle at top, #222 0, #050509 60%);
       border: 2px solid #333;
@@ -50,6 +52,7 @@
       height: auto;
       touch-action: none;
     }
+
 
     button {
       margin-top: 10px;
@@ -72,7 +75,6 @@
   <div id="spaceLives">❤️❤️❤️</div>
   <div id="spaceHealth">Health: 100</div>
 
-  <button onclick="startSpaceGame()">Start</button>
 
   <canvas id="spaceCanvas" width="240" height="320"></canvas>
 
@@ -87,6 +89,9 @@
     }
 
     const canvas = document.getElementById("spaceCanvas");
+    canvas.addEventListener("click", handleGameTap);
+    canvas.addEventListener("touchstart", handleGameTap);
+
     const ctx = canvas.getContext("2d");
 
     let ship, bullets, enemies, stars, powerups, debris, enemyBullets;
@@ -100,6 +105,10 @@
     let lastPowerupTime = 0;
     let powerupCooldown = 2000; // 2 seconds minimum between spawns
     let maxPowerupsOnScreen = 2;
+    let gameRunning = false;
+    let gamePaused = false;
+    let gameLoopId = null;
+
 
 
     // ⭐ PERMANENT STACKING BOOSTERS
@@ -264,14 +273,46 @@
 
 
     function spaceLoop(ts) {
-      if (!running) return;
+      if (gamePaused) return;   // ← pause support
+
       const dt = (ts - lastTime) / 16.67;
       lastTime = ts;
 
       updateSpace(dt);
       drawSpace();
+
+      gameLoopId = requestAnimationFrame(spaceLoop);  // ← store ID so pause can cancel it
+    }
+
+    function pauseGame() {
+      gamePaused = true;
+      cancelAnimationFrame(gameLoopId);
+    }
+
+    function resumeGame() {
+      gamePaused = false;
       requestAnimationFrame(spaceLoop);
     }
+
+    function handleGameTap(e) {
+      e.preventDefault();
+
+      if (!gameRunning) {
+        gameRunning = true;
+        gamePaused = false;
+        startSpaceGame();
+        return;
+      }
+
+      if (!gamePaused) {
+        pauseGame();
+      } else {
+        resumeGame();
+      }
+    }
+
+
+
 
     function updateSpace(dt) {
       shootCooldown = Math.max(0, shootCooldown - dt * 0.2);
@@ -376,6 +417,30 @@
       // Movement
       powerups.forEach(p => p.y += SPEED * dt);
       powerups = powerups.filter(p => p.y < canvas.height + 20);
+
+
+      function handleGameTap(e) {
+        e.preventDefault();
+
+        if (!gameRunning) {
+          // FIRST TAP → START GAME
+          gameRunning = true;
+          gamePaused = false;
+          startSpaceGame();
+          return;
+        }
+
+        if (!gamePaused) {
+          // SECOND TAP → PAUSE GAME
+          gamePaused = true;
+          pauseGame();
+        } else {
+          // THIRD TAP → RESUME GAME
+          gamePaused = false;
+          resumeGame();
+        }
+      }
+
 
 
 
