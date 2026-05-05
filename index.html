@@ -176,21 +176,6 @@
     max-width: 300px;
   }
 
-  #resetPlayerBtn {
-  position: absolute;
-  top: 120px;
-  left: 20px;
-
-  width: 150px;
-  padding: 6px;
-  border-radius: 6px;
-
-  background: #0084ff;
-  color: white;
-  border: 1px solid #ff9a2b;
-
-  margin-top: 12px;
-  }
 
 
 
@@ -209,11 +194,6 @@
   </div>
 </div>
 
-<div>
-  <button onclick="resetPlayerName()" id="resetPlayerBtn">
-Reset Player Name
-</button>
-</div>
 
 
 
@@ -513,6 +493,15 @@ async function loadLeaderboard(game) {
       style="margin-top:12px; width:100%; padding:6px; border-radius:6px;
              background:#d62828; color:white; border:1px solid #ff9a2b;">
       Reset Scoreboard
+    </button>
+  `;
+
+  // RESET PLAYER NAME BUTTON (NEW)
+  html += `
+    <button onclick="resetPlayerName()"
+      style="margin-top:10px; width:100%; padding:6px; border-radius:6px;
+             background:#ff7b00; color:#050509; border:1px solid #ff9a2b;">
+      Reset Player Name
     </button>
   `;
 
