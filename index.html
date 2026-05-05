@@ -143,19 +143,14 @@
       transform: scale(1.1);
     }
 
-    /* FOUR CORNER ADS */
-    .ad-corner {
-      position: fixed;
-      width: 200px;
-      max-width: 30vw;
-      height: auto;
-      z-index: 99999;
+
+    #homeAd {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
     }
 
-    .ad-top-left { top: 10px; left: 10px; }
-    .ad-top-right { top: 10px; right: 10px; }
-    .ad-bottom-left { bottom: 10px; left: 10px; }
-    .ad-bottom-right { bottom: 10px; right: 10px; }
 
 
     .popup {
@@ -224,28 +219,16 @@ Reset Player Name
 
 <p class="subtitle" id="arcadeDesc">Tap a game to launch it. Close it to return to the arcade.</p>
 
-
-<!-- ADS -->
-<div class="ad-corner ad-top-left">
-  <iframe data-aa="2436395" src="https://acceptable.a-ads.com/2436395?size=728x90"
-  style="border:0; width:728px; max-width:100%; height:90px; display:block;" loading="lazy"></iframe>
+<!-- HOME SCREEN AD -->
+<div id="homeAd">
+  <iframe
+    data-aa="2434032"
+    src="https://acceptable.a-ads.com/2434032?size=728x90"
+    style="border:0; width:728px; height:90px; display:block; margin:auto; background:transparent;"
+    loading="lazy">
+  </iframe>
 </div>
 
-
-<div class="ad-corner ad-top-right">
-  <iframe data-aa="2436395" src="https://acceptable.a-ads.com/2436395?size=728x90"
-  style="border:0; width:728px; max-width:100%; height:90px; display:block;" loading="lazy"></iframe>
-</div>
-
-<div class="ad-corner ad-bottom-left">
-  <iframe data-aa="2436395" src="https://acceptable.a-ads.com/2436395?size=728x90"
-  style="border:0; width:728px; max-width:100%; height:90px; display:block;" loading="lazy"></iframe>
-</div>
-
-<div class="ad-corner ad-bottom-right">
-  <iframe data-aa="2436395" src="https://acceptable.a-ads.com/2436395?size=728x90"
-  style="border:0; width:728px; max-width:100%; height:90px; display:block;" loading="lazy"></iframe>
-</div>
 
 <!-- GAME GRID -->
 <div class="grid" id="gameGrid">
