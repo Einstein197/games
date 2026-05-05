@@ -573,23 +573,31 @@
       }
     }, { passive: false });
 
-    // ⭐ Mobile tap controls
+    let dragging = false;
+
     canvas.addEventListener("touchstart", e => {
       e.preventDefault();
-      if (!running) return;
+      dragging = true;
+    });
+
+    canvas.addEventListener("touchmove", e => {
+      if (!dragging || !running) return;
 
       const rect = canvas.getBoundingClientRect();
       const x = e.touches[0].clientX - rect.left;
 
-      if (x < ship.x + ship.w / 2) {
-        ship.x -= ship.speed * 4;
-      } else {
-        ship.x += ship.speed * 4;
-      }
+      // Center ship on finger
+      ship.x = x - ship.w / 2;
 
+      // Keep inside bounds
       if (ship.x < 0) ship.x = 0;
       if (ship.x + ship.w > canvas.width) ship.x = canvas.width - ship.w;
     }, { passive: false });
+
+    canvas.addEventListener("touchend", () => {
+      dragging = false;
+    });
+
 
     // ⭐ Leaderboard submit
     async function submitSpaceShooterScore(score) {

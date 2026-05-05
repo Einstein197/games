@@ -158,6 +158,16 @@
   position: absolute;
   top: 120px;
   left: 20px;
+
+  width: 150px;
+  padding: 6px;
+  border-radius: 6px;
+
+  background: #0084ff;
+  color: white;
+  border: 1px solid #ff9a2b;
+
+  margin-top: 12px;
   }
 
 
@@ -177,6 +187,12 @@
   </div>
 </div>
 
+<div>
+  <button onclick="resetPlayerName()" id="resetPlayerBtn">
+Reset Player Name
+</button>
+</div>
+
 
 
 <p class="subtitle">Tap a game to launch it. Close it to return to the arcade.</p>
@@ -185,15 +201,6 @@
 <div class="ad-corner ad-top-left">
   <iframe data-aa="2436395" src="https://acceptable.a-ads.com/2436395?size=728x90"
   style="border:0; width:728px; max-width:100%; height:90px; display:block;" loading="lazy"></iframe>
-</div>
-
-<div>
-  <button onclick="resetPlayerName()" id="resetPlayerBtn"
-style="margin-top:12px; top: 120px;
-  left: 20px; width:150px; padding:6px; border-radius:6px;
-background:#444; color:white; border:1px solid #ff9a2b;">
-Reset Player Name
-</button>
 </div>
 
 
@@ -508,28 +515,11 @@ async function resetScores(game) {
 }
 
   function resetPlayerName() {
-  const pass = prompt("Enter admin password:");
-  if (pass !== "Fl@shAdmin197") {
-    alert("Incorrect password.");
-    return;
-  }
-
-  const target = prompt("Enter the EXACT player name to reset:");
-
-  if (!target || target.trim() === "") {
-    alert("No name entered.");
-    return;
-  }
-
-  // If THIS device has that name, reset it
-  if (localStorage.getItem("playerName") === target) {
-    localStorage.removeItem("playerName");
-    localStorage.removeItem("playerNameSet");
-    alert(`Player '${target}' will be asked to enter a new name next time.`);
-  } else {
-    alert(`Player '${target}' is not on THIS device.`);
-  }
+  localStorage.removeItem("playerName");
+  localStorage.removeItem("playerNameSet");
+  alert("Your name has been reset. Reload the page to enter a new one.");
 }
+
 
 </script>
 
