@@ -530,6 +530,11 @@ async function resetScores(game) {
   alert("Your name has been reset. Reload the page to enter a new one.");
 }
 
+setInterval(() => {
+  const ad = document.querySelector("#homeAd iframe");
+  if (ad) ad.src = ad.src;
+}, 90000); // 90 seconds
+
 
 </script>
 
