@@ -87,12 +87,35 @@
 
     #gameFrame {
       width: 100%;
-      height: 80vh;
+      height: 100%;
       border: 3px solid rgba(255,255,255,0.3);
       border-radius: 18px;
       box-shadow: 0 0 22px rgba(0,0,0,0.7);
       background: #000;
     }
+
+
+    #leaderboardBox {
+      width: 100%;
+      max-width: 400px;   /* match your game width */
+      background: #111;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #333;
+      color: white;
+      display: none;
+      margin: 0 auto;     /* center it */
+    }
+
+    #leaderboardWrapper {
+      margin-top: 20px;   /* spacing BELOW the game */
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+
+
 
    
 
@@ -415,9 +438,11 @@ Reset Player Name
   </div>
 
   <!-- LEADERBOARD (right side) -->
-  <div id="leaderboardBox"
-       style="width:200px; background:#111; padding:12px; border-radius:10px; border:2px solid #333; color:white; display:none;">
+  <div id="leaderboardWrapper">
+      <div id="leaderboardBox"></div>
   </div>
+
+
 
 </div>
 
