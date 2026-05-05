@@ -24,11 +24,13 @@
       font-weight: 600;
       color: #ff7b00;
       margin-bottom: 4px;
+      display: none;
     }
 
     #spaceLives {
       font-size: 20px;
       margin-bottom: 4px;
+      display: none;
     }
 
     #spaceHealth {
@@ -36,6 +38,7 @@
       font-weight: 600;
       color: #ff7b00;
       margin-bottom: 10px;
+      display: none;
     }
 
     canvas {
@@ -94,6 +97,10 @@
     let lastTime = 0;
     let shootCooldown = 0;
     let difficulty = 1;
+    let lastPowerupTime = 0;
+    let powerupCooldown = 2000; // 2 seconds minimum between spawns
+    let maxPowerupsOnScreen = 2;
+
 
     // ⭐ PERMANENT STACKING BOOSTERS
     let power = {
@@ -115,6 +122,8 @@
     }
 
     function resetSpaceGame() {
+      shootCooldown = 0;
+      lastPowerupTime = 0;
       ship = {
         x: canvas.width / 2 - 12,
         y: canvas.height - 40,
@@ -137,6 +146,8 @@
       difficulty = 1;
 
       power = { rapid: 0, multishot: 1, shield: 0 };
+      power.shieldTime = 0;   // milliseconds of shield remaining
+
 
       updateLives();
       updateHealth();
@@ -186,27 +197,41 @@
       let shots = power.multishot;
 
       for (let i = 0; i < shots; i++) {
-        let offset = (i - (shots - 1) / 2) * 6;
+        let angle;
+
+        if (shots === 1) {
+          angle = 0; // straight up
+        } else {
+          let t = (i - (shots - 1) / 2) / ((shots - 1) / 2);
+          angle = t * Math.abs(t) * 0.08;  
+        }
+
+
         bullets.push({
-          x: ship.x + ship.w / 2 - 2 + offset,
+          x: ship.x + ship.w / 2,
           y: ship.y,
           w: 4,
           h: 8,
-          speed: 4
+          speedX: Math.sin(angle) * 4,
+          speedY: -Math.cos(angle) * 4
         });
       }
 
-      shootCooldown = power.rapid > 0 ? 2 : 10;
+      shootCooldown = power.rapid > 0 ? 8 : 10;
     }
+
 
     function damage(amount) {
       if (ship.invincible > 0) return false;
 
       // ⭐ Shield absorbs hits
-      if (power.shield > 0) {
-        power.shield--;
+      if (power.shieldTime > 0) {
+        // absorb hit, reduce shield time
+        power.shieldTime -= 1000;   // lose 1 second per hit
+        if (power.shieldTime < 0) power.shieldTime = 0;
         return false;
-      }
+    }
+
 
       health -= amount;
       updateHealth();
@@ -229,11 +254,14 @@
     }
 
     function startSpaceGame() {
+      shootCooldown = 0;
+      lastPowerupTime = 0;
       resetSpaceGame();
       running = true;
       lastTime = performance.now();
       requestAnimationFrame(spaceLoop);
     }
+
 
     function spaceLoop(ts) {
       if (!running) return;
@@ -246,7 +274,8 @@
     }
 
     function updateSpace(dt) {
-      shootCooldown = Math.max(0, shootCooldown - dt);
+      shootCooldown = Math.max(0, shootCooldown - dt * 0.2);
+
 
       // ⭐ ALWAYS SHOOTING
       shoot();
@@ -286,6 +315,13 @@
         }
       });
 
+      // ⭐ Shield countdown
+      if (power.shieldTime > 0) {
+          power.shieldTime -= dt * 16.67;  // convert dt to ms
+          if (power.shieldTime < 0) power.shieldTime = 0;
+      }
+
+
 
       // ⭐ Debris
       if (Math.random() < 0.003 * dt) {
@@ -301,20 +337,32 @@
       debris = debris.filter(d => d.y < canvas.height + 20);
 
       // ⭐ Player bullets
-      bullets.forEach(b => b.y -= b.speed * dt);
+      bullets.forEach(b => {
+        b.x += b.speedX * dt;
+        b.y += b.speedY * dt;
+      });
       bullets = bullets.filter(b => b.y + b.h > 0);
 
-      // ⭐ Powerups (shield, rapid, multishot, life)
-      if (Math.random() < 0.005 * dt) {
-        // Weighted powerups
-        const roll = Math.random();
 
+      // ⭐ CLEAN POWERUP SYSTEM (always spawns reliably)
+      const TEST_MODE = true;   // set to false for normal gameplay
+
+      // Spawn frequency
+      const SPAWN_RATE = 0.0018;   // ~1.8 per second early game
+      const SPEED = 1.2;
+      const MAX_ON_SCREEN = 2;
+
+      // Try to spawn
+      if (powerups.length < MAX_ON_SCREEN && Math.random() < SPAWN_RATE * dt) {
+
+        // Weighted types
+        const roll = Math.random();
         let type;
+
         if (roll < 0.40) type = "shield";      // 40%
         else if (roll < 0.75) type = "rapid";  // 35%
-        else if (roll < 0.95) type = "double"; // 5%
-        else type = "life";                    // 5%
-
+        else if (roll < 0.90) type = "double"; // 15%
+        else type = "life";                    // 10%
 
         powerups.push({
           x: Math.random() * (canvas.width - 12),
@@ -323,10 +371,14 @@
           h: 12,
           type: type
         });
-
       }
-      powerups.forEach(p => p.y += 1.2 * dt);
+
+      // Movement
+      powerups.forEach(p => p.y += SPEED * dt);
       powerups = powerups.filter(p => p.y < canvas.height + 20);
+
+
+
 
       // ⭐ Enemy bullets
       enemies.forEach(e => {
@@ -377,8 +429,9 @@
           p.y + p.h > ship.y
         ) {
           if (p.type === "shield") {
-            power.shield++;
+              power.shieldTime += 10000;   // +10 seconds per pickup
           }
+
 
           if (p.type === "rapid") {
             power.rapid++;
@@ -470,8 +523,26 @@
       ctx.closePath();
       ctx.fill();
 
+      // ⭐ Draw shield bubble
+      if (power.shieldTime > 0) {
+          ctx.strokeStyle = "rgba(0, 200, 255, 0.7)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, 22, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Countdown text
+          ctx.fillStyle = "rgba(255,255,255,0.9)";
+          ctx.font = "10px system-ui";
+          ctx.textAlign = "center";
+          ctx.fillText(Math.ceil(power.shieldTime / 1000), 0, -28);
+      }
+
+
       ctx.restore();
     }
+
+
 
     function drawEnemyShip(e) {
       ctx.save();
@@ -519,6 +590,8 @@
 
       // Player ship
       drawShip();
+      drawUI();
+
 
       // Player bullets
       ctx.fillStyle = "#ffea00";
@@ -552,6 +625,25 @@
         ctx.fillText("Press Start to play again", canvas.width / 2, canvas.height / 2 + 30);
       }
     }
+
+    function drawUI() {
+        ctx.save();
+        ctx.fillStyle = "white";
+        ctx.font = "16px system-ui";
+        ctx.textAlign = "left";
+
+        // ⭐ Score (top-left inside the game)
+        ctx.fillText("Score: " + spaceScore, 100, 40);
+
+        // ⭐ Health (below score)
+        ctx.fillText("Health: " + Math.floor(health), 10, 40);
+
+        // ⭐ Lives (hearts)
+        ctx.fillText("❤️".repeat(lives), 10, 20);
+
+        ctx.restore();
+    }
+
 
     function endSpaceGame() {
       running = false;
