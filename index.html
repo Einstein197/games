@@ -70,7 +70,8 @@
     #gameContainer {
       display: none;
       width: 100%;
-      flex-direction: row;
+      flex-direction: column;
+      align-items: center; 
       gap: 20px;
       justify-content: center;
       margin-top: 20px;
@@ -177,7 +178,7 @@
 </head>
 <body>
 
-<h1>Krypton Arcade</h1>
+<h1 id="arcadeTitle">Krypton Arcade</h1>
 
 <div id="namePopup" class="popup">
   <div class="popup-box">
@@ -195,7 +196,8 @@ Reset Player Name
 
 
 
-<p class="subtitle">Tap a game to launch it. Close it to return to the arcade.</p>
+<p class="subtitle" id="arcadeDesc">Tap a game to launch it. Close it to return to the arcade.</p>
+
 
 <!-- ADS -->
 <div class="ad-corner ad-top-left">
@@ -423,6 +425,10 @@ function openGame(path, gameName) {
   document.getElementById("gameContainer").style.display = "flex";
   document.getElementById("gameFrame").src = path;
 
+  // Hide Krypton Arcade header + description
+  document.getElementById("arcadeTitle").style.display = "none";
+  document.getElementById("arcadeDesc").style.display = "none";
+
   // Show leaderboard if game has one
   if (gameName) {
     loadLeaderboard(gameName);
@@ -443,6 +449,10 @@ function closeGame() {
   document.getElementById("gameContainer").style.display = "none";
   document.getElementById("gameGrid").style.display = "grid";
   document.getElementById("leaderboardBox").style.display = "none";
+
+  document.getElementById("arcadeTitle").style.display = "block";
+  document.getElementById("arcadeDesc").style.display = "block";
+
 }
 
 /* PLAYER ID (ALWAYS CREATED) */
