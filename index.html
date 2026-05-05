@@ -130,11 +130,44 @@
     .ad-bottom-left { bottom: 10px; left: 10px; }
     .ad-bottom-right { bottom: 10px; right: 10px; }
 
+
+    .popup {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .popup-box {
+    background: #111;
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #ff7b00;
+    text-align: center;
+    width: 80%;
+    max-width: 300px;
+  }
+
+
   </style>
 </head>
 <body>
 
 <h1>Krypton Arcade</h1>
+
+<div id="namePopup" class="popup">
+  <div class="popup-box">
+    <h2>Enter your player name</h2>
+    <input id="playerNameInput" type="text" placeholder="Your name">
+    <button onclick="savePlayerName()">Continue</button>
+  </div>
+</div>
 
 
 <p class="subtitle">Tap a game to launch it. Close it to return to the arcade.</p>
@@ -358,19 +391,27 @@
 </div>
 
 <script>
+/* OPEN GAME */
 function openGame(path, gameName) {
   document.getElementById("gameGrid").style.display = "none";
   document.getElementById("gameContainer").style.display = "flex";
   document.getElementById("gameFrame").src = path;
 
+  // Show leaderboard if game has one
   if (gameName) {
     loadLeaderboard(gameName);
     document.getElementById("leaderboardBox").style.display = "block";
   } else {
     document.getElementById("leaderboardBox").style.display = "none";
   }
+
+  // Show name popup INSIDE the game window
+  if (!localStorage.getItem("playerNameSet")) {
+    document.getElementById("namePopup").style.display = "flex";
+  }
 }
 
+/* CLOSE GAME */
 function closeGame() {
   document.getElementById("gameFrame").src = "";
   document.getElementById("gameContainer").style.display = "none";
@@ -378,28 +419,22 @@ function closeGame() {
   document.getElementById("leaderboardBox").style.display = "none";
 }
 
-/* PLAYER ID + NAME (REQUIRED BEFORE PLAYING) */
+/* PLAYER ID (ALWAYS CREATED) */
 if (!localStorage.getItem("playerID")) {
   const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
   localStorage.setItem("playerID", id);
 }
 
-if (!localStorage.getItem("playerNameSet")) {
-  askForNameOnce();
-}
+/* SAVE NAME FROM POPUP */
+function savePlayerName() {
+  const name = document.getElementById("playerNameInput").value.trim();
 
-function askForNameOnce() {
-  const name = prompt("Welcome! Enter your player name:");
-
-  if (name && name.trim() !== "") {
-    localStorage.setItem("playerName", name.trim());
+  if (name !== "") {
+    localStorage.setItem("playerName", name);
     localStorage.setItem("playerNameSet", "true");
-  } else {
-    // Force them to enter a name
-    askForNameOnce();
+    document.getElementById("namePopup").style.display = "none";
   }
 }
-
 
 /* UNIVERSAL LEADERBOARD */
 const API = "https://leaderboard.shadownetcg-f2f.workers.dev";
@@ -453,6 +488,7 @@ async function resetScores(game) {
   loadLeaderboard(game);
 }
 </script>
+
 
 </body>
 </html>
