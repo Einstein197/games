@@ -431,8 +431,11 @@ function openGame(path, gameName) {
   document.getElementById("arcadeTitle").style.display = "none";
   document.getElementById("arcadeDesc").style.display = "none";
 
+
+
   // Show leaderboard + comments if game has one
   if (gameName) {
+    window.currentGameId = gameName; 
     loadLeaderboard(gameName);
     loadComments(gameName);
 
