@@ -405,12 +405,23 @@
       <div id="leaderboardBox"></div>
   </div>
 
+  <div id="commentsSection" style="display:none;">
+    <h3>Comments</h3>
+    <div id="commentsList"></div>
+
+    <textarea id="commentInput" placeholder="Write a comment..."></textarea>
+    <button id="commentSubmit">Post</button>
+  </div>
+
+
 
 
 </div>
 
 <script>
-/* OPEN GAME */
+/* ============================
+      OPEN GAME
+============================ */
 function openGame(path, gameName) {
   document.getElementById("gameGrid").style.display = "none";
   document.getElementById("gameContainer").style.display = "flex";
@@ -420,39 +431,50 @@ function openGame(path, gameName) {
   document.getElementById("arcadeTitle").style.display = "none";
   document.getElementById("arcadeDesc").style.display = "none";
 
-  // Show leaderboard if game has one
+  // Show leaderboard + comments if game has one
   if (gameName) {
     loadLeaderboard(gameName);
+    loadComments(gameName);
+
     document.getElementById("leaderboardBox").style.display = "block";
+    document.getElementById("commentsSection").style.display = "block";
   } else {
     document.getElementById("leaderboardBox").style.display = "none";
+    document.getElementById("commentsSection").style.display = "none";
   }
 
-  // Show name popup INSIDE the game window
+  // Show name popup if not set
   if (!localStorage.getItem("playerNameSet")) {
     document.getElementById("namePopup").style.display = "flex";
   }
 }
 
-/* CLOSE GAME */
+/* ============================
+      CLOSE GAME
+============================ */
 function closeGame() {
   document.getElementById("gameFrame").src = "";
   document.getElementById("gameContainer").style.display = "none";
   document.getElementById("gameGrid").style.display = "grid";
+
   document.getElementById("leaderboardBox").style.display = "none";
+  document.getElementById("commentsSection").style.display = "none";
 
   document.getElementById("arcadeTitle").style.display = "block";
   document.getElementById("arcadeDesc").style.display = "block";
-
 }
 
-/* PLAYER ID (ALWAYS CREATED) */
+/* ============================
+      PLAYER ID (ALWAYS)
+============================ */
 if (!localStorage.getItem("playerID")) {
   const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
   localStorage.setItem("playerID", id);
 }
 
-/* SAVE NAME FROM POPUP */
+/* ============================
+      SAVE PLAYER NAME
+============================ */
 function savePlayerName() {
   const name = document.getElementById("playerNameInput").value.trim();
 
@@ -463,9 +485,14 @@ function savePlayerName() {
   }
 }
 
-/* UNIVERSAL LEADERBOARD */
+/* ============================
+      API ENDPOINT
+============================ */
 const API = "https://leaderboard.shadownetcg-f2f.workers.dev";
 
+/* ============================
+      LOAD LEADERBOARD
+============================ */
 async function loadLeaderboard(game) {
   const box = document.getElementById("leaderboardBox");
 
@@ -496,7 +523,6 @@ async function loadLeaderboard(game) {
     </button>
   `;
 
-  // RESET PLAYER NAME BUTTON (NEW)
   html += `
     <button onclick="resetPlayerName()"
       style="margin-top:10px; width:100%; padding:6px; border-radius:6px;
@@ -508,7 +534,9 @@ async function loadLeaderboard(game) {
   box.innerHTML = html;
 }
 
-/* UNIVERSAL RESET */
+/* ============================
+      RESET LEADERBOARD
+============================ */
 async function resetScores(game) {
   const pass = prompt("Enter admin password:");
   if (pass !== "Fl@shAdmin197") {
@@ -516,27 +544,80 @@ async function resetScores(game) {
     return;
   }
 
-  await fetch(`${API}/reset?game=${game}`, {
-    method: "POST"
-  });
+  await fetch(`${API}/reset?game=${game}`, { method: "POST" });
 
   alert(`${game.toUpperCase()} leaderboard reset.`);
   loadLeaderboard(game);
 }
 
-  function resetPlayerName() {
+/* ============================
+      RESET PLAYER NAME
+============================ */
+function resetPlayerName() {
   localStorage.removeItem("playerName");
   localStorage.removeItem("playerNameSet");
   alert("Your name has been reset. Reload the page to enter a new one.");
 }
 
+/* ============================
+      LOAD COMMENTS
+============================ */
+async function loadComments(game) {
+  const list = document.getElementById("commentsList");
+  list.innerHTML = "<p>Loading comments...</p>";
+
+  try {
+    const res = await fetch(`${API}/comment/load?game=${game}`);
+    const comments = await res.json();
+
+    list.innerHTML = "";
+
+    if (!comments.length) {
+      list.innerHTML = "<p>No comments yet.</p>";
+      return;
+    }
+
+    comments.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "comment";
+      div.innerHTML = `<strong>${c.name}</strong>: ${c.text}`;
+      list.appendChild(div);
+    });
+
+  } catch (err) {
+    list.innerHTML = "<p>Failed to load comments.</p>";
+  }
+}
+
+/* ============================
+      SUBMIT COMMENT
+============================ */
+document.getElementById("commentSubmit").onclick = async () => {
+  const text = document.getElementById("commentInput").value.trim();
+  if (!text) return;
+
+  const name = localStorage.getItem("playerName") || "Anonymous";
+  const game = window.currentGameId;
+
+  await fetch(`${API}/comment/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ game, name, text })
+  });
+
+  document.getElementById("commentInput").value = "";
+  loadComments(game);
+};
+
+/* ============================
+      REFRESH ADS
+============================ */
 setInterval(() => {
   const ad = document.querySelector("#homeAd iframe");
   if (ad) ad.src = ad.src;
-}, 90000); // 90 seconds
-
-
+}, 90000);
 </script>
+
 
 
 </body>
