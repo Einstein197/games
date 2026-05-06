@@ -109,6 +109,12 @@
     let gamePaused = false;
     let gameLoopId = null;
     let lastTap = 0;
+    let wave = 1;
+    let enemiesPerWave = 1;
+    let waveCooldown = 0;
+    let waitingForNextWave = false;
+
+
 
 
 
@@ -180,24 +186,66 @@
 
     function spawnEnemy() {
       const w = 20;
-      const x = Math.random() * (canvas.width - w);
-
-      // ⭐ Score-based difficulty scaling
-      let scoreFactor = 1 + (spaceScore / 300); // every 300 score = +100% difficulty
 
       enemies.push({
-        x: x,
-        y: -30,
+        x: Math.random() * (canvas.width - w),
+
+        // Spread enemies vertically so they don't clump
+        y: Math.random() * 120 + 20,  // wider range
+
         w: w,
         h: 24,
 
-        // ⭐ Speed increases with score
-        speed: (0.6 + Math.random() * 0.6) * scoreFactor,
+        // Each enemy gets its own speed
+        speedX: (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 0.8),
 
-        // ⭐ HP increases with score
-        hp: 1 + Math.floor(spaceScore / 200)
+        hoverOffset: Math.random() * 200, // MUCH bigger offset → unique motion
+        hoverSpeed: 0.01 + Math.random() * 0.03,
+
+        hp: 1 + Math.floor(wave / 3),
+
+        speed: 0
       });
     }
+
+
+
+    function updateWaves(dt) {
+      // 1. If all enemies are dead AND we are not already waiting → start cooldown
+      if (enemies.length === 0 && !waitingForNextWave) {
+        waitingForNextWave = true;
+        waveCooldown = 3000; // 3 seconds pause before next wave
+      }
+
+      // 2. If waiting, count down
+      if (waitingForNextWave) {
+        waveCooldown -= dt * 16.67;
+
+        // 3. When cooldown finishes → spawn next wave
+        if (waveCooldown <= 0) {
+          waitingForNextWave = false;
+
+          wave++;
+          // Wave size grows slowly and predictably
+          let baseWaveSize = 1 + wave; // Wave 1 = 2 enemies, Wave 2 = 3, Wave 3 = 4...
+
+          // Add small randomness
+          let randomBonus = Math.floor(Math.random() * 2); // 0 or +1
+
+          // Final wave size
+          enemiesPerWave = Math.min(10, baseWaveSize + randomBonus);
+
+
+
+          for (let i = 0; i < enemiesPerWave; i++) {
+            spawnEnemy();
+          }
+        }
+      }
+    }
+
+
+
 
 
     function shoot() {
@@ -321,6 +369,8 @@
 
     function updateSpace(dt) {
       shootCooldown = Math.max(0, shootCooldown - dt * 0.2);
+      updateWaves(dt);
+
 
 
       // ⭐ ALWAYS SHOOTING
@@ -339,27 +389,33 @@
         }
       });
 
-      // ⭐ Smooth early-game spawn curve
-      let spawnRate = 0.002 + (difficulty * 0.004);
-
-      // Cap early game to prevent too many enemies
-      if (spaceScore < 100) spawnRate *= 0.4;
-      if (spaceScore < 200) spawnRate *= 0.7;
-
-      if (Math.random() < spawnRate * dt) spawnEnemy();
 
 
-      enemies.forEach(e => e.y += e.speed * dt);
+      
+
+
+      
+      // ⭐ NEW ENEMY MOVEMENT — Galaga style
       enemies.forEach(e => {
-        if (e.y > canvas.height + 40) {
-          // Respawn enemy at top
-          e.y = -30;
-          e.x = Math.random() * (canvas.width - e.w);
 
-          // Make returning enemies stronger
-          e.speed *= 1.25;
+        // Horizontal movement
+        e.x += e.speedX * dt;
+
+        // Bounce off walls
+        if (e.x < 0 || e.x + e.w > canvas.width) {
+          e.speedX *= -1;
+        }
+
+        // Hover motion (small vertical wiggle)
+        e.y += Math.sin(performance.now() * e.hoverSpeed + e.hoverOffset) * 0.3;
+
+        // Prevent enemies from going below the player
+        const maxEnemyY = ship.y - 80; // they can get close but not pass you
+        if (e.y > maxEnemyY) {
+          e.y = maxEnemyY;
         }
       });
+
 
       // ⭐ Shield countdown
       if (power.shieldTime > 0) {
@@ -674,13 +730,27 @@
       ctx.fillStyle = "#ff4444";
       enemyBullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
 
+      function drawImagePowerup(x, y, img) {
+        ctx.drawImage(img, x - 12, y - 12, 24, 24);
+      }
+
+
       // Powerups (emoji)
+      const shieldImg = new Image();
+      shieldImg.src = "shield.png";
+      const rapidImg = new Image();
+      rapidImg.src = "rapid.png";
+      const doubleImg = new Image();
+      doubleImg.src = "double.png";
+      const lifeImg = new Image();
+      lifeImg.src = "life.png";
       powerups.forEach(p => {
-        if (p.type === "shield") drawEmoji(p.x, p.y, "🛡️");
-        if (p.type === "rapid") drawEmoji(p.x, p.y, "⚡");
-        if (p.type === "double") drawEmoji(p.x, p.y, "🔫");
-        if (p.type === "life") drawEmoji(p.x, p.y, "❤️");
+        if (p.type === "shield") drawImagePowerup(p.x, p.y, shieldImg);
+        if (p.type === "rapid")  drawImagePowerup(p.x, p.y, rapidImg);
+        if (p.type === "double") drawImagePowerup(p.x, p.y, doubleImg);
+        if (p.type === "life")   drawImagePowerup(p.x, p.y, lifeImg);
       });
+
 
       // Game Over screen
       if (!running) {
@@ -779,6 +849,7 @@
 
     resetSpaceGame();
     drawSpace();
+    
   </script>
 </body>
 </html>
