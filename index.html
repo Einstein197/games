@@ -166,7 +166,7 @@
     }
 
 
-    #homeAd {
+    #frame {
       width: 100%;
       display: flex;
       justify-content: center;
@@ -221,15 +221,15 @@
 
 <p class="subtitle" id="arcadeDesc">Tap a game to launch it. Close it to return to the arcade.</p>
 
-<!-- HOME SCREEN AD -->
-<div id="homeAd">
-  <iframe
-    data-aa="2434032"
-    src="https://acceptable.a-ads.com/2434032?size=728x90"
-    style="border:0; width:728px; height:90px; display:block; margin:auto; background:transparent;"
-    loading="lazy">
-  </iframe>
-</div>
+
+<!-- BEGIN AADS AD UNIT 2436395 -->
+
+<div id="frame" style="width: 100%;margin: auto;position: relative; z-index: 99998;">
+          <iframe data-aa='2436395' src='//acceptable.a-ads.com/2436395/?size=Adaptive'
+                            style='border:0; padding:0; width:70%; height:auto; overflow:hidden;display: block;margin: auto'></iframe>
+        </div>
+
+<!-- END AADS AD UNIT 2436395 -->
 
 
 <!-- GAME GRID -->
@@ -646,7 +646,7 @@ document.getElementById("commentSubmit").onclick = async () => {
       REFRESH ADS
 ============================ */
 setInterval(() => {
-  const ad = document.querySelector("#homeAd iframe");
+  const ad = document.querySelector("#frame iframe");
   if (ad) ad.src = ad.src;
 }, 90000);
 
