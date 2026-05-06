@@ -115,6 +115,28 @@
     }
 
 
+    #gameAndBoard {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px; /* ⭐ perfect spacing between iframe and leaderboard */
+    }
+
+    #belowGame {
+      margin-top: 20px;      /* consistent gap under the iframe */
+      display: flex;
+      flex-direction: column;
+      gap: 20px;             /* consistent gap between leaderboard and comments */
+      width: 100%;
+      max-width: 400px;      /* optional: keeps it neat */
+      margin-left: auto;
+      margin-right: auto;    /* centers it */
+    }
+
+
+
+    
+
+
 
 
    
@@ -400,18 +422,26 @@
     <iframe id="gameFrame"></iframe>
   </div>
 
-  <!-- LEADERBOARD (right side) -->
-  <div id="leaderboardWrapper">
+  <!-- EVERYTHING BELOW THE GAME -->
+  <div id="belowGame">
+
+    <div id="leaderboardWrapper">
       <div id="leaderboardBox"></div>
+    </div>
+
+    <div id="commentsSection">
+      <h3>Comments</h3>
+      <div id="commentsList"></div>
+      <textarea id="commentInput" placeholder="Write a comment..."></textarea>
+      <button id="commentSubmit">Post</button>
+    </div>
+
   </div>
 
-  <div id="commentsSection" style="display:none;">
-    <h3>Comments</h3>
-    <div id="commentsList"></div>
 
-    <textarea id="commentInput" placeholder="Write a comment..."></textarea>
-    <button id="commentSubmit">Post</button>
-  </div>
+</div>
+
+
 
 
 
@@ -619,6 +649,42 @@ setInterval(() => {
   const ad = document.querySelector("#homeAd iframe");
   if (ad) ad.src = ad.src;
 }, 90000);
+
+
+function resizeIframe() {
+  const frame = document.getElementById("gameFrame");
+  if (!frame) return;
+
+  const doc = frame.contentDocument || frame.contentWindow.document;
+  if (!doc) return;
+
+  const height = doc.documentElement.scrollHeight;
+  frame.style.height = height + "px";
+}
+
+// Resize when iframe loads
+document.getElementById("gameFrame").addEventListener("load", () => {
+  const frame = document.getElementById("gameFrame");
+  const doc = frame.contentDocument || frame.contentWindow.document;
+
+  // Initial resize
+  setTimeout(resizeIframe, 100);
+
+  // ⭐ Watch for content changes inside the iframe
+  const observer = new MutationObserver(() => resizeIframe());
+  observer.observe(doc.body, { childList: true, subtree: true, attributes: true });
+});
+
+// Resize on window resize
+window.addEventListener("resize", resizeIframe);
+
+window.addEventListener("message", (event) => {
+  if (event.data.type === "resize-iframe") {
+    const frame = document.getElementById("gameFrame");
+    frame.style.height = event.data.height + "px";
+  }
+});
+
 </script>
 
 

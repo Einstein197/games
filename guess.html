@@ -122,6 +122,14 @@
         console.log("Score upload failed:", err);
       }
     }
+
+    function sendHeight() {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage({ type: "resize-iframe", height }, "*");
+    }
+
+    window.onload = sendHeight;
+    setInterval(sendHeight, 300);
   </script>
 
 </body>

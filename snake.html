@@ -50,6 +50,7 @@
       width: 90vw;
       max-width: 320px;
       height: auto;
+      margin-bottom: 20px;
       touch-action: none;
     }
   </style>
@@ -286,6 +287,14 @@
         else if (dyTouch < 0 && dy === 0) { dx = 0; dy = -10; }
       }
     });
+    function sendHeight() {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage({ type: "resize-iframe", height }, "*");
+    }
+
+    window.onload = sendHeight;
+    setInterval(sendHeight, 300);
+
   </script>
 
 </body>

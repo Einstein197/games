@@ -27,6 +27,7 @@
       width: 90vw;
       max-width: 320px;
       height: auto;
+      margin-bottom: 20px;
       touch-action: none;
     }
   </style>
@@ -269,6 +270,14 @@
       if (!running) startFlappy();
       else birdVel = -4.5;
     });
+
+    function sendHeight() {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage({ type: "resize-iframe", height }, "*");
+    }
+
+    window.onload = sendHeight;
+    setInterval(sendHeight, 300);
   </script>
 
 </body>
