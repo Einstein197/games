@@ -108,6 +108,7 @@
     let gameRunning = false;
     let gamePaused = false;
     let gameLoopId = null;
+    let lastTap = 0;
 
 
 
@@ -296,20 +297,24 @@
 
     function handleGameTap(e) {
       e.preventDefault();
+      const now = Date.now();
 
       if (!gameRunning) {
         gameRunning = true;
         gamePaused = false;
         startSpaceGame();
+        lastTap = now;
         return;
       }
 
-      if (!gamePaused) {
-        pauseGame();
-      } else {
-        resumeGame();
+      if (now - lastTap < 300) {
+        // DOUBLE TAP → pause/resume
+        if (!gamePaused) pauseGame(); else resumeGame();
       }
+
+      lastTap = now;
     }
+
 
 
 
