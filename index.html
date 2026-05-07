@@ -770,32 +770,53 @@ async function loadVisitorStats() {
 loadVisitorStats();
 
 
-async function loadAnnouncement() {
+let announcementQueue = [];
+let seenAnnouncements = JSON.parse(localStorage.getItem("seenAnnouncements") || "[]");
+
+async function loadAnnouncements() {
   try {
     const res = await fetch("https://announcements.shadownetcg-f2f.workers.dev/get");
-    const data = await res.json();
+    const list = await res.json();
 
-    const seen = localStorage.getItem("announcementSeenVersion");
+    // Filter announcements user has NOT seen
+    announcementQueue = list.filter(a => !seenAnnouncements.includes(a.id));
 
-    // Save version globally so close button can use it
-    window.currentAnnouncementVersion = data.version;
-
-    if (data.text.trim() !== "" && seen !== data.version) {
-      document.getElementById("announcementText").textContent = data.text;
-      document.getElementById("announcementOverlay").style.display = "flex";
+    // If there are announcements, show the first one
+    if (announcementQueue.length > 0) {
+      showAnnouncement(announcementQueue[0]);
     }
-  } catch (e) {
-    console.log("Announcement fetch failed", e);
+
+  } catch (err) {
+    console.log("Announcement fetch failed", err);
   }
 }
 
+function showAnnouncement(a) {
+  document.getElementById("announcementText").textContent = a.text;
+  document.getElementById("announcementOverlay").style.display = "flex";
+}
+
 document.getElementById("announcementClose").onclick = () => {
-  document.getElementById("announcementOverlay").style.display = "none";
-  localStorage.setItem("announcementSeenVersion", window.currentAnnouncementVersion);
+  const current = announcementQueue.shift();
+
+  // Mark as seen
+  seenAnnouncements.push(current.id);
+  localStorage.setItem("seenAnnouncements", JSON.stringify(seenAnnouncements));
+
+  // Show next announcement if exists
+  if (announcementQueue.length > 0) {
+    showAnnouncement(announcementQueue[0]);
+  } else {
+    document.getElementById("announcementOverlay").style.display = "none";
+  }
 };
 
-setInterval(loadAnnouncement, 10000);
-document.addEventListener("DOMContentLoaded", loadAnnouncement);
+// Auto-refresh every 10 seconds
+setInterval(loadAnnouncements, 10000);
+
+// Load on page start
+document.addEventListener("DOMContentLoaded", loadAnnouncements);
+
 
 
 
