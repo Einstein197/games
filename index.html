@@ -768,6 +768,7 @@ async function loadVisitorStats() {
   }
 }
 loadVisitorStats();
+setInterval(loadVisitorStats, 300000); // refresh every 5 minutes
 
 
 let announcementQueue = [];
