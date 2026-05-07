@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Announcement Admin</title>
+  <style>
+    body {
+      background: #0d0d0d;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    h2 {
+      color: #ff7b00;
+      margin-bottom: 20px;
+    }
+    textarea {
+      width: 90%;
+      max-width: 500px;
+      height: 140px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid #ff7b00;
+      background: #111;
+      color: white;
+      font-size: 16px;
+      resize: none;
+      outline: none;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      background: #ff7b00;
+      color: #050509;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #ffa64d;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Send Announcement</h2>
+
+  <textarea id="msg" placeholder="Type announcement..."></textarea>
+  <br>
+  <button onclick="sendAnnouncement()">Send Announcement</button>
+
+  <script>
+    async function sendAnnouncement() {
+      const text = document.getElementById("msg").value.trim();
+      if (!text) {
+        alert("Please type a message before sending.");
+        return;
+      }
+
+      // ⭐ REPLACE THIS WITH YOUR WORKER URL
+      const workerURL = "https://announcements.shadownetcg-f2f.workers.dev/set";
+
+      try {
+        await fetch(workerURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+
+        alert("Announcement sent successfully!");
+        document.getElementById("msg").value = "";
+      } catch (err) {
+        alert("Failed to send announcement. Check your Worker URL.");
+      }
+    }
+  </script>
+
+</body>
+</html>
