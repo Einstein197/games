@@ -200,67 +200,6 @@
   margin-bottom: 20px;
 }
 
-#announcementOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.85);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 999999; /* always on top */
-}
-
-#announcementBox {
-  background: #111;
-  border: 2px solid #ff7b00;
-  padding: 20px;
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.7);
-  color: white;
-  font-size: 18px;
-}
-
-#announcementClose {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: #ff7b00;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: #050509;
-  font-size: 16px;
-}
-#announcementClose:hover {
-  background: #ffa64d;
-}
-
-
-#adminButton {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #ff7b00;
-  color: #050509;
-  padding: 12px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  z-index: 999999; /* always on top */
-  opacity: 1;      /* fully visible */
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-#adminButton:hover {
-  background: #ffa64d;
-}
-
-
 
   </style>
 </head>
@@ -283,7 +222,7 @@
 
 <div id="visitorStats">Loading stats...</div>
 
-<div id="adminButton">Admin</div>
+
 
 
 <!-- BEGIN AADS AD UNIT 2436395 -->
@@ -294,15 +233,6 @@
         </div>
 
 <!-- END AADS AD UNIT 2436395 -->
-
-
-
-<div id="announcementOverlay">
-  <div id="announcementBox">
-    <div id="announcementText"></div>
-    <button id="announcementClose">OK</button>
-  </div>
-</div>
 
 
 
@@ -770,71 +700,6 @@ async function loadVisitorStats() {
 loadVisitorStats();
 setInterval(loadVisitorStats, 300000); // refresh every 5 minutes
 
-
-let announcementQueue = [];
-let seenAnnouncements = JSON.parse(localStorage.getItem("seenAnnouncements") || "[]");
-
-async function loadAnnouncements() {
-  try {
-    const res = await fetch("https://announcements.shadownetcg-f2f.workers.dev/get");
-    const list = await res.json();
-
-    // Filter announcements user has NOT seen
-    announcementQueue = list.filter(a => !seenAnnouncements.includes(a.id));
-
-    // If there are announcements, show the first one
-    if (announcementQueue.length > 0) {
-      showAnnouncement(announcementQueue[0]);
-    }
-
-  } catch (err) {
-    console.log("Announcement fetch failed", err);
-  }
-}
-
-function showAnnouncement(a) {
-  document.getElementById("announcementText").textContent = a.text;
-  document.getElementById("announcementOverlay").style.display = "flex";
-}
-
-document.getElementById("announcementClose").onclick = () => {
-  const current = announcementQueue.shift();
-
-  // Mark as seen
-  seenAnnouncements.push(current.id);
-  localStorage.setItem("seenAnnouncements", JSON.stringify(seenAnnouncements));
-
-  // Show next announcement if exists
-  if (announcementQueue.length > 0) {
-    showAnnouncement(announcementQueue[0]);
-  } else {
-    document.getElementById("announcementOverlay").style.display = "none";
-  }
-};
-
-// Auto-refresh every 10 seconds
-setInterval(loadAnnouncements, 10000);
-
-// Load on page start
-document.addEventListener("DOMContentLoaded", loadAnnouncements);
-
-
-
-
-
-document.getElementById("adminButton").onclick = () => {
-  const pass = prompt("Enter admin password:");
-
-  if (pass === "Fl@shAdmin197") {
-    window.open(
-      "admin.html",
-      "adminPopup",
-      "width=500,height=600,menubar=no,toolbar=no,location=no,status=no"
-    );
-  } else if (pass !== null) {
-    alert("Incorrect password.");
-  }
-};
 
 
 
