@@ -14,7 +14,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
+      justify-content: flex-start;
+      padding: 20px;
+      height: auto;
+
     }
 
     h1 { margin: 16px 0 4px; }
@@ -53,12 +56,14 @@
       position: absolute;
       width: 40px;
       height: 40px;
-      background: gold;
+      background: rgb(255, 0, 60);
       border-radius: 50%;
       display: none;
       box-shadow: 0 0 10px rgba(255,215,0,0.7);
       cursor: pointer;
     }
+
+    
   </style>
 </head>
 <body>
@@ -71,10 +76,16 @@
   <button onclick="startCoinGame()">Start</button>
 
   <div id="coinArea">
-    <div id="coin"></div>
+    <img id="coin" src="krypotn.png">
   </div>
 
   <script>
+
+    const kryptonImg = new Image();
+    kryptonImg.src = "krypton.png";
+  
+
+
     /* PLAYER NAME */
     if (!localStorage.getItem("playerID")) {
       const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
@@ -152,7 +163,19 @@
         console.log("Score upload failed:", err);
       }
     }
+
+    function sendHeight() {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage({ type: "resize-iframe", height }, "*");
+    }
+
+    window.onload = sendHeight;
+    setInterval(sendHeight, 300);
   </script>
 
 </body>
 </html>
+
+
+const lifeImg = new Image();
+      lifeImg.src = "life.png";
