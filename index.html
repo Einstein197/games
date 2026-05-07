@@ -192,6 +192,16 @@
   }
 
 
+  #visitorStats {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.8;
+  margin-bottom: 20px;
+}
+
+
+
   </style>
 </head>
 <body>
@@ -211,6 +221,8 @@
 
 <p class="subtitle" id="arcadeDesc">Tap a game to launch it. Close it to return to the arcade.</p>
 
+<div id="visitorStats">Loading stats...</div>
+
 
 <!-- BEGIN AADS AD UNIT 2436395 -->
 
@@ -221,9 +233,8 @@
 
 <!-- END AADS AD UNIT 2436395 -->
 
-<div id="visitorStats" style="text-align:center; margin-top:10px; font-size:14px; opacity:0.8;">
-  Loading stats...
-</div>
+
+
 
 
 
@@ -674,15 +685,21 @@ window.addEventListener("message", (event) => {
   }
 });
 
-async function loadStats() {
-  const res = await fetch("https://visitorstats.shadownetcg-f2f.workers.dev");
-  const data = await res.json();
+async function loadVisitorStats() {
+  try {
+    const res = await fetch("https://visitorstats.shadownetcg-f2f.workers.dev");
+    const data = await res.json();
 
-  document.getElementById("visitorStats").textContent =
-    `Visitors today: ${data.unique} | Total visits: ${data.total}`;
+    document.getElementById("visitorStats").textContent =
+      `Visitors today: ${data.unique} | Total visits: ${data.total}`;
+  } catch (err) {
+    document.getElementById("visitorStats").textContent =
+      "Failed to load visitor stats.";
+  }
 }
+loadVisitorStats();
 
-document.addEventListener("DOMContentLoaded", loadStats);
+
 
 
 </script>
