@@ -1,20 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Krypton Ultra Tractor Sim</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Disable Cloudflare Rocket Loader / JS rewriting -->
+  <script data-cfasync="false"></script>
+
   <style>
-    body { margin:0; background:#050509; display:flex; justify-content:center; padding-top:20px; }
-    canvas { background:#0b0b10; border:2px solid #333; border-radius:12px; image-rendering:pixelated; }
+    body {
+      margin: 0;
+      background: #050509;
+      display: flex;
+      justify-content: center;
+      padding-top: 20px;
+      font-family: system-ui, sans-serif;
+    }
+
+    canvas {
+      background: #0b0b10;
+      border: 2px solid #333;
+      border-radius: 12px;
+      image-rendering: pixelated;
+    }
   </style>
 </head>
 <body>
 
-<canvas id="game" width="480" height="320"></canvas>
+  <canvas id="game" width="480" height="320"></canvas>
 
-<!-- Only load the main module -->
-<script type="module" src="js/game.js"></script>
+  <!-- Load ONLY the main module -->
+  <script type="module" src="js/game.js"></script>
 
 </body>
 </html>
