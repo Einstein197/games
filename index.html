@@ -12,24 +12,21 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: linear-gradient(to bottom, #ff7b00, #3b0b5c);
       color: #fff;
-      min-height: 100vh;
+      min-height: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-
     h1 {
       margin-top: 24px;
       margin-bottom: 8px;
       font-size: 36px;
       text-shadow: 0 0 18px rgba(0,0,0,0.7);
     }
-
     p.subtitle {
       margin: 0 0 20px;
       opacity: 0.9;
     }
-
     .grid {
       width: 100%;
       max-width: 900px;
@@ -39,7 +36,6 @@
       gap: 20px;
       box-sizing: border-box;
     }
-
     .card {
       background: rgba(0,0,0,0.35);
       border-radius: 18px;
@@ -50,25 +46,21 @@
       backdrop-filter: blur(6px);
       transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
     }
-
     .card:hover {
       transform: translateY(-4px);
       box-shadow: 0 0 22px rgba(0,0,0,0.7);
       background: rgba(0,0,0,0.5);
     }
-
     .icon-wrap {
       width: 80px;
       height: 80px;
       margin: 0 auto 10px;
     }
-
     .card-title {
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 4px;
     }
-
     .card-sub {
       font-size: 12px;
       opacity: 0.8;
@@ -79,72 +71,69 @@
       display: none;
       width: 100%;
       flex-direction: column;
-      align-items: center;
+      align-items: center; 
       gap: 20px;
       justify-content: center;
       margin-top: 20px;
     }
 
-    /* ⭐ FIXED: wrapper now grows to match iframe height */
     #gameWrapper {
       position: relative;
-      width: 100%;
-      max-width: 600px;
-      height: auto;
-      max-height: none;
+      width: 420px;
+      height: 600px;
+      max-width: 90vw;
+      max-height: 70vh;
+      margin-bottom: 20px;
     }
 
-    /* ⭐ FIXED: iframe no longer forces height loop */
     #gameFrame {
       width: 100%;
-      height: auto;
-      display: block;
+      height: 100%;
       border: 3px solid rgba(255,255,255,0.3);
       border-radius: 18px;
       box-shadow: 0 0 22px rgba(0,0,0,0.7);
       background: #000;
     }
 
+
     #leaderboardBox {
       width: 100%;
-      max-width: 400px;
+      max-width: 400px;   /* match your game width */
       background: #111;
       padding: 12px;
       border-radius: 10px;
       border: 2px solid #333;
       color: white;
       display: none;
-      margin: 0 auto;
-      box-sizing: border-box;
-    }
-
-    #commentsSection {
-      width: 100%;
-      box-sizing: border-box;
+      margin: 0 auto;     /* center it */
     }
 
     #leaderboardWrapper {
-      margin-top: 20px;
+      margin-top: 20px;   /* spacing BELOW the game */
       width: 100%;
       display: flex;
       justify-content: center;
     }
 
+
     #gameAndBoard {
       display: flex;
       align-items: flex-start;
-      gap: 20px;
+
     }
 
-    /* ⭐ FIXED: perfect spacing between game, leaderboard, comments */
     #belowGame {
+      margin-top: 20px;      /* consistent gap under the iframe */
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 20px;             /* consistent gap between leaderboard and comments */
       width: 100%;
-      max-width: 420px;
-      margin: 20px auto 0;
+      max-width: 400px;      /* optional: keeps it neat */
+      margin-left: auto;
+      margin-right: auto;    /* centers it */
     }
+
+
 
     #closeX {
       position: absolute;
@@ -169,59 +158,59 @@
       transform: scale(1.1);
     }
 
-    #frame, #adWrap {
+
+    #frame {
       width: 100%;
       display: flex;
       justify-content: center;
       margin: 20px 0;
-    }
-
-    .popup {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.6);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-
-    .popup-box {
-      background: #111;
-      padding: 20px;
-      border-radius: 12px;
-      border: 2px solid #ff7b00;
-      text-align: center;
-      width: 80%;
-      max-width: 300px;
-    }
-
-    #visitorStats {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.8;
       margin-bottom: 20px;
     }
 
-    /* ⭐ MOBILE FIXES */
-    @media (max-width: 600px) {
-      #gameWrapper {
-        max-width: 100%;
-      }
-      #belowGame {
-        max-width: 100%;
-        padding: 0 10px;
-      }
-      #leaderboardBox {
-        max-width: 100%;
-      }
+    #adwrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+      margin-bottom: 20px;
     }
-  </style>
 
+
+
+    .popup {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .popup-box {
+    background: #111;
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #ff7b00;
+    text-align: center;
+    width: 80%;
+    max-width: 300px;
+  }
+
+
+  #visitorStats {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.8;
+  margin-bottom: 20px;
+}
+
+
+  </style>
 </head>
 <body>
 

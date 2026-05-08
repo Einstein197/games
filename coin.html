@@ -14,10 +14,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 20px;
-      height: auto;
+    }
 
+    /* WRAP GAME CONTENT FOR ACCURATE HEIGHT */
+    #gameContent {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
     }
 
     h1 { margin: 16px 0 4px; }
@@ -62,29 +68,26 @@
       box-shadow: 0 0 10px rgba(255,215,0,0.7);
       cursor: pointer;
     }
-
-    
   </style>
 </head>
 <body>
 
-  <h1>Click the Coin</h1>
-  <p>Tap “Start” then tap the coin as many times as you can in 10 seconds.</p>
+  <div id="gameContent">
+    <h1>Click the Coin</h1>
+    <p>Tap “Start” then tap the coin as many times as you can in 10 seconds.</p>
 
-  <div id="coinScore">Score: 0</div>
+    <div id="coinScore">Score: 0</div>
 
-  <button onclick="startCoinGame()">Start</button>
+    <button onclick="startCoinGame()">Start</button>
 
-  <div id="coinArea">
-    <img id="coin" src="krypton.png">
+    <div id="coinArea">
+      <img id="coin" src="krypton.png">
+    </div>
   </div>
 
   <script>
-
     const kryptonImg = new Image();
     kryptonImg.src = "krypton.png";
-  
-
 
     /* PLAYER NAME */
     if (!localStorage.getItem("playerID")) {
@@ -126,6 +129,8 @@
           submitCoinScore(coinScore);
         }
       }, 1000);
+
+      sendHeight();
     }
 
     function moveCoin() {
@@ -136,6 +141,8 @@
       const y = Math.random() * maxY;
       coin.style.left = x + "px";
       coin.style.top = y + "px";
+
+      sendHeight();
     }
 
     function hitCoin(e) {
@@ -164,9 +171,15 @@
       }
     }
 
+    /* ACCURATE HEIGHT REPORTING */
     function sendHeight() {
-      const height = document.body.scrollHeight;
-      window.parent.postMessage({ type: "resize-iframe", height }, "*");
+      const game = document.getElementById("gameContent");
+      const height = game.scrollHeight;
+
+      window.parent.postMessage({
+        type: "resize-iframe",
+        height: height
+      }, "*");
     }
 
     window.onload = sendHeight;

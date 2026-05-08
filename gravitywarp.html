@@ -40,12 +40,7 @@
       justify-content: center;
       flex-wrap: wrap;
     }
-    #daily {
-      margin-top: 4px;
-      font-size: 12px;
-      opacity: 0.85;
-      text-align: center;
-    }
+
     #powerups {
       margin-top: 4px;
       font-size: 11px;
@@ -77,7 +72,6 @@
     <span>Best: <span id="best">0</span></span>
     <span>Skin: <span id="skinLabel">Default</span></span>
   </div>
-  <div id="daily"></div>
   <div id="powerups">Active: <span id="powerStatus">None</span></div>
   <canvas id="gwCanvas" width="260" height="420"></canvas>
   <div id="hint">Tap or press any arrow to start. Instant restart on game over.</div>
@@ -88,7 +82,6 @@
     const scoreEl = document.getElementById("score");
     const bestEl = document.getElementById("best");
     const skinLabelEl = document.getElementById("skinLabel");
-    const dailyEl = document.getElementById("daily");
     const powerStatusEl = document.getElementById("powerStatus");
 
     let orb, obstacles, running, lastTime, speed, score, bestScore;
@@ -109,10 +102,6 @@
     ];
     let currentSkin = skins[0];
 
-    // Daily challenge
-    const today = new Date();
-    const dailyTarget = 40 + (today.getDate() * 7) % 60;
-    dailyEl.textContent = `Daily challenge: reach score ${dailyTarget}.`;
 
     // Best score
     bestScore = Number(localStorage.getItem("gravityWarpBest")) || 0;
@@ -338,7 +327,6 @@
 
       let coins = 0;
       const finalScore = Math.floor(score);
-      if (finalScore >= dailyTarget) coins += 5;
       if (finalScore >= 20) coins += Math.floor(finalScore / 20);
 
       try {

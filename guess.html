@@ -53,19 +53,29 @@
       min-height: 20px;
       font-size: 14px;
     }
+
+    /* WRAP GAME CONTENT FOR ACCURATE HEIGHT */
+    #gameContent {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Number Guessing</h1>
-  <p>Guess a number between 1 and 10.</p>
+  <div id="gameContent">
+    <h1>Number Guessing</h1>
+    <p>Guess a number between 1 and 10.</p>
 
-  <div id="guessScore">Score: 0</div>
+    <div id="guessScore">Score: 0</div>
 
-  <input id="guessInput" type="number" min="1" max="10" />
-  <button onclick="checkGuess()">Check</button>
+    <input id="guessInput" type="number" min="1" max="10" />
+    <button onclick="checkGuess()">Check</button>
 
-  <p id="guessResult"></p>
+    <p id="guessResult"></p>
+  </div>
 
   <script>
     /* PLAYER NAME */
@@ -105,6 +115,8 @@
         result.textContent = "Wrong! The number was " + num;
         result.style.color = "red";
       }
+
+      sendHeight(); // update iframe height after text changes
     }
 
     /* SUBMIT SCORE TO CLOUDFLARE */
@@ -123,9 +135,15 @@
       }
     }
 
+    /* ACCURATE HEIGHT REPORTING */
     function sendHeight() {
-      const height = document.body.scrollHeight;
-      window.parent.postMessage({ type: "resize-iframe", height }, "*");
+      const game = document.getElementById("gameContent");
+      const height = game.scrollHeight;
+
+      window.parent.postMessage({
+        type: "resize-iframe",
+        height: height
+      }, "*");
     }
 
     window.onload = sendHeight;
