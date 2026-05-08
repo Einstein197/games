@@ -2,37 +2,333 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Krypton Ultra Tractor Sim</title>
+  <title>Krypton Grid Farm</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Stop Cloudflare from rewriting or transforming JS -->
   <meta http-equiv="Cache-Control" content="no-transform">
   <script data-cfasync="false"></script>
 
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
       background: #050509;
-      display: flex;
-      justify-content: center;
-      padding-top: 20px;
+      color: #eee;
       font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
     }
 
-    canvas {
-      background: #0b0b10;
-      border: 2px solid #333;
+    h1 {
+      margin: 6px 0;
+      font-size: 18px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    #ui {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 6px;
+    }
+
+    .panel {
+      background: #11131a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    select, button {
+      background: #1a1d26;
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-size: 12px;
+    }
+
+    #farm {
+      flex-grow: 1;
+      display: grid;
+      width: 95vmin;
+      height: 95vmin;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+      gap: 0.8vmin;
+      padding: 0.8vmin;
+      box-sizing: border-box;
+      background: #05060a;
       border-radius: 12px;
-      image-rendering: pixelated;
+      border: 1px solid #333;
+    }
+
+    .tile {
+      width: 100%;
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3vmin;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.05s;
+    }
+
+    .tile:hover { transform: translateY(-0.3vmin); }
+
+    .tile.empty { background: #2b2415; border: 1px solid #3a3120; }
+    .tile.planted { background: #3b2f18; border: 1px solid #5a4420; }
+    .tile.growing { background: #4b3f1c; border: 1px solid #7a5a26; }
+    .tile.ready { background: #5f7a2a; border: 1px solid #9ad13a; }
+    .tile.dead { background: #3a3a3a; border: 1px solid #555; }
+
+    #msg {
+      font-size: 12px;
+      padding: 6px;
+      text-align: center;
+      height: 18px;
     }
   </style>
 </head>
 <body>
+  <h1>Krypton Grid Farm</h1>
 
-  <canvas id="game" width="480" height="320"></canvas>
+  <div id="ui">
+    <div class="panel">
+      <span>Coins:</span> <span id="coins">0</span>
+    </div>
 
-  <!-- Load ONLY the main module -->
-  <script type="module" src="js/game.js"></script>
+    <div class="panel">
+      <span>Seed:</span>
+      <select id="seedSelect"></select>
+    </div>
 
+    <div class="panel">
+      <button id="clearSaveBtn">Reset Farm</button>
+    </div>
+  </div>
+
+  <div id="farm"></div>
+  <div id="msg"></div>
+
+  <script>
+    const CROPS = [
+      { id: "wheat", name: "Wheat", emoji: "🌾", cost: 5, sell: 10, growSeconds: 30 },
+      { id: "corn", name: "Corn", emoji: "🌽", cost: 12, sell: 25, growSeconds: 90 },
+      { id: "carrot", name: "Carrot", emoji: "🥕", cost: 20, sell: 45, growSeconds: 180 }
+    ];
+
+    const GRID_SIZE = 10;
+    const SAVE_KEY = "krypton_grid_farm_v3";
+
+    const farmEl = document.getElementById("farm");
+    const coinsEl = document.getElementById("coins");
+    const seedSelectEl = document.getElementById("seedSelect");
+    const msgEl = document.getElementById("msg");
+    const clearSaveBtn = document.getElementById("clearSaveBtn");
+
+    let state = { coins: 100, tiles: [] };
+
+    function nowSeconds() {
+      return Math.floor(Date.now() / 1000);
+    }
+
+    function getCropById(id) {
+      return CROPS.find(c => c.id === id) || null;
+    }
+
+    function setMessage(text) {
+      msgEl.textContent = text || "";
+    }
+
+    function saveState() {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (data && Array.isArray(data.tiles)) {
+          state = data;
+        }
+      } catch {}
+    }
+
+    function initTiles() {
+      if (!Array.isArray(state.tiles) || state.tiles.length !== GRID_SIZE * GRID_SIZE) {
+        state.tiles = Array.from({ length: GRID_SIZE * GRID_SIZE }, () => ({
+          cropId: null,
+          plantedAt: 0,
+          harvested: false,
+          dead: false
+        }));
+      }
+    }
+
+    function initSeedSelect() {
+      seedSelectEl.innerHTML = "";
+      CROPS.forEach(crop => {
+        const opt = document.createElement("option");
+        opt.value = crop.id;
+        opt.textContent = `${crop.emoji} ${crop.name} (Cost: ${crop.cost}, Sell: ${crop.sell}, ${crop.growSeconds}s)`;
+        seedSelectEl.appendChild(opt);
+      });
+    }
+
+    function getTileState(tile) {
+      if (!tile.cropId) return { stage: "empty", crop: null, remaining: 0 };
+
+      const crop = getCropById(tile.cropId);
+      if (!crop) return { stage: "empty", crop: null, remaining: 0 };
+
+      if (tile.dead) return { stage: "dead", crop, remaining: 0 };
+
+      const elapsed = nowSeconds() - tile.plantedAt;
+      const remaining = crop.growSeconds - elapsed;
+
+      if (remaining <= 0) return { stage: "ready", crop, remaining: 0 };
+      if (elapsed > crop.growSeconds * 2) return { stage: "dead", crop, remaining: 0 };
+      if (elapsed > crop.growSeconds * 0.4) return { stage: "growing", crop, remaining };
+      return { stage: "planted", crop, remaining };
+    }
+
+    function plantTile(index) {
+      const tile = state.tiles[index];
+      const crop = getCropById(seedSelectEl.value);
+      if (!crop) return setMessage("No crop selected.");
+      if (tile.cropId) return setMessage("Tile already planted.");
+      if (state.coins < crop.cost) return setMessage("Not enough coins.");
+
+      state.coins -= crop.cost;
+      tile.cropId = crop.id;
+      tile.plantedAt = nowSeconds();
+      tile.harvested = false;
+      tile.dead = false;
+
+      setMessage(`Planted ${crop.name}.`);
+      saveState();
+      render();
+    }
+
+    function harvestTile(index) {
+      const tile = state.tiles[index];
+      const { stage, crop } = getTileState(tile);
+      if (!crop) return setMessage("Nothing to harvest.");
+      if (stage !== "ready") return setMessage("Crop not ready yet.");
+
+      state.coins += crop.sell;
+      tile.cropId = null;
+      tile.plantedAt = 0;
+      tile.harvested = true;
+      tile.dead = false;
+
+      setMessage(`Harvested ${crop.name} for ${crop.sell} coins.`);
+      saveState();
+      render();
+    }
+
+    function clearDeadTile(index) {
+      const tile = state.tiles[index];
+      tile.cropId = null;
+      tile.plantedAt = 0;
+      tile.harvested = false;
+      tile.dead = false;
+      setMessage("Cleared dead crop.");
+      saveState();
+      render();
+    }
+
+    function handleTileClick(index) {
+      const tile = state.tiles[index];
+      const { stage } = getTileState(tile);
+
+      if (stage === "empty") return plantTile(index);
+      if (stage === "ready") return harvestTile(index);
+      if (stage === "dead") return clearDeadTile(index);
+
+      setMessage("Growing…");
+    }
+
+    function formatTimeRemaining(sec) {
+      if (sec <= 0) return "Ready";
+      if (sec < 60) return sec + "s";
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      if (m >= 60) {
+        const h = Math.floor(m / 60);
+        const rm = m % 60;
+        return h + "h " + (rm > 0 ? rm + "m" : "");
+      }
+      return m + "m" + (s > 0 ? " " + s + "s" : "");
+    }
+
+    function render() {
+      coinsEl.textContent = state.coins;
+      farmEl.innerHTML = "";
+
+      for (let i = 0; i < state.tiles.length; i++) {
+        const tile = state.tiles[i];
+        const { stage, crop, remaining } = getTileState(tile);
+
+        const div = document.createElement("div");
+        div.className = "tile " + stage;
+
+        let label = "";
+        if (stage === "planted" || stage === "growing" || stage === "ready") {
+          label = crop.emoji;
+        } else if (stage === "dead") {
+          label = "💀";
+        }
+
+        div.textContent = label;
+
+        if (stage === "planted" || stage === "growing") {
+          div.title = `${crop.name} — ${formatTimeRemaining(remaining)}`;
+        } else if (stage === "ready") {
+          div.title = `${crop.name} — Ready to harvest`;
+        } else if (stage === "dead") {
+          div.title = `Dead crop — click to clear`;
+        } else {
+          div.title = `Empty — click to plant`;
+        }
+
+        div.addEventListener("click", () => handleTileClick(i));
+        farmEl.appendChild(div);
+      }
+    }
+
+    clearSaveBtn.addEventListener("click", () => {
+      if (!confirm("Reset farm and coins?")) return;
+      state.coins = 100;
+      state.tiles = [];
+      initTiles();
+      saveState();
+      setMessage("Farm reset.");
+      render();
+    });
+
+    function tick() {
+      render();
+    }
+
+    loadState();
+    initTiles();
+    initSeedSelect();
+    render();
+    setMessage("Click a tile to plant. Ready crops glow green.");
+
+    setInterval(tick, 1000);
+  </script>
 </body>
 </html>
