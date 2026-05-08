@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Krypton Grid Farm</title>
+  <title>Krypton Grid Farm+</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <meta http-equiv="Cache-Control" content="no-transform">
@@ -23,7 +23,7 @@
     }
 
     h1 {
-      margin: 6px 0;
+      margin: 4px 0;
       font-size: 18px;
       letter-spacing: 0.05em;
       text-transform: uppercase;
@@ -31,19 +31,22 @@
 
     #ui {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       align-items: center;
       flex-wrap: wrap;
       justify-content: center;
-      padding: 6px;
+      padding: 4px 6px;
+      font-size: 12px;
     }
 
     .panel {
       background: #11131a;
       border: 1px solid #333;
       border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 12px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     select, button {
@@ -52,7 +55,13 @@
       border: 1px solid #444;
       border-radius: 4px;
       padding: 3px 6px;
-      font-size: 12px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
     }
 
     #farm {
@@ -62,8 +71,8 @@
       height: 95vmin;
       grid-template-columns: repeat(10, 1fr);
       grid-template-rows: repeat(10, 1fr);
-      gap: 0.8vmin;
-      padding: 0.8vmin;
+      gap: 0.7vmin;
+      padding: 0.7vmin;
       box-sizing: border-box;
       background: #05060a;
       border-radius: 12px;
@@ -77,7 +86,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 3vmin;
+      font-size: 2.8vmin;
       cursor: pointer;
       user-select: none;
       transition: transform 0.05s;
@@ -85,6 +94,7 @@
 
     .tile:hover { transform: translateY(-0.3vmin); }
 
+    .tile.locked { background: #111; border: 1px solid #222; cursor: default; }
     .tile.empty { background: #2b2415; border: 1px solid #3a3120; }
     .tile.planted { background: #3b2f18; border: 1px solid #5a4420; }
     .tile.growing { background: #4b3f1c; border: 1px solid #7a5a26; }
@@ -93,18 +103,39 @@
 
     #msg {
       font-size: 12px;
-      padding: 6px;
+      padding: 4px 6px;
       text-align: center;
       height: 18px;
+    }
+
+    #bottomBar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 4px 6px 6px;
+      font-size: 11px;
+    }
+
+    .small-panel {
+      background: #10121a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 4px 6px;
     }
   </style>
 </head>
 <body>
-  <h1>Krypton Grid Farm</h1>
+  <h1>Krypton Grid Farm+</h1>
 
   <div id="ui">
     <div class="panel">
       <span>Coins:</span> <span id="coins">0</span>
+    </div>
+
+    <div class="panel">
+      <span>Lvl:</span> <span id="level">1</span>
+      <span>XP:</span> <span id="xp">0</span>/<span id="xpNext">10</span>
     </div>
 
     <div class="panel">
@@ -113,31 +144,78 @@
     </div>
 
     <div class="panel">
-      <button id="clearSaveBtn">Reset Farm</button>
+      <button id="expandBtn">Expand Farm</button>
+    </div>
+
+    <div class="panel">
+      <button id="buildingsBtn">Upgrade Buildings</button>
+    </div>
+
+    <div class="panel">
+      <button id="animalsBtn">Animals</button>
+    </div>
+
+    <div class="panel">
+      <button id="clearSaveBtn">Reset</button>
     </div>
   </div>
 
   <div id="farm"></div>
   <div id="msg"></div>
 
+  <div id="bottomBar">
+    <div class="small-panel" id="buildingsInfo"></div>
+    <div class="small-panel" id="animalsInfo"></div>
+  </div>
+
   <script>
+    // ---------- DATA ----------
     const CROPS = [
-      { id: "wheat", name: "Wheat", emoji: "🌾", cost: 5, sell: 10, growSeconds: 30 },
-      { id: "corn", name: "Corn", emoji: "🌽", cost: 12, sell: 25, growSeconds: 90 },
-      { id: "carrot", name: "Carrot", emoji: "🥕", cost: 20, sell: 45, growSeconds: 180 }
+      { id: "wheat", name: "Wheat", emoji: "🌾", cost: 5, sell: 10, growSeconds: 30, xp: 2, levelRequired: 1 },
+      { id: "corn", name: "Corn", emoji: "🌽", cost: 12, sell: 25, growSeconds: 90, xp: 5, levelRequired: 2 },
+      { id: "carrot", name: "Carrot", emoji: "🥕", cost: 20, sell: 45, growSeconds: 180, xp: 9, levelRequired: 3 },
+      { id: "strawberry", name: "Strawberry", emoji: "🍓", cost: 35, sell: 80, growSeconds: 300, xp: 15, levelRequired: 4 },
+      { id: "pumpkin", name: "Pumpkin", emoji: "🎃", cost: 60, sell: 150, growSeconds: 600, xp: 30, levelRequired: 5 }
     ];
 
+    const LEVEL_XP = [0, 10, 30, 70, 130, 220, 340]; // level 1..n thresholds
     const GRID_SIZE = 10;
-    const SAVE_KEY = "krypton_grid_farm_v3";
+    const SAVE_KEY = "krypton_grid_farm_plus_v1";
 
     const farmEl = document.getElementById("farm");
     const coinsEl = document.getElementById("coins");
+    const levelEl = document.getElementById("level");
+    const xpEl = document.getElementById("xp");
+    const xpNextEl = document.getElementById("xpNext");
     const seedSelectEl = document.getElementById("seedSelect");
     const msgEl = document.getElementById("msg");
     const clearSaveBtn = document.getElementById("clearSaveBtn");
+    const expandBtn = document.getElementById("expandBtn");
+    const buildingsBtn = document.getElementById("buildingsBtn");
+    const animalsBtn = document.getElementById("animalsBtn");
+    const buildingsInfoEl = document.getElementById("buildingsInfo");
+    const animalsInfoEl = document.getElementById("animalsInfo");
 
-    let state = { coins: 100, tiles: [] };
+    // state
+    let state = {
+      coins: 100,
+      xp: 0,
+      level: 1,
+      unlockedSize: 6, // active area (starts 6x6, then 8x8, then 10x10)
+      tiles: [],
+      buildings: {
+        barn: 1,      // cosmetic / flavor
+        silo: 1,      // cosmetic
+        well: 1       // reduces grow time
+      },
+      animals: {
+        chickens: 0,
+        cows: 0
+      },
+      lastAnimalTick: Math.floor(Date.now() / 1000)
+    };
 
+    // ---------- HELPERS ----------
     function nowSeconds() {
       return Math.floor(Date.now() / 1000);
     }
@@ -150,6 +228,22 @@
       msgEl.textContent = text || "";
     }
 
+    function xpForLevel(level) {
+      return LEVEL_XP[level] ?? LEVEL_XP[LEVEL_XP.length - 1] + (level - LEVEL_XP.length + 1) * 150;
+    }
+
+    function checkLevelUp() {
+      let changed = false;
+      while (state.level < 99 && state.xp >= xpForLevel(state.level)) {
+        state.level++;
+        changed = true;
+      }
+      if (changed) {
+        setMessage("Level up! You are now level " + state.level + ".");
+      }
+    }
+
+    // ---------- SAVE / LOAD ----------
     function saveState() {
       localStorage.setItem(SAVE_KEY, JSON.stringify(state));
     }
@@ -159,12 +253,12 @@
       if (!raw) return;
       try {
         const data = JSON.parse(raw);
-        if (data && Array.isArray(data.tiles)) {
-          state = data;
-        }
+        if (!data || !Array.isArray(data.tiles)) return;
+        state = Object.assign(state, data);
       } catch {}
     }
 
+    // ---------- INIT ----------
     function initTiles() {
       if (!Array.isArray(state.tiles) || state.tiles.length !== GRID_SIZE * GRID_SIZE) {
         state.tiles = Array.from({ length: GRID_SIZE * GRID_SIZE }, () => ({
@@ -181,9 +275,16 @@
       CROPS.forEach(crop => {
         const opt = document.createElement("option");
         opt.value = crop.id;
-        opt.textContent = `${crop.emoji} ${crop.name} (Cost: ${crop.cost}, Sell: ${crop.sell}, ${crop.growSeconds}s)`;
+        opt.textContent = `${crop.emoji} ${crop.name} (Lv${crop.levelRequired}, ${crop.cost}/${crop.sell}, ${crop.growSeconds}s)`;
         seedSelectEl.appendChild(opt);
       });
+    }
+
+    // ---------- TILE STATE ----------
+    function isTileLocked(index) {
+      const row = Math.floor(index / GRID_SIZE);
+      const col = index % GRID_SIZE;
+      return row >= state.unlockedSize || col >= state.unlockedSize;
     }
 
     function getTileState(tile) {
@@ -195,18 +296,27 @@
       if (tile.dead) return { stage: "dead", crop, remaining: 0 };
 
       const elapsed = nowSeconds() - tile.plantedAt;
-      const remaining = crop.growSeconds - elapsed;
+      const growTime = Math.max(5, crop.growSeconds * wellGrowMultiplier());
+      const remaining = growTime - elapsed;
 
       if (remaining <= 0) return { stage: "ready", crop, remaining: 0 };
-      if (elapsed > crop.growSeconds * 2) return { stage: "dead", crop, remaining: 0 };
-      if (elapsed > crop.growSeconds * 0.4) return { stage: "growing", crop, remaining };
+      if (elapsed > growTime * 2) return { stage: "dead", crop, remaining: 0 };
+      if (elapsed > growTime * 0.4) return { stage: "growing", crop, remaining };
       return { stage: "planted", crop, remaining };
     }
 
+    function wellGrowMultiplier() {
+      // each well level reduces grow time by 5%, min 60%
+      const mult = 1 - (state.buildings.well - 1) * 0.05;
+      return Math.max(0.6, mult);
+    }
+
+    // ---------- ACTIONS ----------
     function plantTile(index) {
       const tile = state.tiles[index];
       const crop = getCropById(seedSelectEl.value);
       if (!crop) return setMessage("No crop selected.");
+      if (state.level < crop.levelRequired) return setMessage("Requires level " + crop.levelRequired + ".");
       if (tile.cropId) return setMessage("Tile already planted.");
       if (state.coins < crop.cost) return setMessage("Not enough coins.");
 
@@ -228,12 +338,15 @@
       if (stage !== "ready") return setMessage("Crop not ready yet.");
 
       state.coins += crop.sell;
+      state.xp += crop.xp;
+      checkLevelUp();
+
       tile.cropId = null;
       tile.plantedAt = 0;
       tile.harvested = true;
       tile.dead = false;
 
-      setMessage(`Harvested ${crop.name} for ${crop.sell} coins.`);
+      setMessage(`Harvested ${crop.name} for ${crop.sell} coins (+${crop.xp} XP).`);
       saveState();
       render();
     }
@@ -250,6 +363,9 @@
     }
 
     function handleTileClick(index) {
+      if (isTileLocked(index)) {
+        return setMessage("Locked. Expand farm to unlock more tiles.");
+      }
       const tile = state.tiles[index];
       const { stage } = getTileState(tile);
 
@@ -260,6 +376,104 @@
       setMessage("Growing…");
     }
 
+    // ---------- EXPANSION ----------
+    function nextExpansionCost() {
+      if (state.unlockedSize >= 10) return null;
+      if (state.unlockedSize === 6) return 500;
+      if (state.unlockedSize === 8) return 2000;
+      return null;
+    }
+
+    function expandFarm() {
+      const cost = nextExpansionCost();
+      if (cost == null) return setMessage("Farm fully expanded.");
+      if (state.coins < cost) return setMessage("Need " + cost + " coins to expand.");
+      state.coins -= cost;
+      state.unlockedSize += 2;
+      if (state.unlockedSize > 10) state.unlockedSize = 10;
+      setMessage("Farm expanded to " + state.unlockedSize + "x" + state.unlockedSize + "!");
+      saveState();
+      render();
+    }
+
+    // ---------- BUILDINGS ----------
+    function buildingUpgradeCost(name) {
+      const level = state.buildings[name] || 1;
+      if (name === "well") return 200 * level;
+      if (name === "barn") return 150 * level;
+      if (name === "silo") return 150 * level;
+      return 100 * level;
+    }
+
+    function upgradeBuilding(name) {
+      const cost = buildingUpgradeCost(name);
+      if (state.coins < cost) return setMessage("Need " + cost + " coins to upgrade " + name + ".");
+      state.coins -= cost;
+      state.buildings[name] = (state.buildings[name] || 1) + 1;
+      setMessage("Upgraded " + name + " to level " + state.buildings[name] + ".");
+      saveState();
+      render();
+    }
+
+    function showBuildingsInfo() {
+      buildingsInfoEl.innerHTML =
+        `Barn Lv${state.buildings.barn} (cosmetic)<br>` +
+        `Silo Lv${state.buildings.silo} (cosmetic)<br>` +
+        `Well Lv${state.buildings.well} (grow time -${(state.buildings.well - 1) * 5}%)<br>` +
+        `<button onclick="upgradeBuilding('barn')">Upgrade Barn (${buildingUpgradeCost('barn')}c)</button> ` +
+        `<button onclick="upgradeBuilding('silo')">Upgrade Silo (${buildingUpgradeCost('silo')}c)</button> ` +
+        `<button onclick="upgradeBuilding('well')">Upgrade Well (${buildingUpgradeCost('well')}c)</button>`;
+    }
+
+    // expose for inline buttons
+    window.upgradeBuilding = upgradeBuilding;
+
+    // ---------- ANIMALS ----------
+    function animalBuyCost(type) {
+      if (type === "chickens") return 100;
+      if (type === "cows") return 300;
+      return 100;
+    }
+
+    function buyAnimal(type) {
+      const cost = animalBuyCost(type);
+      if (state.coins < cost) return setMessage("Need " + cost + " coins.");
+      state.coins -= cost;
+      state.animals[type] = (state.animals[type] || 0) + 1;
+      setMessage("Bought 1 " + type.slice(0, -1) + ".");
+      saveState();
+      render();
+    }
+
+    function animalIncomePerSecond() {
+      const chickens = state.animals.chickens || 0;
+      const cows = state.animals.cows || 0;
+      // simple: chickens 1 coin/10s, cows 1 coin/4s
+      return chickens * 0.1 + cows * 0.25;
+    }
+
+    function tickAnimals() {
+      const now = nowSeconds();
+      const dt = now - (state.lastAnimalTick || now);
+      if (dt <= 0) return;
+      state.lastAnimalTick = now;
+      const income = animalIncomePerSecond() * dt;
+      if (income > 0) {
+        state.coins += Math.floor(income);
+      }
+    }
+
+    function showAnimalsInfo() {
+      animalsInfoEl.innerHTML =
+        `Chickens: ${state.animals.chickens} (slow coins)<br>` +
+        `Cows: ${state.animals.cows} (faster coins)<br>` +
+        `<button onclick="buyAnimal('chickens')">Buy Chicken (${animalBuyCost('chickens')}c)</button> ` +
+        `<button onclick="buyAnimal('cows')">Buy Cow (${animalBuyCost('cows')}c)</button>`;
+    }
+
+    window.buyAnimal = buyAnimal;
+
+    // ---------- RENDER ----------
     function formatTimeRemaining(sec) {
       if (sec <= 0) return "Ready";
       if (sec < 60) return sec + "s";
@@ -275,58 +489,105 @@
 
     function render() {
       coinsEl.textContent = state.coins;
-      farmEl.innerHTML = "";
+      levelEl.textContent = state.level;
+      xpEl.textContent = state.xp;
+      xpNextEl.textContent = xpForLevel(state.level);
 
+      const cost = nextExpansionCost();
+      if (cost == null) {
+        expandBtn.textContent = "Farm Maxed";
+        expandBtn.disabled = true;
+      } else {
+        expandBtn.textContent = "Expand (" + cost + "c)";
+        expandBtn.disabled = state.coins < cost;
+      }
+
+      farmEl.innerHTML = "";
       for (let i = 0; i < state.tiles.length; i++) {
         const tile = state.tiles[i];
-        const { stage, crop, remaining } = getTileState(tile);
-
+        const locked = isTileLocked(i);
         const div = document.createElement("div");
-        div.className = "tile " + stage;
 
-        let label = "";
-        if (stage === "planted" || stage === "growing" || stage === "ready") {
-          label = crop.emoji;
-        } else if (stage === "dead") {
-          label = "💀";
-        }
-
-        div.textContent = label;
-
-        if (stage === "planted" || stage === "growing") {
-          div.title = `${crop.name} — ${formatTimeRemaining(remaining)}`;
-        } else if (stage === "ready") {
-          div.title = `${crop.name} — Ready to harvest`;
-        } else if (stage === "dead") {
-          div.title = `Dead crop — click to clear`;
+        if (locked) {
+          div.className = "tile locked";
+          div.textContent = "🔒";
+          div.title = "Locked. Expand farm to unlock.";
         } else {
-          div.title = `Empty — click to plant`;
+          const { stage, crop, remaining } = getTileState(tile);
+          div.className = "tile " + stage;
+
+          let label = "";
+          if (stage === "planted" || stage === "growing" || stage === "ready") {
+            label = crop.emoji;
+          } else if (stage === "dead") {
+            label = "💀";
+          }
+
+          div.textContent = label;
+
+          if (stage === "planted" || stage === "growing") {
+            div.title = `${crop.name} — ${formatTimeRemaining(remaining)}`;
+          } else if (stage === "ready") {
+            div.title = `${crop.name} — Ready to harvest`;
+          } else if (stage === "dead") {
+            div.title = `Dead crop — click to clear`;
+          } else {
+            div.title = `Empty — click to plant`;
+          }
+
+          div.addEventListener("click", () => handleTileClick(i));
         }
 
-        div.addEventListener("click", () => handleTileClick(i));
         farmEl.appendChild(div);
       }
+
+      showBuildingsInfo();
+      showAnimalsInfo();
     }
 
+    // ---------- EVENTS ----------
     clearSaveBtn.addEventListener("click", () => {
-      if (!confirm("Reset farm and coins?")) return;
-      state.coins = 100;
-      state.tiles = [];
+      if (!confirm("Reset farm, coins, XP, buildings, animals?")) return;
+      state = {
+        coins: 100,
+        xp: 0,
+        level: 1,
+        unlockedSize: 6,
+        tiles: [],
+        buildings: { barn: 1, silo: 1, well: 1 },
+        animals: { chickens: 0, cows: 0 },
+        lastAnimalTick: nowSeconds()
+      };
       initTiles();
       saveState();
       setMessage("Farm reset.");
       render();
     });
 
+    expandBtn.addEventListener("click", expandFarm);
+    buildingsBtn.addEventListener("click", () => {
+      setMessage("Buildings affect growth and flavor. Upgrade Well to speed crops.");
+      showBuildingsInfo();
+    });
+    animalsBtn.addEventListener("click", () => {
+      setMessage("Animals generate passive coins over time.");
+      showAnimalsInfo();
+    });
+
+    // ---------- TICK ----------
     function tick() {
+      tickAnimals();
       render();
+      saveState();
     }
 
+    // ---------- START ----------
     loadState();
     initTiles();
     initSeedSelect();
+    if (!state.lastAnimalTick) state.lastAnimalTick = nowSeconds();
     render();
-    setMessage("Click a tile to plant. Ready crops glow green.");
+    setMessage("Plant, harvest, level up, expand, upgrade, and raise animals.");
 
     setInterval(tick, 1000);
   </script>
