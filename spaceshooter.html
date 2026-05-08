@@ -41,8 +41,6 @@
       display: none;
     }
 
-
-
     canvas {
       background: radial-gradient(circle at top, #222 0, #050509 60%);
       border: 2px solid #333;
@@ -53,29 +51,16 @@
       touch-action: none;
       margin-bottom: 20px;
     }
-
-
-    button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      border-radius: 999px;
-      border: none;
-      background: #ff7b00;
-      color: #050509;
-      font-weight: 600;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
 
   <h1>Space Shooter</h1>
-  <p>Dodge debris, fight enemy ships, collect power-ups.</p>
+  <p>Dodge debris, fight enemy ships, collect power-ups. check comments</p>
 
   <div id="spaceScore">Score: 0</div>
   <div id="spaceLives">❤️❤️❤️</div>
   <div id="spaceHealth">Health: 100</div>
-
 
   <canvas id="spaceCanvas" width="240" height="320"></canvas>
 
@@ -90,10 +75,10 @@
     }
 
     const canvas = document.getElementById("spaceCanvas");
+    const ctx = canvas.getContext("2d");
+
     canvas.addEventListener("click", handleGameTap);
     canvas.addEventListener("touchstart", handleGameTap);
-
-    const ctx = canvas.getContext("2d");
 
     let ship, bullets, enemies, stars, powerups, debris, enemyBullets;
     let spaceScore = 0;
@@ -103,9 +88,6 @@
     let lastTime = 0;
     let shootCooldown = 0;
     let difficulty = 1;
-    let lastPowerupTime = 0;
-    let powerupCooldown = 2000; // 2 seconds minimum between spawns
-    let maxPowerupsOnScreen = 2;
     let gameRunning = false;
     let gamePaused = false;
     let gameLoopId = null;
@@ -114,17 +96,28 @@
     let enemiesPerWave = 1;
     let waveCooldown = 0;
     let waitingForNextWave = false;
+    let patternTime = 0;
 
+    // TEST MODE
+    let TEST_MODE = false;
+    let testIntervals = [];
 
-
-
-
-    // ⭐ PERMANENT STACKING BOOSTERS
+    // BOOSTERS
     let power = {
-      rapid: 0,       // permanent rapid fire
-      multishot: 1,   // 1=single, 2=double, 3=triple
-      shield: 0       // absorbs hits
+      rapid: 0,
+      multishot: 1,
+      shieldTime: 0
     };
+
+    // Powerup images
+    const shieldImg = new Image();
+    shieldImg.src = "shield.png";
+    const rapidImg = new Image();
+    rapidImg.src = "rapid.png";
+    const doubleImg = new Image();
+    doubleImg.src = "double.png";
+    const lifeImg = new Image();
+    lifeImg.src = "life.png";
 
     function updateLives() {
       document.getElementById("spaceLives").textContent = "❤️".repeat(lives);
@@ -140,7 +133,12 @@
 
     function resetSpaceGame() {
       shootCooldown = 0;
-      lastPowerupTime = 0;
+      wave = 1;
+      enemiesPerWave = 1;
+      waitingForNextWave = false;
+      waveCooldown = 0;
+      difficulty = 1;
+
       ship = {
         x: canvas.width / 2 - 12,
         y: canvas.height - 40,
@@ -160,11 +158,8 @@
       spaceScore = 0;
       lives = 3;
       health = 100;
-      difficulty = 1;
 
-      power = { rapid: 0, multishot: 1, shield: 0 };
-      power.shieldTime = 0;   // milliseconds of shield remaining
-
+      power = { rapid: 0, multishot: 1, shieldTime: 0 };
 
       updateLives();
       updateHealth();
@@ -179,76 +174,203 @@
       }
     }
 
-    function drawEmoji(x, y, emoji, size = 18) {
-      ctx.font = size + "px serif";
-      ctx.textAlign = "center";
-      ctx.fillText(emoji, x + size / 2, y + size);
+    // ---------- TEST MODE ----------
+    function enableTestMode() {
+      TEST_MODE = true;
+
+      lives = 999;
+      health = 999;
+      power.shieldTime = 999999;
+
+      power.rapid = 5;
+      power.multishot = 10;
+
+      testIntervals.push(setInterval(() => {
+        powerups.push({
+          x: Math.random() * (canvas.width - 12),
+          y: -20,
+          w: 12,
+          h: 12,
+          type: ["shield", "rapid", "double", "life"][Math.floor(Math.random() * 4)]
+        });
+      }, 300));
+
+      testIntervals.push(setInterval(() => {
+        spawnEnemy();
+      }, 500));
+
+      testIntervals.push(setInterval(() => {
+        spawnBoss();
+      }, 8000));
+
+      console.log("TEST MODE ENABLED");
     }
 
-    function spawnEnemy() {
-      const w = 20;
+    function disableTestMode() {
+      TEST_MODE = false;
 
-      enemies.push({
-        x: Math.random() * (canvas.width - w),
+      testIntervals.forEach(id => clearInterval(id));
+      testIntervals = [];
 
-        // Spread enemies vertically so they don't clump
-        y: Math.random() * 120 + 20,  // wider range
+      power.rapid = 0;
+      power.multishot = 1;
+      power.shieldTime = 0;
+      lives = 3;
+      health = 100;
 
-        w: w,
-        h: 24,
-
-        // Each enemy gets its own speed
-        speedX: (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 0.8),
-
-        hoverOffset: Math.random() * 200, // MUCH bigger offset → unique motion
-        hoverSpeed: 0.01 + Math.random() * 0.03,
-
-        hp: 1 + Math.floor(wave / 3),
-
-        speed: 0
-      });
+      console.log("TEST MODE DISABLED");
     }
 
+    function toggleTestMode() {
+      if (TEST_MODE) disableTestMode();
+      else enableTestMode();
+    }
 
+    document.addEventListener("keydown", e => {
+      if (e.key === "t" || e.key === "T") {
+        toggleTestMode();
+      }
+    });
 
-    function updateWaves(dt) {
-      // 1. If all enemies are dead AND we are not already waiting → start cooldown
-      if (enemies.length === 0 && !waitingForNextWave) {
-        waitingForNextWave = true;
-        waveCooldown = 3000; // 3 seconds pause before next wave
+    // ---------- ENEMY SPAWNING ----------
+
+    function spawnEnemy(typeOverride = null) {
+      const typeRoll = Math.random();
+      let type = typeOverride;
+
+      if (!type) {
+        if (typeRoll < 0.55) type = "light";
+        else if (typeRoll < 0.9) type = "medium";
+        else type = "elite";
       }
 
-      // 2. If waiting, count down
-      if (waitingForNextWave) {
-        waveCooldown -= dt * 16.67;
+      let baseHP, speedX, w, h;
 
-        // 3. When cooldown finishes → spawn next wave
-        if (waveCooldown <= 0) {
-          waitingForNextWave = false;
+      if (type === "light") {
+        baseHP = 1;
+        speedX = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random());
+        w = 16; h = 16;
+      } else if (type === "medium") {
+        baseHP = 3;
+        speedX = (Math.random() < 0.5 ? -1 : 1) * (0.6 + Math.random() * 0.5);
+        w = 22; h = 22;
+      } else if (type === "elite") {
+        baseHP = 6;
+        speedX = (Math.random() < 0.5 ? -1 : 1) * 1.5;
+        w = 26; h = 26;
+      } else if (["dreadnought", "hive", "mecha"].includes(type)) {
+        baseHP = 200 + wave * 40;
+        speedX = 1.2;
+        w = 80; h = 60;
+      }
 
-          wave++;
-          // Wave size grows slowly and predictably
-          let baseWaveSize = 1 + wave; // Wave 1 = 2 enemies, Wave 2 = 3, Wave 3 = 4...
+      const hpMultiplier = 1 + wave * 0.25;
 
-          // Add small randomness
-          let randomBonus = Math.floor(Math.random() * 2); // 0 or +1
+      const enemy = {
+        type,
+        x: Math.random() * (canvas.width - w),
+        y: Math.random() * 60 + 20,
+        w,
+        h,
+        speedX,
+        hoverOffset: Math.random() * 200,
+        hoverSpeed: 0.01 + Math.random() * 0.03,
+        hp: ["dreadnought", "hive", "mecha"].includes(type)
+          ? baseHP
+          : Math.floor(baseHP * hpMultiplier),
+        maxHP: ["dreadnought", "hive", "mecha"].includes(type)
+          ? baseHP
+          : Math.floor(baseHP * hpMultiplier),
+        dive: false,
+        phase: 1,
+        cooldown: 0
+      };
 
-          // Final wave size
-          enemiesPerWave = Math.min(10, baseWaveSize + randomBonus);
+      enemies.push(enemy);
+      return enemy;
+    }
 
+    function spawnEnemyAt(x, y, typeOverride = null) {
+      spawnEnemy(typeOverride);
+      const e = enemies[enemies.length - 1];
+      e.x = x;
+      e.y = y;
+    }
 
+    function spawnFormation(count) {
+      const formation = Math.floor(Math.random() * 4);
 
-          for (let i = 0; i < enemiesPerWave; i++) {
-            spawnEnemy();
-          }
+      if (formation === 0) {
+        for (let i = 0; i < count; i++) {
+          spawnEnemyAt(20 + i * 30, 30);
+        }
+      } else if (formation === 1) {
+        for (let i = 0; i < count; i++) {
+          const offset = i - count / 2;
+          spawnEnemyAt(
+            canvas.width / 2 + offset * 20,
+            20 + Math.abs(offset) * 10
+          );
+        }
+      } else if (formation === 2) {
+        for (let i = 0; i < count; i++) {
+          spawnEnemyAt(
+            (i + 0.5) * (canvas.width / count),
+            20 + Math.sin(i) * 20
+          );
+        }
+      } else if (formation === 3) {
+        for (let i = 0; i < count; i++) {
+          const col = i % 2 === 0 ? 40 : canvas.width - 40;
+          spawnEnemyAt(col, 20 + i * 15);
         }
       }
     }
 
+    function spawnBoss() {
+      const bossTypes = ["dreadnought", "hive", "mecha"];
+      const pick = bossTypes[Math.floor(Math.random() * bossTypes.length)];
 
+      const boss = {
+        type: pick,
+        x: canvas.width / 2 - 40,
+        y: 40,
+        w: 80,
+        h: 60,
+        hp: 200 + wave * 40,
+        maxHP: 200 + wave * 40,
+        phase: 1,
+        cooldown: 0,
+        speedX: 1.2
+      };
 
+      enemies.push(boss);
+    }
 
+    function updateWaves(dt) {
+      if (enemies.length === 0 && !waitingForNextWave && running) {
+        waitingForNextWave = true;
+        waveCooldown = 3000;
+      }
 
+      if (waitingForNextWave) {
+        waveCooldown -= dt * 16.67;
+        if (waveCooldown <= 0) {
+          waitingForNextWave = false;
+          wave++;
+
+          if (wave % 5 === 0) {
+            spawnBoss();
+          } else {
+            let baseWaveSize = 1 + wave;
+            let randomBonus = Math.floor(Math.random() * 2);
+            enemiesPerWave = Math.min(10, baseWaveSize + randomBonus);
+            spawnFormation(enemiesPerWave);
+          }
+        }
+      }
+    }
+    // ---------- SHOOTING ----------
     function shoot() {
       if (!running) return;
       if (shootCooldown > 0) return;
@@ -257,14 +379,12 @@
 
       for (let i = 0; i < shots; i++) {
         let angle;
-
         if (shots === 1) {
-          angle = 0; // straight up
+          angle = 0;
         } else {
           let t = (i - (shots - 1) / 2) / ((shots - 1) / 2);
-          angle = t * Math.abs(t) * 0.08;  
+          angle = t * Math.abs(t) * 0.08;
         }
-
 
         bullets.push({
           x: ship.x + ship.w / 2,
@@ -276,21 +396,19 @@
         });
       }
 
-      shootCooldown = power.rapid > 0 ? 8 : 10;
+      // ⭐ Stacking rapid-fire fix
+      shootCooldown = Math.max(2, 10 - power.rapid * 2);
     }
 
-
+    // ---------- DAMAGE ----------
     function damage(amount) {
       if (ship.invincible > 0) return false;
 
-      // ⭐ Shield absorbs hits
       if (power.shieldTime > 0) {
-        // absorb hit, reduce shield time
-        power.shieldTime -= 1000;   // lose 1 second per hit
+        power.shieldTime -= 1000;
         if (power.shieldTime < 0) power.shieldTime = 0;
         return false;
-    }
-
+      }
 
       health -= amount;
       updateHealth();
@@ -312,26 +430,27 @@
       return false;
     }
 
+    // ---------- GAME LOOP ----------
     function startSpaceGame() {
       shootCooldown = 0;
-      lastPowerupTime = 0;
       resetSpaceGame();
       running = true;
+      gameRunning = true;
       lastTime = performance.now();
       requestAnimationFrame(spaceLoop);
     }
 
-
     function spaceLoop(ts) {
-      if (gamePaused) return;   // ← pause support
+      if (gamePaused || !running) return;
 
       const dt = (ts - lastTime) / 16.67;
       lastTime = ts;
+      patternTime += dt;
 
       updateSpace(dt);
       drawSpace();
 
-      gameLoopId = requestAnimationFrame(spaceLoop);  // ← store ID so pause can cancel it
+      gameLoopId = requestAnimationFrame(spaceLoop);
     }
 
     function pauseGame() {
@@ -340,7 +459,9 @@
     }
 
     function resumeGame() {
+      if (!running) return;
       gamePaused = false;
+      lastTime = performance.now();
       requestAnimationFrame(spaceLoop);
     }
 
@@ -357,31 +478,93 @@
       }
 
       if (now - lastTap < 300) {
-        // DOUBLE TAP → pause/resume
         if (!gamePaused) pauseGame(); else resumeGame();
       }
 
       lastTap = now;
     }
 
+    // ---------- ENEMY BULLET PATTERNS ----------
+    function fireBossCircle(e) {
+      const cx = e.x + e.w / 2;
+      const cy = e.y + e.h / 2;
+      const count = 14;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i;
+        enemyBullets.push({
+          x: cx,
+          y: cy,
+          w: 4,
+          h: 4,
+          speedX: Math.cos(angle) * 2,
+          speedY: Math.sin(angle) * 2
+        });
+      }
+    }
 
+    function fireBossCone(e) {
+      const cx = e.x + e.w / 2;
+      const cy = e.y + e.h;
+      for (let i = -3; i <= 3; i++) {
+        enemyBullets.push({
+          x: cx,
+          y: cy,
+          w: 4,
+          h: 4,
+          speedX: i * 0.7,
+          speedY: 2.2
+        });
+      }
+    }
 
+    function fireBossSpiral(e) {
+      const cx = e.x + e.w / 2;
+      const cy = e.y + e.h / 2;
+      const angle = patternTime * 0.15;
+      enemyBullets.push({
+        x: cx,
+        y: cy,
+        w: 4,
+        h: 4,
+        speedX: Math.cos(angle) * 2.5,
+        speedY: Math.sin(angle) * 2.5
+      });
+    }
 
+    function fireEliteAimed(e) {
+      const cx = e.x + e.w / 2;
+      const cy = e.y + e.h;
+      const targetX = ship.x + ship.w / 2;
+      const targetY = ship.y;
+      const dx = targetX - cx;
+      const dy = targetY - cy;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const speed = 2.4;
+      enemyBullets.push({
+        x: cx,
+        y: cy,
+        w: 4,
+        h: 8,
+        speedX: (dx / len) * speed,
+        speedY: (dy / len) * speed
+      });
+    }
+
+    // ---------- UPDATE LOOP ----------
+    function isBossType(e) {
+      return ["dreadnought", "hive", "mecha"].includes(e.type);
+    }
 
     function updateSpace(dt) {
       shootCooldown = Math.max(0, shootCooldown - dt * 0.2);
       updateWaves(dt);
 
-
-
-      // ⭐ ALWAYS SHOOTING
       shoot();
-
       difficulty += 0.00015 * dt;
 
       if (ship.invincible > 0) ship.invincible -= dt;
 
-      // ⭐ Stars
+      // ---------- STARS ----------
       stars.forEach(s => {
         s.y += s.s * dt;
         if (s.y > canvas.height) {
@@ -390,43 +573,61 @@
         }
       });
 
-
-
-      
-
-
-      
-      // ⭐ NEW ENEMY MOVEMENT — Galaga style
+      // ---------- ENEMY MOVEMENT & AI ----------
       enemies.forEach(e => {
+        if (isBossType(e)) {
+          const shipCenter = ship.x + ship.w / 2;
+          const bossCenter = e.x + e.w / 2;
+          if (shipCenter < bossCenter) e.x -= 0.8 * dt;
+          else e.x += 0.8 * dt;
 
-        // Horizontal movement
-        e.x += e.speedX * dt;
+          if (e.x < 0) e.x = 0;
+          if (e.x + e.w > canvas.width) e.x = canvas.width - e.w;
 
-        // Bounce off walls
-        if (e.x < 0 || e.x + e.w > canvas.width) {
-          e.speedX *= -1;
-        }
+          const ratio = e.hp / e.maxHP;
+          if (ratio < 0.6) e.phase = 2;
+          if (ratio < 0.3) e.phase = 3;
 
-        // Hover motion (small vertical wiggle)
-        e.y += Math.sin(performance.now() * e.hoverSpeed + e.hoverOffset) * 0.3;
+          if (Math.random() < 0.01 * dt) fireBossCircle(e);
+          if (e.phase >= 2 && Math.random() < 0.008 * dt) fireBossCone(e);
+          if (e.phase >= 3 && Math.random() < 0.02 * dt) fireBossSpiral(e);
 
-        // Prevent enemies from going below the player
-        const maxEnemyY = ship.y - 80; // they can get close but not pass you
-        if (e.y > maxEnemyY) {
-          e.y = maxEnemyY;
+        } else {
+          e.x += e.speedX * dt;
+
+          if (e.x < 0 || e.x + e.w > canvas.width) {
+            e.speedX *= -1;
+          }
+
+          e.y += Math.sin(performance.now() * e.hoverSpeed + e.hoverOffset) * 0.3;
+
+          const maxEnemyY = ship.y - 80;
+          if (e.y > maxEnemyY) e.y = maxEnemyY;
+
+          if (e.type === "elite") {
+            if (Math.random() < 0.0008 * dt && !e.dive) {
+              e.dive = true;
+            }
+            if (e.dive) {
+              e.y += 2.5 * dt;
+              if (e.y > ship.y - 40) e.dive = false;
+            }
+
+            if (Math.random() < 0.002 * dt) {
+              if (ship.x < e.x) e.x -= 1.2 * dt;
+              else e.x += 1.2 * dt;
+            }
+          }
         }
       });
 
-
-      // ⭐ Shield countdown
+      // ---------- SHIELD TIMER ----------
       if (power.shieldTime > 0) {
-          power.shieldTime -= dt * 16.67;  // convert dt to ms
-          if (power.shieldTime < 0) power.shieldTime = 0;
+        power.shieldTime -= dt * 16.67;
+        if (power.shieldTime < 0) power.shieldTime = 0;
       }
 
-
-
-      // ⭐ Debris
+      // ---------- DEBRIS ----------
       if (Math.random() < 0.003 * dt) {
         debris.push({
           x: Math.random() * (canvas.width - 10),
@@ -439,33 +640,25 @@
       debris.forEach(d => d.y += d.speed * dt);
       debris = debris.filter(d => d.y < canvas.height + 20);
 
-      // ⭐ Player bullets
+      // ---------- PLAYER BULLETS ----------
       bullets.forEach(b => {
         b.x += b.speedX * dt;
         b.y += b.speedY * dt;
       });
       bullets = bullets.filter(b => b.y + b.h > 0);
 
-
-      // ⭐ CLEAN POWERUP SYSTEM (always spawns reliably)
-      const TEST_MODE = false;   // set to false for normal gameplay
-
-      // Spawn frequency
-      const SPAWN_RATE = 0.0018;   // ~1.8 per second early game
+      // ---------- POWERUP SPAWNING ----------
+      const SPAWN_RATE = 0.0018;
       const SPEED = 1.2;
       const MAX_ON_SCREEN = 2;
 
-      // Try to spawn
       if (powerups.length < MAX_ON_SCREEN && Math.random() < SPAWN_RATE * dt) {
-
-        // Weighted types
         const roll = Math.random();
         let type;
-
-        if (roll < 0.40) type = "shield";      // 40%
-        else if (roll < 0.75) type = "rapid";  // 35%
-        else if (roll < 0.90) type = "double"; // 15%
-        else type = "life";                    // 10%
+        if (roll < 0.40) type = "shield";
+        else if (roll < 0.75) type = "rapid";
+        else if (roll < 0.90) type = "double";
+        else type = "life";
 
         powerups.push({
           x: Math.random() * (canvas.width - 12),
@@ -476,55 +669,42 @@
         });
       }
 
-      // Movement
       powerups.forEach(p => p.y += SPEED * dt);
       powerups = powerups.filter(p => p.y < canvas.height + 20);
 
-
-      function handleGameTap(e) {
-        e.preventDefault();
-
-        if (!gameRunning) {
-          // FIRST TAP → START GAME
-          gameRunning = true;
-          gamePaused = false;
-          startSpaceGame();
-          return;
-        }
-
-        if (!gamePaused) {
-          // SECOND TAP → PAUSE GAME
-          gamePaused = true;
-          pauseGame();
-        } else {
-          // THIRD TAP → RESUME GAME
-          gamePaused = false;
-          resumeGame();
-        }
-      }
-
-
-
-
-
-      // ⭐ Enemy bullets
+      // ---------- ENEMY BULLETS ----------
       enemies.forEach(e => {
-        if (Math.random() < 0.003 * dt) {
-          enemyBullets.push({
-            x: e.x + e.w / 2 - 2,
-            y: e.y + e.h,
-            w: 4,
-            h: 8,
-            speed: 2
-          });
+        if (isBossType(e)) {
+          // handled above
+        } else if (e.type === "elite") {
+          if (Math.random() < 0.005 * dt) {
+            fireEliteAimed(e);
+          }
+        } else {
+          if (Math.random() < 0.003 * dt) {
+            enemyBullets.push({
+              x: e.x + e.w / 2 - 2,
+              y: e.y + e.h,
+              w: 4,
+              h: 8,
+              speedX: 0,
+              speedY: 2
+            });
+          }
         }
       });
-      enemyBullets.forEach(b => b.y += b.speed * dt);
+
+      enemyBullets.forEach(b => {
+        b.x += (b.speedX || 0) * dt;
+        b.y += (b.speedY || b.speed || 0) * dt;
+      });
       enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 20);
 
-      // ⭐ Bullet vs enemy
-      bullets.forEach((b, bi) => {
-        enemies.forEach((e, ei) => {
+      // ---------- BULLET VS ENEMY ----------
+      for (let bi = bullets.length - 1; bi >= 0; bi--) {
+        const b = bullets[bi];
+        for (let ei = enemies.length - 1; ei >= 0; ei--) {
+          const e = enemies[ei];
           if (
             b.x < e.x + e.w &&
             b.x + b.w > e.x &&
@@ -532,22 +712,25 @@
             b.y + b.h > e.y
           ) {
             bullets.splice(bi, 1);
-
-            // ⭐ Reduce HP
             e.hp--;
 
-            // ⭐ Kill enemy if HP reaches 0
             if (e.hp <= 0) {
+              if (isBossType(e)) {
+                spaceScore += 200;
+              } else if (e.type === "elite") {
+                spaceScore += 40;
+              } else {
+                spaceScore += 10;
+              }
               enemies.splice(ei, 1);
-              spaceScore += 10;
               updateSpaceScore();
             }
+            break;
           }
-        });
-      });
+        }
+      }
 
-
-      // ⭐ Powerup pickup
+      // ---------- POWERUP PICKUP ----------
       powerups.forEach((p, i) => {
         if (
           p.x < ship.x + ship.w &&
@@ -556,28 +739,23 @@
           p.y + p.h > ship.y
         ) {
           if (p.type === "shield") {
-              power.shieldTime += 10000;   // +10 seconds per pickup
+            power.shieldTime += 10000;
           }
-
-
           if (p.type === "rapid") {
             power.rapid++;
           }
-
           if (p.type === "double") {
             power.multishot = Math.min(10, power.multishot + 1);
           }
-
           if (p.type === "life") {
             lives++;
             updateLives();
           }
-
           powerups.splice(i, 1);
         }
       });
 
-      // ⭐ Enemy bullets vs ship
+      // ---------- ENEMY BULLET VS SHIP ----------
       for (let i = enemyBullets.length - 1; i >= 0; i--) {
         const b = enemyBullets[i];
         if (
@@ -591,7 +769,7 @@
         }
       }
 
-      // ⭐ Debris vs ship
+      // ---------- DEBRIS VS SHIP ----------
       for (let i = debris.length - 1; i >= 0; i--) {
         const d = debris[i];
         if (
@@ -605,7 +783,7 @@
         }
       }
 
-      // ⭐ Enemy body vs ship
+      // ---------- ENEMY BODY VS SHIP ----------
       for (const e of enemies) {
         if (
           e.x < ship.x + ship.w &&
@@ -617,8 +795,9 @@
         }
       }
     }
+    // ---------- DRAWING ----------
 
-        function drawShip() {
+    function drawShip() {
       ctx.save();
       ctx.translate(ship.x + ship.w / 2, ship.y + ship.h / 2);
 
@@ -627,7 +806,6 @@
         return;
       }
 
-      // Player ship (faces upward)
       ctx.fillStyle = "#4fd5ff";
       ctx.beginPath();
       ctx.moveTo(0, -14);
@@ -650,32 +828,173 @@
       ctx.closePath();
       ctx.fill();
 
-      // ⭐ Draw shield bubble
       if (power.shieldTime > 0) {
-          ctx.strokeStyle = "rgba(0, 200, 255, 0.7)";
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(0, 0, 22, 0, Math.PI * 2);
-          ctx.stroke();
+        ctx.strokeStyle = "rgba(0, 200, 255, 0.7)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.stroke();
 
-          // Countdown text
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          ctx.font = "10px system-ui";
-          ctx.textAlign = "center";
-          ctx.fillText(Math.ceil(power.shieldTime / 1000), 0, -28);
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.font = "10px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(Math.ceil(power.shieldTime / 1000), 0, -28);
       }
-
 
       ctx.restore();
     }
 
+    // ---------- BOSS DRAWING ----------
 
+    function drawBoss_Dreadnought(e) {
+      ctx.save();
+      ctx.translate(e.x + e.w/2, e.y + e.h/2);
+
+      ctx.fillStyle = "#3a0f0f";
+      ctx.beginPath();
+      ctx.moveTo(-40, -20);
+      ctx.lineTo(40, -20);
+      ctx.lineTo(55, 0);
+      ctx.lineTo(40, 20);
+      ctx.lineTo(-40, 20);
+      ctx.lineTo(-55, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#661111";
+      ctx.fillRect(-30, -12, 60, 24);
+
+      ctx.fillStyle = "#ff4444";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 14, 20, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ff8800";
+      ctx.beginPath();
+      ctx.arc(-35, 0, 8, 0, Math.PI * 2);
+      ctx.arc(35, 0, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawBoss_Hive(e) {
+      ctx.save();
+      ctx.translate(e.x + e.w/2, e.y + e.h/2);
+
+      ctx.fillStyle = "#4b0f5f";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 45, 28, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#7a1fa3";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 30, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ff00ff";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 12, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#aa33ff";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(-40, -10);
+      ctx.quadraticCurveTo(-60, 0, -40, 10);
+      ctx.moveTo(40, -10);
+      ctx.quadraticCurveTo(60, 0, 40, 10);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawBoss_Mecha(e) {
+      ctx.save();
+      ctx.translate(e.x + e.w/2, e.y + e.h/2);
+
+      ctx.fillStyle = "#1e2b3c";
+      ctx.beginPath();
+      ctx.moveTo(0, -35);
+      ctx.lineTo(35, -10);
+      ctx.lineTo(25, 30);
+      ctx.lineTo(-25, 30);
+      ctx.lineTo(-35, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#00d4ff";
+      ctx.beginPath();
+      ctx.ellipse(0, -10, 12, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ff4444";
+      ctx.fillRect(-40, -20, 12, 20);
+      ctx.fillRect(28, -20, 12, 20);
+
+      ctx.fillStyle = "#ffaa00";
+      ctx.beginPath();
+      ctx.arc(-15, 32, 8, 0, Math.PI * 2);
+      ctx.arc(15, 32, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawBossHP(e) {
+      const barWidth = e.w;
+      const barHeight = 4;
+      const x = e.x;
+      const y = e.y - 8;
+      const ratio = e.hp / e.maxHP;
+
+      ctx.fillStyle = "#400";
+      ctx.fillRect(x, y, barWidth, barHeight);
+      ctx.fillStyle = "#f44";
+      ctx.fillRect(x, y, barWidth * ratio, barHeight);
+    }
+
+    // ---------- ENEMY DRAWING ----------
 
     function drawEnemyShip(e) {
+      if (e.type === "dreadnought") {
+        drawBoss_Dreadnought(e);
+        drawBossHP(e);
+        return;
+      }
+      if (e.type === "hive") {
+        drawBoss_Hive(e);
+        drawBossHP(e);
+        return;
+      }
+      if (e.type === "mecha") {
+        drawBoss_Mecha(e);
+        drawBossHP(e);
+        return;
+      }
+
       ctx.save();
       ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
 
-      // Enemy ship (faces downward)
+      if (e.type === "elite") {
+        ctx.fillStyle = "#ff4b81";
+        ctx.beginPath();
+        ctx.moveTo(0, 14);
+        ctx.lineTo(16, -10);
+        ctx.lineTo(0, -6);
+        ctx.lineTo(-16, -10);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "#ffd1e0";
+        ctx.beginPath();
+        ctx.ellipse(0, 4, 6, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+        return;
+      }
+
       ctx.fillStyle = "#ff4b81";
       ctx.beginPath();
       ctx.moveTo(0, 14);
@@ -690,61 +1009,52 @@
       ctx.ellipse(0, 4, 6, 8, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(255, 80, 80, 0.8)";
-      ctx.beginPath();
-      ctx.moveTo(-5, -12);
-      ctx.lineTo(0, -20);
-      ctx.lineTo(5, -12);
-      ctx.closePath();
-      ctx.fill();
+      ctx.restore();
+    }
+
+    // ---------- POWERUP DRAWING ----------
+    function drawImagePowerup(x, y, img) {
+      ctx.drawImage(img, x - 12, y - 12, 24, 24);
+    }
+
+    // ---------- UI DRAWING ----------
+    function drawUI() {
+      ctx.save();
+      ctx.fillStyle = "white";
+      ctx.font = "12px system-ui";
+      ctx.textAlign = "left";
+
+      ctx.fillText("Score: " + spaceScore, 10, 14);
+      ctx.fillText("Health: " + Math.floor(health), 10, 28);
+      ctx.fillText("❤️".repeat(lives), 10, 42);
 
       ctx.restore();
     }
 
+    // ---------- MAIN DRAW ----------
     function drawSpace() {
       ctx.fillStyle = "#050509";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Stars
       stars.forEach(s => {
         ctx.fillStyle = "rgba(255,255,255,0.8)";
         ctx.fillRect(s.x, s.y, s.s, s.s);
       });
 
-      // Debris
       ctx.fillStyle = "#777";
       debris.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h));
 
-      // Player ship
       drawShip();
       drawUI();
 
-
-      // Player bullets
       ctx.fillStyle = "#ffea00";
       bullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
 
-      // Enemies
       enemies.forEach(e => drawEnemyShip(e));
 
-      // Enemy bullets
       ctx.fillStyle = "#ff4444";
       enemyBullets.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
 
-      function drawImagePowerup(x, y, img) {
-        ctx.drawImage(img, x - 12, y - 12, 24, 24);
-      }
-
-
-      // Powerups (emoji)
-      const shieldImg = new Image();
-      shieldImg.src = "shield.png";
-      const rapidImg = new Image();
-      rapidImg.src = "rapid.png";
-      const doubleImg = new Image();
-      doubleImg.src = "double.png";
-      const lifeImg = new Image();
-      lifeImg.src = "life.png";
       powerups.forEach(p => {
         if (p.type === "shield") drawImagePowerup(p.x, p.y, shieldImg);
         if (p.type === "rapid")  drawImagePowerup(p.x, p.y, rapidImg);
@@ -752,9 +1062,7 @@
         if (p.type === "life")   drawImagePowerup(p.x, p.y, lifeImg);
       });
 
-
-      // Game Over screen
-      if (!running) {
+      if (!running && gameRunning) {
         ctx.fillStyle = "rgba(0,0,0,0.6)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "#ffffff";
@@ -763,36 +1071,19 @@
         ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2 - 10);
         ctx.font = "14px system-ui";
         ctx.fillText("Score: " + spaceScore, canvas.width / 2, canvas.height / 2 + 10);
-        ctx.fillText("Press Start to play again", canvas.width / 2, canvas.height / 2 + 30);
+        ctx.fillText("Tap to play again", canvas.width / 2, canvas.height / 2 + 30);
       }
     }
 
-    function drawUI() {
-        ctx.save();
-        ctx.fillStyle = "white";
-        ctx.font = "16px system-ui";
-        ctx.textAlign = "left";
-
-        // ⭐ Score (top-left inside the game)
-        ctx.fillText("Score: " + spaceScore, 100, 40);
-
-        // ⭐ Health (below score)
-        ctx.fillText("Health: " + Math.floor(health), 10, 40);
-
-        // ⭐ Lives (hearts)
-        ctx.fillText("❤️".repeat(lives), 10, 20);
-
-        ctx.restore();
-    }
-
-
+    // ---------- END GAME ----------
     function endSpaceGame() {
       running = false;
+      gameRunning = false;
       submitSpaceShooterScore(spaceScore);
       drawSpace();
     }
 
-    // ⭐ Keyboard controls
+    // ---------- INPUT ----------
     document.addEventListener("keydown", e => {
       if (!running) return;
 
@@ -819,10 +1110,7 @@
       const rect = canvas.getBoundingClientRect();
       const x = e.touches[0].clientX - rect.left;
 
-      // Center ship on finger
       ship.x = x - ship.w / 2;
-
-      // Keep inside bounds
       if (ship.x < 0) ship.x = 0;
       if (ship.x + ship.w > canvas.width) ship.x = canvas.width - ship.w;
     }, { passive: false });
@@ -831,8 +1119,7 @@
       dragging = false;
     });
 
-
-    // ⭐ Leaderboard submit
+    // ---------- LEADERBOARD ----------
     async function submitSpaceShooterScore(score) {
       try {
         await fetch("https://leaderboard.shadownetcg-f2f.workers.dev/submit?game=spaceshooter", {
