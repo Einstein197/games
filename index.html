@@ -423,6 +423,43 @@
     <div class="card-sub">Arcade survival</div>
   </div>
 
+  <!-- Farm Game -->
+  <div class="card" onclick="openGame('farm.html', 'farm')">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <radialGradient id="farmGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#7fff5a"/>
+            <stop offset="60%" stop-color="#3ecf2c"/>
+            <stop offset="100%" stop-color="#3ecf2c" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <!-- Background glow -->
+        <circle cx="50" cy="50" r="40" fill="#050509"/>
+        <circle cx="50" cy="50" r="40" fill="url(#farmGlow)"/>
+        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#7fff5a" stroke-width="3"/>
+
+        <!-- 🌾 FARM ICON -->
+        <g transform="translate(50 50)">
+          <!-- Barn -->
+          <rect x="-12" y="-10" width="24" height="20" fill="#d13f3f"/>
+          <polygon points="-12 -10 0 -22 12 -10" fill="#b83232"/>
+          <rect x="-6" y="0" width="12" height="10" fill="#ffffff"/>
+
+          <!-- Crop rows -->
+          <path d="M-20 18 L20 18" stroke="#7fff5a" stroke-width="3"/>
+          <path d="M-20 22 L20 22" stroke="#5fd94a" stroke-width="3"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="card-title">Krypton Farm</div>
+    <div class="card-sub">Grow • Harvest • Expand</div>
+  </div>
+
+
+
 
 
 </div> <!-- end grid -->
