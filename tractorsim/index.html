@@ -232,7 +232,7 @@ button:hover {
     <select id="seedSelect"></select>
   </div>
 
-  <button id="expandBtn"></button>
+  <button id="expandBtn">expand farm</button>
   <button id="resetBtn">Reset</button>
 
 </div>
@@ -543,7 +543,12 @@ let state = {
   town: {
     population: 10,
     prosperity: 1
+  },
+  silo: {
+    capacity: 100,
+    stored: {}
   }
+
 };
 
 function now() {
@@ -554,7 +559,7 @@ function xpForLevel(level) {
 
   if (level <= 0) return 0;
 
-  return level * 100;
+  return level * 1000;
 
 }
 
@@ -857,55 +862,150 @@ function plant(index) {
 
 }
 
+function siloUsed() {
+  return Object.values(state.silo.stored).reduce((a,b)=>a+b,0);
+}
+
+function siloFree() {
+  return state.silo.capacity - siloUsed();
+}
+
+function addToSilo(cropId, amount=1) {
+  if (!state.silo.stored[cropId]) {
+    state.silo.stored[cropId] = 0;
+  }
+  state.silo.stored[cropId] += amount;
+}
+
+function sellOne(cropId) {
+  if (!state.silo.stored[cropId]) return;
+
+  const price = state.market.prices[cropId] || cropById(cropId).baseSell;
+
+  state.silo.stored[cropId]--;
+  state.coins += price;
+
+  setMessage("Sold 1 " + cropById(cropId).name + " for " + price + " coins");
+  save();
+  render();
+}
+
+function sellMax(cropId) {
+  const qty = state.silo.stored[cropId] || 0;
+  if (qty <= 0) return;
+
+  const price = state.market.prices[cropId] || cropById(cropId).baseSell;
+  const total = qty * price;
+
+  state.silo.stored[cropId] = 0;
+  state.coins += total;
+
+  setMessage("Sold all " + cropById(cropId).name + " for " + total + " coins");
+  save();
+  render();
+}
+
+function sellPrompt(cropId) {
+  const qty = state.silo.stored[cropId] || 0;
+  if (qty <= 0) return;
+
+  const amount = parseInt(prompt("Sell how many? (Max " + qty + ")"));
+
+  if (!amount || amount <= 0) return;
+  if (amount > qty) return setMessage("You don't have that many.");
+
+  const price = state.market.prices[cropId] || cropById(cropId).baseSell;
+  const total = amount * price;
+
+  state.silo.stored[cropId] -= amount;
+  state.coins += total;
+
+  setMessage("Sold " + amount + " " + cropById(cropId).name + " for " + total + " coins");
+  save();
+  render();
+}
+
+
+function sellAllSilo() {
+  let total = 0;
+
+  for (const crop of CROPS) {
+    const id = crop.id;
+    const qty = state.silo.stored[id] || 0;
+    if (qty <= 0) continue;
+
+    const price = state.market.prices[id] || crop.baseSell;
+    total += qty * price;
+  }
+
+  state.coins += total;
+  state.silo.stored = {};
+
+  setMessage("Sold everything for " + total + " coins");
+  save();
+  render();
+}
+
+function expandSilo() {
+  const cost = state.silo.capacity * 2;
+
+  if (state.coins < cost) {
+    return setMessage("Not enough coins to expand silo");
+  }
+
+  state.coins -= cost;
+  state.silo.capacity += 50;
+
+  // Update button text
+  const siloExpandBtn = document.getElementById("siloExpandBtn");
+  if (siloExpandBtn) {
+    siloExpandBtn.textContent =
+      "Expand Silo (Cost: " + (state.silo.capacity * 2) + ")";
+  }
+
+  setMessage("Silo expanded! New capacity: " + state.silo.capacity);
+  save();
+  render();
+}
+
+
+
 function harvest(index) {
 
   const tile = state.tiles[index];
-
   const info = getTileState(tile);
 
   if (info.stage !== "ready") return;
 
+  if (siloFree() <= 0) {
+    return setMessage("Silo full! Expand it.");
+  }
+
   const crop = info.crop;
 
-  let value =
-    state.market.prices[crop.id] ||
-    crop.baseSell;
-
-  value *= qualityMultiplier(tile.quality);
-
-  value = Math.round(value);
-
-  state.coins += value;
+  addToSilo(crop.id, 1);
   state.xp += crop.xp;
 
   while (
     state.level < 99 &&
     state.xp >= xpForLevel(state.level)
   ) {
-
     state.level++;
-
     showLevelPopup(state.level);
-
     initSeedSelect();
-
+    state.xp = xpForLevel(state.level - 1);
+    render();
   }
 
   tile.cropId = null;
   tile.plantedAt = 0;
 
-  setMessage(
-    "Harvested " +
-    crop.name +
-    " for " +
-    value +
-    " coins"
-  );
+  setMessage("Stored " + crop.name + " in silo");
 
   save();
   render();
-
 }
+
 
 function clearDead(index) {
 
@@ -1046,10 +1146,10 @@ function renderUI() {
     xpForLevel(state.level);
 
   xpEl.textContent =
-    state.xp - currentLevelXP;
+    state.xp;
 
   xpNextEl.textContent =
-    nextLevelXP - currentLevelXP;
+    nextLevelXP;
 
   seasonEl.textContent =
     currentSeason();
@@ -1060,23 +1160,28 @@ function renderUI() {
   weatherEl.textContent =
     currentWeather();
 
-  let marketHTML =
-    "<b>Market</b><br>";
+  let marketHTML = "<b>Silo Storage</b><br>";
 
   CROPS.forEach(crop => {
+    const qty = state.silo?.stored?.[crop.id] || 0;
+    const price = state.market.prices[crop.id] || crop.baseSell;
 
-    marketHTML +=
-      crop.emoji +
-      " " +
-      crop.name +
-      ": " +
-      (state.market.prices[crop.id] ||
-      crop.baseSell) +
-      "c<br>";
-
+    if (qty > 0) {
+      marketHTML += `
+        ${crop.emoji} ${crop.name}<br>
+        Stored: ${qty}<br>
+        Price: ${price}c each<br>
+        <button onclick="sellOne('${crop.id}')">Sell 1</button>
+        <button onclick="sellMax('${crop.id}')">Sell All</button>
+        <button onclick="sellPrompt('${crop.id}')">Sell Amount</button>
+        <br><br>
+      `;
+    }
   });
 
   marketInfoEl.innerHTML = marketHTML;
+
+
 
   townInfoEl.innerHTML =
     "<b>Town</b><br>" +
@@ -1087,12 +1192,18 @@ function renderUI() {
     state.town.prosperity;
 
   machineInfoEl.innerHTML =
-    "<b>Machinery</b><br>" +
-    "🚜 Tractor Lv" +
-    state.machinery.tractor +
-    "<br>" +
-    "🌾 Harvester Lv" +
-    state.machinery.harvester;
+    "<b>Silo</b><br>" +
+    "Used: " + siloUsed() + "/" + state.silo.capacity +
+    "<br><button id='siloExpandBtn' onclick='expandSilo()'>Expand Silo</button>";
+
+  const siloExpandBtn = document.getElementById("siloExpandBtn");
+  if (siloExpandBtn) {
+    siloExpandBtn.textContent =
+      "Expand Silo (Cost: " + (state.silo.capacity * 2) + ")";
+  }
+
+
+
 
 }
 
@@ -1157,6 +1268,30 @@ function initSeedSelect() {
 
 }
 
+expandBtn.addEventListener("click", () => {
+  const cost = state.unlockedSize * 1000;
+
+  if (state.coins < cost) {
+    return setMessage("Not enough coins to expand.");
+  }
+
+  if (state.unlockedSize >= GRID_SIZE) {
+    return setMessage("Farm is fully expanded.");
+  }
+
+  state.coins -= cost;
+  state.unlockedSize++;
+
+  // Update button text dynamically
+  expandBtn.textContent = "Expand Farm (Cost: " + (state.unlockedSize * 1000) + ")";
+
+  setMessage("Farm expanded to " + state.unlockedSize + "×" + state.unlockedSize);
+  save();
+  render();
+});
+
+
+
 resetBtn.addEventListener("click", () => {
 
   if (!confirm("Reset save?")) return;
@@ -1169,6 +1304,9 @@ resetBtn.addEventListener("click", () => {
 
 load();
 
+expandBtn.textContent = "Expand Farm (Cost: " + (state.unlockedSize * 1000) + ")";
+
+
 initTiles();
 
 createFarm();
@@ -1180,6 +1318,7 @@ updateWeather();
 updateMarket();
 
 render();
+
 
 setMessage(
   "Manage crops, seasons, weather, and progression."
