@@ -1,595 +1,1037 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Krypton Grid Farm+</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Krypton SimFarm Deluxe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta http-equiv="Cache-Control" content="no-transform">
-  <script data-cfasync="false"></script>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #050509;
+  color: #eee;
+  font-family: system-ui, sans-serif;
+  overflow: hidden;
+  height: 100%;
+}
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #050509;
-      color: #eee;
-      font-family: system-ui, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow: hidden;
-    }
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-    h1 {
-      margin: 4px 0;
-      font-size: 18px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
+h1 {
+  margin: 6px 0;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
 
-    #ui {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 4px 6px;
-      font-size: 12px;
-    }
+#topBar, #bottomBar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 4px;
+  font-size: 11px;
+}
 
-    .panel {
-      background: #11131a;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 4px 8px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+.panel, .small-panel {
+  background: #10131a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
 
-    select, button {
-      background: #1a1d26;
-      color: #eee;
-      border: 1px solid #444;
-      border-radius: 4px;
-      padding: 3px 6px;
-      font-size: 11px;
-      cursor: pointer;
-    }
+.small-panel {
+  min-width: 140px;
+}
 
-    button:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
+button, select {
+  background: #1a1d26;
+  color: #eee;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 4px 7px;
+  font-size: 11px;
+  cursor: pointer;
+}
 
-    #farm {
-      flex-grow: 1;
-      display: grid;
-      width: 95vmin;
-      height: 95vmin;
-      grid-template-columns: repeat(10, 1fr);
-      grid-template-rows: repeat(10, 1fr);
-      gap: 0.7vmin;
-      padding: 0.7vmin;
-      box-sizing: border-box;
-      background: #05060a;
-      border-radius: 12px;
-      border: 1px solid #333;
-    }
+button:hover {
+  background: #222735;
+}
 
-    .tile {
-      width: 100%;
-      height: 100%;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.8vmin;
-      cursor: pointer;
-      user-select: none;
-      transition: transform 0.05s;
-    }
+#farm {
+  width: 94vmin;
+  height: 94vmin;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: .5vmin;
+  background: #06070c;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: .5vmin;
+  box-sizing: border-box;
+}
 
-    .tile:hover { transform: translateY(-0.3vmin); }
+.tile {
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4vmin;
+  cursor: pointer;
+  transition: transform .05s;
+  user-select: none;
+}
 
-    .tile.locked { background: #111; border: 1px solid #222; cursor: default; }
-    .tile.empty { background: #2b2415; border: 1px solid #3a3120; }
-    .tile.planted { background: #3b2f18; border: 1px solid #5a4420; }
-    .tile.growing { background: #4b3f1c; border: 1px solid #7a5a26; }
-    .tile.ready { background: #5f7a2a; border: 1px solid #9ad13a; }
-    .tile.dead { background: #3a3a3a; border: 1px solid #555; }
+.tile:hover {
+  transform: translateY(-1px);
+}
 
-    #msg {
-      font-size: 12px;
-      padding: 4px 6px;
-      text-align: center;
-      height: 18px;
-    }
+.locked {
+  background: #111;
+  border: 1px solid #222;
+}
 
-    #bottomBar {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 4px 6px 6px;
-      font-size: 11px;
-    }
+.empty {
+  background: #2b2415;
+  border: 1px solid #3a3120;
+}
 
-    .small-panel {
-      background: #10121a;
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 4px 6px;
-    }
-  </style>
+.planted {
+  background: #3d331a;
+  border: 1px solid #57421d;
+}
+
+.growing {
+  background: #56421d;
+  border: 1px solid #866225;
+}
+
+.ready {
+  background: #567d2a;
+  border: 1px solid #9bd740;
+  box-shadow: 0 0 10px rgba(150,255,80,.25);
+}
+
+.dead {
+  background: #444;
+  border: 1px solid #666;
+}
+
+#msg {
+  height: 18px;
+  font-size: 12px;
+  padding: 5px;
+}
+
+.good {
+  filter: brightness(1.1);
+}
+
+.excellent {
+  filter: brightness(1.2) saturate(1.2);
+}
+
+.golden {
+  animation: glow 1s infinite alternate;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 5px gold; }
+  to { box-shadow: 0 0 18px gold; }
+}
+</style>
 </head>
+
 <body>
-  <h1>Krypton Grid Farm+</h1>
 
-  <div id="ui">
-    <div class="panel">
-      <span>Coins:</span> <span id="coins">0</span>
-    </div>
+<h1>Krypton SimFarm Deluxe</h1>
 
-    <div class="panel">
-      <span>Lvl:</span> <span id="level">1</span>
-      <span>XP:</span> <span id="xp">0</span>/<span id="xpNext">10</span>
-    </div>
-
-    <div class="panel">
-      <span>Seed:</span>
-      <select id="seedSelect"></select>
-    </div>
-
-    <div class="panel">
-      <button id="expandBtn">Expand Farm</button>
-    </div>
-
-    <div class="panel">
-      <button id="buildingsBtn">Upgrade Buildings</button>
-    </div>
-
-    <div class="panel">
-      <button id="animalsBtn">Animals</button>
-    </div>
-
-    <div class="panel">
-      <button id="clearSaveBtn">Reset</button>
-    </div>
+<div id="topBar">
+  <div class="panel">Coins: <span id="coins"></span></div>
+  <div class="panel">
+    Lv <span id="level"></span> —
+    XP <span id="xp"></span>/<span id="xpNext"></span>
+  </div>
+  <div class="panel">
+    <span id="season"></span> Day <span id="day"></span>
+  </div>
+  <div class="panel">
+    Weather: <span id="weather"></span>
+  </div>
+  <div class="panel">
+    <select id="seedSelect"></select>
   </div>
 
-  <div id="farm"></div>
-  <div id="msg"></div>
+  <button id="expandBtn"></button>
+  <button id="resetBtn">Reset</button>
+</div>
 
-  <div id="bottomBar">
-    <div class="small-panel" id="buildingsInfo"></div>
-    <div class="small-panel" id="animalsInfo"></div>
-  </div>
+<div id="farm"></div>
 
-  <script>
-    // ---------- DATA ----------
-    const CROPS = [
-      { id: "wheat", name: "Wheat", emoji: "🌾", cost: 5, sell: 10, growSeconds: 30, xp: 2, levelRequired: 1 },
-      { id: "corn", name: "Corn", emoji: "🌽", cost: 12, sell: 25, growSeconds: 90, xp: 5, levelRequired: 2 },
-      { id: "carrot", name: "Carrot", emoji: "🥕", cost: 20, sell: 45, growSeconds: 180, xp: 9, levelRequired: 3 },
-      { id: "strawberry", name: "Strawberry", emoji: "🍓", cost: 35, sell: 80, growSeconds: 300, xp: 15, levelRequired: 4 },
-      { id: "pumpkin", name: "Pumpkin", emoji: "🎃", cost: 60, sell: 150, growSeconds: 600, xp: 30, levelRequired: 5 }
-    ];
+<div id="msg"></div>
 
-    const LEVEL_XP = [0, 10, 30, 70, 130, 220, 340]; // level 1..n thresholds
-    const GRID_SIZE = 10;
-    const SAVE_KEY = "krypton_grid_farm_plus_v1";
+<div id="bottomBar">
+  <div class="small-panel" id="marketInfo"></div>
+  <div class="small-panel" id="townInfo"></div>
+  <div class="small-panel" id="machineInfo"></div>
+</div>
 
-    const farmEl = document.getElementById("farm");
-    const coinsEl = document.getElementById("coins");
-    const levelEl = document.getElementById("level");
-    const xpEl = document.getElementById("xp");
-    const xpNextEl = document.getElementById("xpNext");
-    const seedSelectEl = document.getElementById("seedSelect");
-    const msgEl = document.getElementById("msg");
-    const clearSaveBtn = document.getElementById("clearSaveBtn");
-    const expandBtn = document.getElementById("expandBtn");
-    const buildingsBtn = document.getElementById("buildingsBtn");
-    const animalsBtn = document.getElementById("animalsBtn");
-    const buildingsInfoEl = document.getElementById("buildingsInfo");
-    const animalsInfoEl = document.getElementById("animalsInfo");
+<script>
 
-    // state
-    let state = {
-      coins: 100,
-      xp: 0,
-      level: 1,
-      unlockedSize: 6, // active area (starts 6x6, then 8x8, then 10x10)
-      tiles: [],
-      buildings: {
-        barn: 1,      // cosmetic / flavor
-        silo: 1,      // cosmetic
-        well: 1       // reduces grow time
-      },
-      animals: {
-        chickens: 0,
-        cows: 0
-      },
-      lastAnimalTick: Math.floor(Date.now() / 1000)
+const SAVE_KEY = "krypton_simfarm_deluxe";
+
+const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
+
+const WEATHER_TYPES = [
+  "Sunny",
+  "Rain",
+  "Cloudy",
+  "Storm",
+  "Drought",
+  "Snow"
+];
+
+const CROPS = [
+  {
+    id: "wheat",
+    emoji: "🌾",
+    name: "Wheat",
+    baseCost: 5,
+    baseSell: 10,
+    growSeconds: 30,
+    xp: 2,
+    levelRequired: 1,
+    bestSeasons: ["Spring","Fall"]
+  },
+  {
+    id: "corn",
+    emoji: "🌽",
+    name: "Corn",
+    baseCost: 12,
+    baseSell: 24,
+    growSeconds: 70,
+    xp: 5,
+    levelRequired: 2,
+    bestSeasons: ["Summer"]
+  },
+  {
+    id: "carrot",
+    emoji: "🥕",
+    name: "Carrot",
+    baseCost: 20,
+    baseSell: 50,
+    growSeconds: 120,
+    xp: 10,
+    levelRequired: 3,
+    bestSeasons: ["Spring","Fall"]
+  },
+  {
+    id: "pumpkin",
+    emoji: "🎃",
+    name: "Pumpkin",
+    baseCost: 60,
+    baseSell: 140,
+    growSeconds: 260,
+    xp: 25,
+    levelRequired: 5,
+    bestSeasons: ["Fall"]
+  }
+];
+
+const LEVEL_XP = [0,10,30,70,130,220,350];
+
+const GRID_SIZE = 10;
+
+const farmEl = document.getElementById("farm");
+
+const coinsEl = document.getElementById("coins");
+const levelEl = document.getElementById("level");
+const xpEl = document.getElementById("xp");
+const xpNextEl = document.getElementById("xpNext");
+const seasonEl = document.getElementById("season");
+const dayEl = document.getElementById("day");
+const weatherEl = document.getElementById("weather");
+
+const marketInfoEl = document.getElementById("marketInfo");
+const townInfoEl = document.getElementById("townInfo");
+const machineInfoEl = document.getElementById("machineInfo");
+
+const expandBtn = document.getElementById("expandBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+const seedSelectEl = document.getElementById("seedSelect");
+
+const msgEl = document.getElementById("msg");
+
+let tileElements = [];
+
+let state = {
+  coins: 200,
+  xp: 0,
+  level: 1,
+
+  unlockedSize: 6,
+
+  day: 1,
+  seasonIndex: 0,
+  weatherIndex: 0,
+
+  lastDayTick: now(),
+
+  tiles: [],
+  soil: [],
+
+  machinery: {
+    tractor: 0,
+    harvester: 0
+  },
+
+  market: {
+    prices: {},
+    demand: {}
+  },
+
+  town: {
+    population: 10,
+    prosperity: 1
+  }
+};
+
+function now() {
+  return Math.floor(Date.now()/1000);
+}
+
+function currentSeason() {
+  return SEASONS[state.seasonIndex];
+}
+
+function currentWeather() {
+  return WEATHER_TYPES[state.weatherIndex];
+}
+
+function cropById(id) {
+  return CROPS.find(c => c.id === id);
+}
+
+function xpForLevel(level) {
+  return LEVEL_XP[level] ??
+    LEVEL_XP[LEVEL_XP.length-1] + level * 180;
+}
+
+function setMessage(text) {
+  msgEl.textContent = text;
+}
+
+function save() {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+}
+
+function load() {
+  const raw = localStorage.getItem(SAVE_KEY);
+
+  if (!raw) return;
+
+  try {
+    const data = JSON.parse(raw);
+    state = Object.assign(state, data);
+  } catch {}
+}
+
+function initTiles() {
+
+  if (!state.tiles.length) {
+
+    state.tiles = Array.from(
+      { length: GRID_SIZE * GRID_SIZE },
+      () => ({
+        cropId: null,
+        plantedAt: 0,
+        dead: false,
+        quality: "normal",
+        lastCropId: null
+      })
+    );
+  }
+
+  if (!state.soil.length) {
+
+    state.soil = Array.from(
+      { length: GRID_SIZE * GRID_SIZE },
+      () => .7
+    );
+  }
+}
+
+function randomChoice(arr) {
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function updateWeather() {
+
+  const season = currentSeason();
+
+  let pool;
+
+  if (season === "Spring") {
+    pool = ["Sunny","Rain","Rain","Cloudy"];
+  }
+
+  else if (season === "Summer") {
+    pool = ["Sunny","Sunny","Drought","Storm"];
+  }
+
+  else if (season === "Fall") {
+    pool = ["Sunny","Rain","Cloudy","Storm"];
+  }
+
+  else {
+    pool = ["Snow","Cloudy","Sunny"];
+  }
+
+  const chosen = randomChoice(pool);
+
+  state.weatherIndex = WEATHER_TYPES.indexOf(chosen);
+}
+
+function updateMarket() {
+
+  CROPS.forEach(crop => {
+
+    let price = crop.baseSell;
+
+    if (crop.bestSeasons.includes(currentSeason())) {
+      price *= 1.2;
+    }
+
+    if (currentWeather() === "Drought") {
+      price *= 1.15;
+    }
+
+    if (currentWeather() === "Rain") {
+      price *= .95;
+    }
+
+    const demand = state.market.demand[crop.id] || 0;
+
+    price *= Math.max(.7, 1.2 - demand * .03);
+
+    price *= .9 + Math.random() * .25;
+
+    state.market.prices[crop.id] = Math.round(price);
+  });
+}
+
+function advanceDay() {
+
+  state.day++;
+
+  if (state.day > 30) {
+    state.day = 1;
+    state.seasonIndex =
+      (state.seasonIndex + 1) % SEASONS.length;
+  }
+
+  updateWeather();
+  updateMarket();
+
+  for (let i=0;i<state.soil.length;i++) {
+    state.soil[i] =
+      Math.min(1, state.soil[i] + .01);
+  }
+
+  maybeDisaster();
+
+  state.town.population =
+    10 + state.level * 5 +
+    state.machinery.harvester * 10;
+
+  state.town.prosperity =
+    state.level +
+    state.machinery.harvester;
+}
+
+function maybeDisaster() {
+
+  const roll = Math.random();
+
+  if (roll < .015) {
+
+    let damaged = 0;
+
+    state.tiles.forEach(tile => {
+
+      if (tile.cropId && Math.random() < .05) {
+        tile.dead = true;
+        damaged++;
+      }
+
+    });
+
+    if (damaged > 0) {
+      setMessage("Storm damaged crops!");
+    }
+  }
+}
+
+function getTileState(tile, index) {
+
+  if (!tile.cropId) {
+    return {
+      stage: "empty"
     };
+  }
 
-    // ---------- HELPERS ----------
-    function nowSeconds() {
-      return Math.floor(Date.now() / 1000);
-    }
+  const crop = cropById(tile.cropId);
 
-    function getCropById(id) {
-      return CROPS.find(c => c.id === id) || null;
-    }
+  const elapsed = now() - tile.plantedAt;
 
-    function setMessage(text) {
-      msgEl.textContent = text || "";
-    }
+  const growTime =
+    Math.max(
+      5,
+      crop.growSeconds *
+      (1 - state.machinery.tractor * .03)
+    );
 
-    function xpForLevel(level) {
-      return LEVEL_XP[level] ?? LEVEL_XP[LEVEL_XP.length - 1] + (level - LEVEL_XP.length + 1) * 150;
-    }
+  const remaining = growTime - elapsed;
 
-    function checkLevelUp() {
-      let changed = false;
-      while (state.level < 99 && state.xp >= xpForLevel(state.level)) {
-        state.level++;
-        changed = true;
-      }
-      if (changed) {
-        setMessage("Level up! You are now level " + state.level + ".");
-      }
-    }
+  if (elapsed > growTime * 4 || tile.dead) {
+    return {
+      stage: "dead",
+      crop
+    };
+  }
 
-    // ---------- SAVE / LOAD ----------
-    function saveState() {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-    }
+  if (remaining <= 0) {
+    return {
+      stage: "ready",
+      crop
+    };
+  }
 
-    function loadState() {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return;
-      try {
-        const data = JSON.parse(raw);
-        if (!data || !Array.isArray(data.tiles)) return;
-        state = Object.assign(state, data);
-      } catch {}
-    }
+  if (elapsed > growTime * .5) {
+    return {
+      stage: "growing",
+      crop,
+      remaining
+    };
+  }
 
-    // ---------- INIT ----------
-    function initTiles() {
-      if (!Array.isArray(state.tiles) || state.tiles.length !== GRID_SIZE * GRID_SIZE) {
-        state.tiles = Array.from({ length: GRID_SIZE * GRID_SIZE }, () => ({
-          cropId: null,
-          plantedAt: 0,
-          harvested: false,
-          dead: false
-        }));
-      }
-    }
+  return {
+    stage: "planted",
+    crop,
+    remaining
+  };
+}
 
-    function initSeedSelect() {
-      seedSelectEl.innerHTML = "";
-      CROPS.forEach(crop => {
-        const opt = document.createElement("option");
-        opt.value = crop.id;
-        opt.textContent = `${crop.emoji} ${crop.name} (Lv${crop.levelRequired}, ${crop.cost}/${crop.sell}, ${crop.growSeconds}s)`;
-        seedSelectEl.appendChild(opt);
-      });
-    }
+function qualityRoll() {
 
-    // ---------- TILE STATE ----------
-    function isTileLocked(index) {
-      const row = Math.floor(index / GRID_SIZE);
-      const col = index % GRID_SIZE;
-      return row >= state.unlockedSize || col >= state.unlockedSize;
-    }
+  const r = Math.random();
 
-    function getTileState(tile) {
-      if (!tile.cropId) return { stage: "empty", crop: null, remaining: 0 };
+  if (r > .995) return "golden";
+  if (r > .95) return "excellent";
+  if (r > .75) return "good";
 
-      const crop = getCropById(tile.cropId);
-      if (!crop) return { stage: "empty", crop: null, remaining: 0 };
+  return "normal";
+}
 
-      if (tile.dead) return { stage: "dead", crop, remaining: 0 };
+function qualityMultiplier(q) {
 
-      const elapsed = nowSeconds() - tile.plantedAt;
-      const growTime = Math.max(5, crop.growSeconds * wellGrowMultiplier());
-      const remaining = growTime - elapsed;
+  if (q === "good") return 1.2;
+  if (q === "excellent") return 1.6;
+  if (q === "golden") return 3;
 
-      if (remaining <= 0) return { stage: "ready", crop, remaining: 0 };
-      if (elapsed > growTime * 2) return { stage: "dead", crop, remaining: 0 };
-      if (elapsed > growTime * 0.4) return { stage: "growing", crop, remaining };
-      return { stage: "planted", crop, remaining };
-    }
+  return 1;
+}
 
-    function wellGrowMultiplier() {
-      // each well level reduces grow time by 5%, min 60%
-      const mult = 1 - (state.buildings.well - 1) * 0.05;
-      return Math.max(0.6, mult);
-    }
+function isLocked(index) {
 
-    // ---------- ACTIONS ----------
-    function plantTile(index) {
-      const tile = state.tiles[index];
-      const crop = getCropById(seedSelectEl.value);
-      if (!crop) return setMessage("No crop selected.");
-      if (state.level < crop.levelRequired) return setMessage("Requires level " + crop.levelRequired + ".");
-      if (tile.cropId) return setMessage("Tile already planted.");
-      if (state.coins < crop.cost) return setMessage("Not enough coins.");
+  const row = Math.floor(index / GRID_SIZE);
+  const col = index % GRID_SIZE;
 
-      state.coins -= crop.cost;
-      tile.cropId = crop.id;
-      tile.plantedAt = nowSeconds();
-      tile.harvested = false;
-      tile.dead = false;
+  return (
+    row >= state.unlockedSize ||
+    col >= state.unlockedSize
+  );
+}
 
-      setMessage(`Planted ${crop.name}.`);
-      saveState();
-      render();
-    }
+function plantSingle(index, crop) {
 
-    function harvestTile(index) {
-      const tile = state.tiles[index];
-      const { stage, crop } = getTileState(tile);
-      if (!crop) return setMessage("Nothing to harvest.");
-      if (stage !== "ready") return setMessage("Crop not ready yet.");
+  const tile = state.tiles[index];
 
-      state.coins += crop.sell;
-      state.xp += crop.xp;
-      checkLevelUp();
+  if (tile.cropId) return false;
 
-      tile.cropId = null;
-      tile.plantedAt = 0;
-      tile.harvested = true;
-      tile.dead = false;
+  tile.cropId = crop.id;
+  tile.plantedAt = now();
+  tile.dead = false;
+  tile.quality = qualityRoll();
 
-      setMessage(`Harvested ${crop.name} for ${crop.sell} coins (+${crop.xp} XP).`);
-      saveState();
-      render();
-    }
+  if (tile.lastCropId === crop.id) {
+    state.soil[index] =
+      Math.max(.2, state.soil[index] - .05);
+  }
 
-    function clearDeadTile(index) {
-      const tile = state.tiles[index];
-      tile.cropId = null;
-      tile.plantedAt = 0;
-      tile.harvested = false;
-      tile.dead = false;
-      setMessage("Cleared dead crop.");
-      saveState();
-      render();
-    }
+  else {
+    state.soil[index] =
+      Math.min(1, state.soil[index] + .03);
+  }
 
-    function handleTileClick(index) {
-      if (isTileLocked(index)) {
-        return setMessage("Locked. Expand farm to unlock more tiles.");
-      }
-      const tile = state.tiles[index];
-      const { stage } = getTileState(tile);
+  tile.lastCropId = crop.id;
 
-      if (stage === "empty") return plantTile(index);
-      if (stage === "ready") return harvestTile(index);
-      if (stage === "dead") return clearDeadTile(index);
+  return true;
+}
 
-      setMessage("Growing…");
-    }
+function tractorPlant(index, crop) {
 
-    // ---------- EXPANSION ----------
-    function nextExpansionCost() {
-      if (state.unlockedSize >= 10) return null;
-      if (state.unlockedSize === 6) return 500;
-      if (state.unlockedSize === 8) return 2000;
-      return null;
-    }
+  const positions = [
+    index,
+    index + 1,
+    index + GRID_SIZE
+  ];
 
-    function expandFarm() {
-      const cost = nextExpansionCost();
-      if (cost == null) return setMessage("Farm fully expanded.");
-      if (state.coins < cost) return setMessage("Need " + cost + " coins to expand.");
+  let planted = 0;
+
+  positions.forEach(i => {
+
+    if (!state.tiles[i]) return;
+    if (isLocked(i)) return;
+
+    const success = plantSingle(i, crop);
+
+    if (success) planted++;
+
+  });
+
+  return planted;
+}
+
+function plant(index) {
+
+  const crop = cropById(seedSelectEl.value);
+
+  if (state.level < crop.levelRequired) {
+    return setMessage("Requires level " + crop.levelRequired);
+  }
+
+  const cost = crop.baseCost;
+
+  if (state.coins < cost) {
+    return setMessage("Not enough coins");
+  }
+
+  let planted = 0;
+
+  if (state.machinery.tractor > 0) {
+
+    planted = tractorPlant(index, crop);
+
+    state.coins -= planted * cost;
+  }
+
+  else {
+
+    const success = plantSingle(index, crop);
+
+    if (success) {
+      planted = 1;
       state.coins -= cost;
-      state.unlockedSize += 2;
-      if (state.unlockedSize > 10) state.unlockedSize = 10;
-      setMessage("Farm expanded to " + state.unlockedSize + "x" + state.unlockedSize + "!");
-      saveState();
-      render();
+    }
+  }
+
+  if (planted > 0) {
+    setMessage("Planted " + planted + " " + crop.name);
+  }
+
+  save();
+  render();
+}
+
+function harvest(index) {
+
+  const tile = state.tiles[index];
+
+  const info = getTileState(tile, index);
+
+  if (info.stage !== "ready") return;
+
+  const crop = info.crop;
+
+  let value =
+    state.market.prices[crop.id] ||
+    crop.baseSell;
+
+  value *= (.5 + state.soil[index]);
+
+  value *= 1 + state.machinery.harvester * .05;
+
+  value *= qualityMultiplier(tile.quality);
+
+  value = Math.round(value);
+
+  state.coins += value;
+  state.xp += crop.xp;
+
+  state.market.demand[crop.id] =
+    (state.market.demand[crop.id] || 0) + 1;
+
+  while (
+    state.level < 99 &&
+    state.xp >= xpForLevel(state.level)
+  ) {
+    state.level++;
+    setMessage("Level up! Level " + state.level);
+  }
+
+  tile.cropId = null;
+  tile.plantedAt = 0;
+  tile.dead = false;
+
+  save();
+  render();
+}
+
+function clearDead(index) {
+
+  const tile = state.tiles[index];
+
+  tile.cropId = null;
+  tile.dead = false;
+
+  render();
+  save();
+}
+
+function tileClick(index) {
+
+  if (isLocked(index)) {
+    return setMessage("Expand farm first.");
+  }
+
+  const tile = state.tiles[index];
+
+  const info = getTileState(tile, index);
+
+  if (info.stage === "empty") {
+    return plant(index);
+  }
+
+  if (info.stage === "ready") {
+    return harvest(index);
+  }
+
+  if (info.stage === "dead") {
+    return clearDead(index);
+  }
+
+  setMessage(
+    info.crop.name +
+    " — " +
+    Math.ceil(info.remaining) +
+    "s"
+  );
+}
+
+function createFarm() {
+
+  farmEl.innerHTML = "";
+  tileElements = [];
+
+  for (let i=0;i<GRID_SIZE*GRID_SIZE;i++) {
+
+    const div = document.createElement("div");
+
+    div.className = "tile";
+
+    div.addEventListener(
+      "click",
+      () => tileClick(i)
+    );
+
+    farmEl.appendChild(div);
+
+    tileElements.push(div);
+  }
+}
+
+function renderTiles() {
+
+  for (let i=0;i<tileElements.length;i++) {
+
+    const div = tileElements[i];
+
+    if (isLocked(i)) {
+
+      div.className = "tile locked";
+      div.textContent = "🔒";
+
+      continue;
     }
 
-    // ---------- BUILDINGS ----------
-    function buildingUpgradeCost(name) {
-      const level = state.buildings[name] || 1;
-      if (name === "well") return 200 * level;
-      if (name === "barn") return 150 * level;
-      if (name === "silo") return 150 * level;
-      return 100 * level;
+    const tile = state.tiles[i];
+
+    const info = getTileState(tile, i);
+
+    div.className =
+      "tile " +
+      info.stage +
+      " " +
+      (tile.quality || "");
+
+    if (info.stage === "empty") {
+      div.textContent = "";
     }
 
-    function upgradeBuilding(name) {
-      const cost = buildingUpgradeCost(name);
-      if (state.coins < cost) return setMessage("Need " + cost + " coins to upgrade " + name + ".");
-      state.coins -= cost;
-      state.buildings[name] = (state.buildings[name] || 1) + 1;
-      setMessage("Upgraded " + name + " to level " + state.buildings[name] + ".");
-      saveState();
-      render();
+    else if (info.stage === "planted") {
+      div.textContent = "🌱";
     }
 
-    function showBuildingsInfo() {
-      buildingsInfoEl.innerHTML =
-        `Barn Lv${state.buildings.barn} (cosmetic)<br>` +
-        `Silo Lv${state.buildings.silo} (cosmetic)<br>` +
-        `Well Lv${state.buildings.well} (grow time -${(state.buildings.well - 1) * 5}%)<br>` +
-        `<button onclick="upgradeBuilding('barn')">Upgrade Barn (${buildingUpgradeCost('barn')}c)</button> ` +
-        `<button onclick="upgradeBuilding('silo')">Upgrade Silo (${buildingUpgradeCost('silo')}c)</button> ` +
-        `<button onclick="upgradeBuilding('well')">Upgrade Well (${buildingUpgradeCost('well')}c)</button>`;
+    else if (info.stage === "growing") {
+      div.textContent = info.crop.emoji;
     }
 
-    // expose for inline buttons
-    window.upgradeBuilding = upgradeBuilding;
-
-    // ---------- ANIMALS ----------
-    function animalBuyCost(type) {
-      if (type === "chickens") return 100;
-      if (type === "cows") return 300;
-      return 100;
+    else if (info.stage === "ready") {
+      div.textContent = "✨";
     }
 
-    function buyAnimal(type) {
-      const cost = animalBuyCost(type);
-      if (state.coins < cost) return setMessage("Need " + cost + " coins.");
-      state.coins -= cost;
-      state.animals[type] = (state.animals[type] || 0) + 1;
-      setMessage("Bought 1 " + type.slice(0, -1) + ".");
-      saveState();
-      render();
+    else if (info.stage === "dead") {
+      div.textContent = "💀";
     }
+  }
+}
 
-    function animalIncomePerSecond() {
-      const chickens = state.animals.chickens || 0;
-      const cows = state.animals.cows || 0;
-      // simple: chickens 1 coin/10s, cows 1 coin/4s
-      return chickens * 0.1 + cows * 0.25;
-    }
+function renderUI() {
 
-    function tickAnimals() {
-      const now = nowSeconds();
-      const dt = now - (state.lastAnimalTick || now);
-      if (dt <= 0) return;
-      state.lastAnimalTick = now;
-      const income = animalIncomePerSecond() * dt;
-      if (income > 0) {
-        state.coins += Math.floor(income);
-      }
-    }
+  coinsEl.textContent = state.coins;
 
-    function showAnimalsInfo() {
-      animalsInfoEl.innerHTML =
-        `Chickens: ${state.animals.chickens} (slow coins)<br>` +
-        `Cows: ${state.animals.cows} (faster coins)<br>` +
-        `<button onclick="buyAnimal('chickens')">Buy Chicken (${animalBuyCost('chickens')}c)</button> ` +
-        `<button onclick="buyAnimal('cows')">Buy Cow (${animalBuyCost('cows')}c)</button>`;
-    }
+  levelEl.textContent = state.level;
 
-    window.buyAnimal = buyAnimal;
+  const currentLevelXP =
+    xpForLevel(state.level - 1);
 
-    // ---------- RENDER ----------
-    function formatTimeRemaining(sec) {
-      if (sec <= 0) return "Ready";
-      if (sec < 60) return sec + "s";
-      const m = Math.floor(sec / 60);
-      const s = sec % 60;
-      if (m >= 60) {
-        const h = Math.floor(m / 60);
-        const rm = m % 60;
-        return h + "h " + (rm > 0 ? rm + "m" : "");
-      }
-      return m + "m" + (s > 0 ? " " + s + "s" : "");
-    }
+  const nextLevelXP =
+    xpForLevel(state.level);
 
-    function render() {
-      coinsEl.textContent = state.coins;
-      levelEl.textContent = state.level;
-      xpEl.textContent = state.xp;
-      xpNextEl.textContent = xpForLevel(state.level);
+  xpEl.textContent =
+    state.xp - currentLevelXP;
 
-      const cost = nextExpansionCost();
-      if (cost == null) {
-        expandBtn.textContent = "Farm Maxed";
-        expandBtn.disabled = true;
-      } else {
-        expandBtn.textContent = "Expand (" + cost + "c)";
-        expandBtn.disabled = state.coins < cost;
-      }
+  xpNextEl.textContent =
+    nextLevelXP - currentLevelXP;
 
-      farmEl.innerHTML = "";
-      for (let i = 0; i < state.tiles.length; i++) {
-        const tile = state.tiles[i];
-        const locked = isTileLocked(i);
-        const div = document.createElement("div");
+  seasonEl.textContent =
+    currentSeason();
 
-        if (locked) {
-          div.className = "tile locked";
-          div.textContent = "🔒";
-          div.title = "Locked. Expand farm to unlock.";
-        } else {
-          const { stage, crop, remaining } = getTileState(tile);
-          div.className = "tile " + stage;
+  dayEl.textContent =
+    state.day;
 
-          let label = "";
-          if (stage === "planted" || stage === "growing" || stage === "ready") {
-            label = crop.emoji;
-          } else if (stage === "dead") {
-            label = "💀";
-          }
+  weatherEl.textContent =
+    currentWeather();
 
-          div.textContent = label;
+  if (state.unlockedSize >= 10) {
 
-          if (stage === "planted" || stage === "growing") {
-            div.title = `${crop.name} — ${formatTimeRemaining(remaining)}`;
-          } else if (stage === "ready") {
-            div.title = `${crop.name} — Ready to harvest`;
-          } else if (stage === "dead") {
-            div.title = `Dead crop — click to clear`;
-          } else {
-            div.title = `Empty — click to plant`;
-          }
+    expandBtn.disabled = true;
+    expandBtn.textContent = "Farm Maxed";
+  }
 
-          div.addEventListener("click", () => handleTileClick(i));
+  else {
+
+    const cost =
+      state.unlockedSize === 6
+      ? 500
+      : 2000;
+
+    expandBtn.textContent =
+      "Expand (" + cost + "c)";
+
+    expandBtn.disabled =
+      state.coins < cost;
+  }
+
+  let marketHTML =
+    "<b>Market</b><br>";
+
+  CROPS.forEach(crop => {
+
+    marketHTML +=
+      crop.emoji +
+      " " +
+      crop.name +
+      ": " +
+      (state.market.prices[crop.id] || crop.baseSell) +
+      "c<br>";
+  });
+
+  marketInfoEl.innerHTML = marketHTML;
+
+  townInfoEl.innerHTML =
+    "<b>Town</b><br>" +
+    "Population: " +
+    state.town.population +
+    "<br>" +
+    "Prosperity: " +
+    state.town.prosperity;
+
+  machineInfoEl.innerHTML =
+    "<b>Machinery</b><br>" +
+    "🚜 Tractor Lv" +
+    state.machinery.tractor +
+    "<br>" +
+    "🌾 Harvester Lv" +
+    state.machinery.harvester +
+    "<br><br>" +
+    "<button id='tractorBtn'>Upgrade Tractor</button><br>" +
+    "<button id='harvesterBtn'>Upgrade Harvester</button>";
+
+  setTimeout(() => {
+
+    document
+      .getElementById("tractorBtn")
+      ?.addEventListener("click", () => {
+
+        const cost =
+          250 *
+          (state.machinery.tractor + 1);
+
+        if (state.coins < cost) {
+          return setMessage("Need " + cost);
         }
 
-        farmEl.appendChild(div);
-      }
+        state.coins -= cost;
+        state.machinery.tractor++;
 
-      showBuildingsInfo();
-      showAnimalsInfo();
+        renderUI();
+        save();
+      });
+
+    document
+      .getElementById("harvesterBtn")
+      ?.addEventListener("click", () => {
+
+        const cost =
+          400 *
+          (state.machinery.harvester + 1);
+
+        if (state.coins < cost) {
+          return setMessage("Need " + cost);
+        }
+
+        state.coins -= cost;
+        state.machinery.harvester++;
+
+        renderUI();
+        save();
+      });
+
+  },0);
+
+}
+
+function render() {
+  renderTiles();
+  renderUI();
+}
+
+function tick() {
+
+  const elapsed =
+    now() - state.lastDayTick;
+
+  if (elapsed >= 30) {
+
+    const skipped =
+      Math.floor(elapsed / 30);
+
+    for (let i=0;i<skipped;i++) {
+      advanceDay();
     }
 
-    // ---------- EVENTS ----------
-    clearSaveBtn.addEventListener("click", () => {
-      if (!confirm("Reset farm, coins, XP, buildings, animals?")) return;
-      state = {
-        coins: 100,
-        xp: 0,
-        level: 1,
-        unlockedSize: 6,
-        tiles: [],
-        buildings: { barn: 1, silo: 1, well: 1 },
-        animals: { chickens: 0, cows: 0 },
-        lastAnimalTick: nowSeconds()
-      };
-      initTiles();
-      saveState();
-      setMessage("Farm reset.");
-      render();
-    });
+    state.lastDayTick = now();
 
-    expandBtn.addEventListener("click", expandFarm);
-    buildingsBtn.addEventListener("click", () => {
-      setMessage("Buildings affect growth and flavor. Upgrade Well to speed crops.");
-      showBuildingsInfo();
-    });
-    animalsBtn.addEventListener("click", () => {
-      setMessage("Animals generate passive coins over time.");
-      showAnimalsInfo();
-    });
-
-    // ---------- TICK ----------
-    function tick() {
-      tickAnimals();
-      render();
-      saveState();
-    }
-
-    // ---------- START ----------
-    loadState();
-    initTiles();
-    initSeedSelect();
-    if (!state.lastAnimalTick) state.lastAnimalTick = nowSeconds();
     render();
-    setMessage("Plant, harvest, level up, expand, upgrade, and raise animals.");
+    save();
+  }
 
-    setInterval(tick, 1000);
-  </script>
+  renderTiles();
+}
+
+expandBtn.addEventListener("click", () => {
+
+  if (state.unlockedSize >= 10) return;
+
+  const cost =
+    state.unlockedSize === 6
+    ? 500
+    : 2000;
+
+  if (state.coins < cost) {
+    return setMessage("Need " + cost);
+  }
+
+  state.coins -= cost;
+
+  state.unlockedSize += 2;
+
+  setMessage(
+    "Farm expanded to " +
+    state.unlockedSize +
+    "x" +
+    state.unlockedSize
+  );
+
+  save();
+  render();
+});
+
+resetBtn.addEventListener("click", () => {
+
+  if (!confirm("Reset save?")) return;
+
+  localStorage.removeItem(SAVE_KEY);
+
+  location.reload();
+});
+
+function initSeedSelect() {
+
+  CROPS.forEach(crop => {
+
+    const opt =
+      document.createElement("option");
+
+    opt.value = crop.id;
+
+    opt.textContent =
+      crop.emoji +
+      " " +
+      crop.name +
+      " Lv" +
+      crop.levelRequired;
+
+    seedSelectEl.appendChild(opt);
+  });
+}
+
+load();
+initTiles();
+createFarm();
+initSeedSelect();
+
+updateWeather();
+updateMarket();
+
+render();
+
+setMessage(
+  "Manage crops, weather, soil, market, and machinery."
+);
+
+setInterval(tick, 1000);
+
+</script>
+
 </body>
 </html>
