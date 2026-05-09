@@ -198,6 +198,7 @@ const WEATHER_TYPES = [
 ];
 
 const CROPS = [
+
   {
     id: "wheat",
     emoji: "🌾",
@@ -209,6 +210,19 @@ const CROPS = [
     levelRequired: 1,
     bestSeasons: ["Spring","Fall"]
   },
+
+  {
+    id: "potato",
+    emoji: "🥔",
+    name: "Potato",
+    baseCost: 8,
+    baseSell: 16,
+    growSeconds: 45,
+    xp: 3,
+    levelRequired: 1,
+    bestSeasons: ["Spring","Winter"]
+  },
+
   {
     id: "corn",
     emoji: "🌽",
@@ -220,6 +234,19 @@ const CROPS = [
     levelRequired: 2,
     bestSeasons: ["Summer"]
   },
+
+  {
+    id: "tomato",
+    emoji: "🍅",
+    name: "Tomato",
+    baseCost: 16,
+    baseSell: 32,
+    growSeconds: 85,
+    xp: 6,
+    levelRequired: 2,
+    bestSeasons: ["Summer"]
+  },
+
   {
     id: "carrot",
     emoji: "🥕",
@@ -231,6 +258,43 @@ const CROPS = [
     levelRequired: 3,
     bestSeasons: ["Spring","Fall"]
   },
+
+  {
+    id: "rice",
+    emoji: "🍚",
+    name: "Rice",
+    baseCost: 25,
+    baseSell: 58,
+    growSeconds: 135,
+    xp: 12,
+    levelRequired: 3,
+    bestSeasons: ["Summer"]
+  },
+
+  {
+    id: "strawberry",
+    emoji: "🍓",
+    name: "Strawberry",
+    baseCost: 30,
+    baseSell: 70,
+    growSeconds: 160,
+    xp: 14,
+    levelRequired: 4,
+    bestSeasons: ["Spring"]
+  },
+
+  {
+    id: "blueberry",
+    emoji: "🫐",
+    name: "Blueberry",
+    baseCost: 40,
+    baseSell: 90,
+    growSeconds: 200,
+    xp: 18,
+    levelRequired: 4,
+    bestSeasons: ["Summer"]
+  },
+
   {
     id: "pumpkin",
     emoji: "🎃",
@@ -241,7 +305,104 @@ const CROPS = [
     xp: 25,
     levelRequired: 5,
     bestSeasons: ["Fall"]
+  },
+
+  {
+    id: "watermelon",
+    emoji: "🍉",
+    name: "Watermelon",
+    baseCost: 70,
+    baseSell: 170,
+    growSeconds: 320,
+    xp: 28,
+    levelRequired: 5,
+    bestSeasons: ["Summer"]
+  },
+
+  {
+    id: "grapes",
+    emoji: "🍇",
+    name: "Grapes",
+    baseCost: 90,
+    baseSell: 220,
+    growSeconds: 420,
+    xp: 35,
+    levelRequired: 6,
+    bestSeasons: ["Fall"]
+  },
+
+  {
+    id: "apple",
+    emoji: "🍎",
+    name: "Apple",
+    baseCost: 110,
+    baseSell: 270,
+    growSeconds: 500,
+    xp: 42,
+    levelRequired: 6,
+    bestSeasons: ["Fall"]
+  },
+
+  {
+    id: "banana",
+    emoji: "🍌",
+    name: "Banana",
+    baseCost: 140,
+    baseSell: 340,
+    growSeconds: 620,
+    xp: 50,
+    levelRequired: 7,
+    bestSeasons: ["Summer"]
+  },
+
+  {
+    id: "pineapple",
+    emoji: "🍍",
+    name: "Pineapple",
+    baseCost: 180,
+    baseSell: 450,
+    growSeconds: 760,
+    xp: 65,
+    levelRequired: 8,
+    bestSeasons: ["Summer"]
+  },
+
+  {
+    id: "coconut",
+    emoji: "🥥",
+    name: "Coconut",
+    baseCost: 240,
+    baseSell: 620,
+    growSeconds: 900,
+    xp: 80,
+    levelRequired: 9,
+    bestSeasons: ["Summer"]
+  },
+
+  {
+    id: "pepper",
+    emoji: "🌶️",
+    name: "Pepper",
+    baseCost: 300,
+    baseSell: 820,
+    growSeconds: 1050,
+    xp: 100,
+    levelRequired: 10,
+    bestSeasons: ["Summer"]
+  },
+
+  {
+    id: "golden_apple",
+    emoji: "✨🍎",
+    name: "Golden Apple",
+    baseCost: 500,
+    baseSell: 1500,
+    growSeconds: 1600,
+    xp: 180,
+    levelRequired: 12,
+    bestSeasons: ["Fall"]
   }
+
 ];
 
 const LEVEL_XP = [0,10,30,70,130,220,350];
@@ -272,11 +433,11 @@ const msgEl = document.getElementById("msg");
 let tileElements = [];
 
 let state = {
-  coins: 200,
+  coins: 50,
   xp: 0,
   level: 1,
 
-  unlockedSize: 6,
+  unlockedSize: 3,
 
   day: 1,
   seasonIndex: 0,
@@ -684,7 +845,12 @@ function harvest(index) {
     state.xp >= xpForLevel(state.level)
   ) {
     state.level++;
-    setMessage("Level up! Level " + state.level);
+    setMessage(
+      "Level up! New crops unlocked at level " +
+      state.level
+    );
+
+    initSeedSelect();
   }
 
   tile.cropId = null;
@@ -997,7 +1163,14 @@ resetBtn.addEventListener("click", () => {
 
 function initSeedSelect() {
 
-  CROPS.forEach(crop => {
+  seedSelectEl.innerHTML = "";
+
+  const unlockedCrops =
+    CROPS.filter(
+      crop => state.level >= crop.levelRequired
+    );
+
+  unlockedCrops.forEach(crop => {
 
     const opt =
       document.createElement("option");
@@ -1007,12 +1180,12 @@ function initSeedSelect() {
     opt.textContent =
       crop.emoji +
       " " +
-      crop.name +
-      " Lv" +
-      crop.levelRequired;
+      crop.name;
 
     seedSelectEl.appendChild(opt);
+
   });
+
 }
 
 load();
