@@ -6,11 +6,21 @@
 // Index = level (0 = no well)
 const WELL_PRODUCTION = [
   0,   // Level 0 (no well)
-  5,   // Level 1
-  10,  // Level 2
-  20,  // Level 3
-  35,  // Level 4
-  50   // Level 5
+  3,   // Level 1
+  5,  // Level 2
+  10,  // Level 3
+  20,  // Level 4
+  45,  // Level 5
+  50,  // Level 6
+  75, // Level 7
+  100, // Level 8
+  120, // Level 9
+  130 // Level 10
+
+
+
+
+
 ];
 
 // Cost formula
