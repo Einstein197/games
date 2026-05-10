@@ -79,6 +79,21 @@ button:hover {
   padding: .5vmin;
   box-sizing: border-box;
 }
+#closeFarm {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 9999;
+}
+
 
 .tile {
   border-radius: 6px;
@@ -236,6 +251,8 @@ button:hover {
 
   <button id="expandBtn">expand farm</button>
   <button id="resetBtn">Reset</button>
+  <button id="closeFarm" onclick="window.location.href='index.html'">✕</button>
+
 
 </div>
 
