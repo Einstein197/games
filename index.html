@@ -424,7 +424,7 @@
   </div>
 
   <!-- Farm Game -->
-  <div class="card" onclick="window.location.href='farm.html'">
+  <div class="card" onclick="openFarm('tractorsim/farm.html', 'farm')">
     <div class="icon-wrap">
       <svg viewBox="0 0 100 100">
         <defs>
@@ -528,6 +528,11 @@ function openGame(path, gameName) {
     document.getElementById("namePopup").style.display = "flex";
   }
 }
+
+function openFarm(url) {
+  window.location.href = url;
+}
+
 
 /* ============================
       CLOSE GAME

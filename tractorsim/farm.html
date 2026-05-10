@@ -5,219 +5,11 @@
 <title>Krypton SimFarm Ultimate</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-
-html, body {
-  margin: 0;
-  padding: 0;
-  background: #050509;
-  color: #eee;
-  font-family: system-ui, sans-serif;
-  overflow: hidden;
-  height: 100%;
-  overflow-y: auto;
-}
-
-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
-}
-
-h1 {
-  margin: 6px 0;
-  font-size: 18px;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
-#topBar, #bottomBar {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding: 4px;
-  font-size: 11px;
-}
-
-.panel, .small-panel {
-  background: #10131a;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 4px 8px;
-}
-
-.small-panel {
-  min-width: 160px;
-}
-
-button, select {
-  background: #1a1d26;
-  color: #eee;
-  border: 1px solid #444;
-  border-radius: 4px;
-  padding: 4px 7px;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #222735;
-}
-
-#farm {
-  width: 94vmin;
-  height: 94vmin;
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(10, 1fr);
-  gap: .5vmin;
-  background: #06070c;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: .5vmin;
-  box-sizing: border-box;
-}
-#closeFarm {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  width: 40px;
-  height: 40px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 24px;
-  cursor: pointer;
-  z-index: 9999;
-}
-
-
-.tile {
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.4vmin;
-  cursor: pointer;
-  transition: transform .05s;
-  user-select: none;
-}
-
-.tile:hover {
-  transform: translateY(-1px);
-}
-
-.locked {
-  background: #111;
-  border: 1px solid #222;
-}
-
-.empty {
-  background: #2b2415;
-  border: 1px solid #3a3120;
-}
-
-.planted {
-  background: #3d331a;
-  border: 1px solid #57421d;
-}
-
-.growing {
-  background: #56421d;
-  border: 1px solid #866225;
-}
-
-.ready {
-  background: #567d2a;
-  border: 1px solid #9bd740;
-  box-shadow: 0 0 10px rgba(150,255,80,.25);
-}
-
-.dead {
-  background: #444;
-  border: 1px solid #666;
-}
-
-.good {
-  filter: brightness(1.1);
-}
-
-.excellent {
-  filter: brightness(1.2) saturate(1.2);
-}
-
-.golden {
-  animation: glow 1s infinite alternate;
-}
-
-@keyframes glow {
-  from { box-shadow: 0 0 5px gold; }
-  to { box-shadow: 0 0 18px gold; }
-}
-
-#msg {
-  height: 18px;
-  font-size: 12px;
-  padding: 5px;
-}
-
-.popup {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.hidden {
-  display: none;
-}
-
-.popupBox {
-  width: 320px;
-  background: #141824;
-  border: 2px solid #4d7cff;
-  border-radius: 14px;
-  padding: 24px;
-  text-align: center;
-  box-shadow: 0 0 30px rgba(80,120,255,.4);
-  animation: popupAnim .25s ease;
-}
-
-.popupBox h2 {
-  margin-top: 0;
-  color: #8cb4ff;
-  letter-spacing: .08em;
-}
-
-.popupBox button {
-  margin-top: 18px;
-  width: 120px;
-  padding: 10px;
-  font-size: 14px;
-}
-
-@keyframes popupAnim {
-
-  from {
-    transform: scale(.7);
-    opacity: 0;
-  }
-
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-}
-
-</style>
+<link rel="stylesheet" href="farm.css">
+<script src="js/crops.js"></script>
+<script src="js/well.js"></script>
 </head>
+
 
 <body>
 
@@ -302,201 +94,6 @@ const WEATHER_TYPES = [
   "Snow"
 ];
 
-const CROPS = [
-
-  {
-    id: "wheat",
-    emoji: "🌾",
-    name: "Wheat",
-    baseCost: 5,
-    baseSell: 10,
-    growSeconds: 30,
-    xp: 10,
-    levelRequired: 1,
-    bestSeasons: ["Spring","Fall"]
-  },
-
-  {
-    id: "potato",
-    emoji: "🥔",
-    name: "Potato",
-    baseCost: 8,
-    baseSell: 16,
-    growSeconds: 45,
-    xp: 14,
-    levelRequired: 1,
-    bestSeasons: ["Spring","Winter"]
-  },
-
-  {
-    id: "corn",
-    emoji: "🌽",
-    name: "Corn",
-    baseCost: 12,
-    baseSell: 24,
-    growSeconds: 70,
-    xp: 20,
-    levelRequired: 2,
-    bestSeasons: ["Summer"]
-  },
-
-  {
-    id: "tomato",
-    emoji: "🍅",
-    name: "Tomato",
-    baseCost: 16,
-    baseSell: 32,
-    growSeconds: 85,
-    xp: 24,
-    levelRequired: 2,
-    bestSeasons: ["Summer"]
-  },
-
-  {
-    id: "carrot",
-    emoji: "🥕",
-    name: "Carrot",
-    baseCost: 20,
-    baseSell: 50,
-    growSeconds: 120,
-    xp: 35,
-    levelRequired: 3,
-    bestSeasons: ["Spring","Fall"]
-  },
-
-  {
-    id: "rice",
-    emoji: "🍚",
-    name: "Rice",
-    baseCost: 25,
-    baseSell: 58,
-    growSeconds: 135,
-    xp: 40,
-    levelRequired: 3,
-    bestSeasons: ["Summer"]
-  },
-
-  {
-    id: "strawberry",
-    emoji: "🍓",
-    name: "Strawberry",
-    baseCost: 30,
-    baseSell: 70,
-    growSeconds: 160,
-    xp: 55,
-    levelRequired: 4,
-    bestSeasons: ["Spring"]
-  },
-
-  {
-    id: "blueberry",
-    emoji: "🫐",
-    name: "Blueberry",
-    baseCost: 40,
-    baseSell: 90,
-    growSeconds: 200,
-    xp: 70,
-    levelRequired: 4,
-    bestSeasons: ["Summer"]
-  },
-
-  {
-    id: "pumpkin",
-    emoji: "🎃",
-    name: "Pumpkin",
-    baseCost: 60,
-    baseSell: 140,
-    growSeconds: 260,
-    xp: 90,
-    levelRequired: 5,
-    bestSeasons: ["Fall"]
-  },
-
-  {
-    id: "watermelon",
-    emoji: "🍉",
-    name: "Watermelon",
-    baseCost: 70,
-    baseSell: 170,
-    growSeconds: 320,
-    xp: 105,
-    levelRequired: 5,
-    bestSeasons: ["Summer"]
-  },
-
-  {
-    id: "grapes",
-    emoji: "🍇",
-    name: "Grapes",
-    baseCost: 90,
-    baseSell: 220,
-    growSeconds: 420,
-    xp: 130,
-    levelRequired: 6,
-    bestSeasons: ["Fall"]
-  },
-
-  {
-    id: "apple",
-    emoji: "🍎",
-    name: "Apple",
-    baseCost: 110,
-    baseSell: 270,
-    growSeconds: 500,
-    xp: 150,
-    levelRequired: 6,
-    bestSeasons: ["Fall"]
-  },
-
-  {
-    id: "banana",
-    emoji: "🍌",
-    name: "Banana",
-    baseCost: 140,
-    baseSell: 340,
-    growSeconds: 620,
-    xp: 180,
-    levelRequired: 7,
-    bestSeasons: ["Summer"]
-  },
-
-  {
-    id: "pineapple",
-    emoji: "🍍",
-    name: "Pineapple",
-    baseCost: 180,
-    baseSell: 450,
-    growSeconds: 760,
-    xp: 220,
-    levelRequired: 8,
-    bestSeasons: ["Summer"]
-  },
-
-  {
-    id: "coconut",
-    emoji: "🥥",
-    name: "Coconut",
-    baseCost: 240,
-    baseSell: 620,
-    growSeconds: 900,
-    xp: 260,
-    levelRequired: 9,
-    bestSeasons: ["Summer"]
-  },
-
-  {
-    id: "pepper",
-    emoji: "🌶️",
-    name: "Pepper",
-    baseCost: 300,
-    baseSell: 820,
-    growSeconds: 1050,
-    xp: 320,
-    levelRequired: 10,
-    bestSeasons: ["Summer"]
-  }
-
-];
 
 const GRID_SIZE = 10;
 
@@ -563,12 +160,40 @@ let state = {
     population: 10,
     prosperity: 1
   },
+  water: {
+    current: 20,
+    max: 20
+  },
   silo: {
     capacity: 100,
     stored: {}
   }
 
 };
+
+function buyWell() {
+  const cost = 1000;
+  if (state.coins < cost) return setMessage("Not enough coins!");
+  state.coins -= cost;
+  state.well.level = 1;
+  state.well.production = WELL_PRODUCTION[1];
+  setMessage("Well purchased!");
+  save();
+  render();
+}
+
+function upgradeWell() {
+  const nextLevel = state.well.level + 1;
+  const cost = nextLevel * 2000;
+  if (state.coins < cost) return setMessage("Not enough coins!");
+  state.coins -= cost;
+  state.well.level = nextLevel;
+  state.well.production = WELL_PRODUCTION[nextLevel];
+  setMessage(`Well upgraded to level ${nextLevel}!`);
+  save();
+  render();
+}
+
 
 function now() {
   return Math.floor(Date.now()/1000);
@@ -651,7 +276,8 @@ function initTiles() {
         plantedAt: 0,
         dead: false,
         quality: "normal",
-        lastCropId: null
+        lastCropId: null,
+        watered: false   // ← NEW
       })
     );
 
@@ -665,8 +291,8 @@ function initTiles() {
     );
 
   }
-
 }
+
 
 function randomChoice(arr) {
   return arr[Math.floor(Math.random()*arr.length)];
@@ -753,6 +379,15 @@ function advanceDay() {
   }
 
   updateWeather();
+  if (currentWeather() === "Rain") {
+
+    state.water.current += 5;
+
+    if (state.water.current > state.water.max) {
+      state.water.current = state.water.max;
+    }
+
+  }
   updateMarket();
 
 }
@@ -767,8 +402,11 @@ function getTileState(tile) {
 
   const crop = cropById(tile.cropId);
 
-  const elapsed =
-    now() - tile.plantedAt;
+  let elapsed = 0;
+
+  if (tile.watered) {
+    elapsed = now() - tile.plantedAt;
+  }
 
   const growTime =
     crop.growSeconds;
@@ -966,7 +604,7 @@ function sellAllSilo() {
 }
 
 function expandSilo() {
-  const cost = state.silo.capacity * 2;
+  const cost = state.silo.capacity * 20;
 
   if (state.coins < cost) {
     return setMessage("Not enough coins to expand silo");
@@ -979,7 +617,7 @@ function expandSilo() {
   const siloExpandBtn = document.getElementById("siloExpandBtn");
   if (siloExpandBtn) {
     siloExpandBtn.textContent =
-      "Expand Silo (Cost: " + (state.silo.capacity * 2) + ")";
+      "Expand Silo (Cost: " + (state.silo.capacity * 20) + ")";
   }
 
   setMessage("Silo expanded! New capacity: " + state.silo.capacity);
@@ -1018,6 +656,7 @@ function harvest(index) {
 
   tile.cropId = null;
   tile.plantedAt = 0;
+  tile.watered = false;
 
   setMessage("Stored " + crop.name + " in silo");
 
@@ -1037,6 +676,59 @@ function clearDead(index) {
   save();
 
 }
+function expandWaterTank() {
+
+  const cost = state.water.max * 100;
+
+  if (state.coins < cost) {
+    return setMessage("Not enough coins.");
+  }
+
+  state.coins -= cost;
+
+  state.water.max += 20;
+  state.water.current += 20;
+
+  setMessage(
+    "Water tank expanded!"
+  );
+
+  save();
+  render();
+
+}
+function waterTile(index) {
+
+  const tile = state.tiles[index];
+
+  if (!tile.cropId) {
+    return setMessage("Nothing planted here.");
+  }
+
+  if (tile.watered) {
+    return setMessage("Already watered.");
+  }
+
+  if (state.water.current <= 0) {
+    return setMessage("Out of water!");
+  }
+
+  state.water.current--;
+
+  tile.watered = true;
+
+  setMessage(
+    "Crop watered 💧 (" +
+    state.water.current +
+    "/" +
+    state.water.max +
+    ")"
+  );
+
+  save();
+  render();
+
+}
 
 function tileClick(index) {
 
@@ -1050,6 +742,13 @@ function tileClick(index) {
 
   if (info.stage === "empty") {
     return plant(index);
+  }
+
+  if (
+    tile.cropId &&
+    !tile.watered
+  ) {
+    return waterTile(index);
   }
 
   if (info.stage === "ready") {
@@ -1211,14 +910,62 @@ function renderUI() {
     state.town.prosperity;
 
   machineInfoEl.innerHTML =
+    "<b>Water Tank</b><br>" +
+    Math.floor(state.water.current) +
+    "/" +
+    state.water.max +
+    "<br><button id='expandWaterTankBtn' onclick='expandWaterTank()'></button>" +
+
+    "<br><br>" +
+    "<b>Well</b><br>" +
+    "Level: " + state.well.level + "<br>" +
+    (
+      state.well.level === 0
+        ? "<button id='buyWellBtn' onclick='buyWell()'>Buy Well (Cost: 1000)</button>"
+        : "<button id='upgradeWellBtn' onclick='upgradeWell()'>Upgrade Well (Cost: " + ((state.well.level + 1) * 2000) + ")</button><br>" +
+          "Production: " + WELL_PRODUCTION[state.well.level] + "/hr"
+    )
+ +
+
+    "<br><br>" +
+
     "<b>Silo</b><br>" +
     "Used: " + siloUsed() + "/" + state.silo.capacity +
-    "<br><button id='siloExpandBtn' onclick='expandSilo()'>Expand Silo</button>";
+    "<br><button id='siloExpandBtn' onclick='expandSilo()'></button>";
 
-  const siloExpandBtn = document.getElementById("siloExpandBtn");
+
+  // ===============================
+  // BUTTON TEXT UPDATES
+  // ===============================
+
+  const siloExpandBtn =
+    document.getElementById("siloExpandBtn");
+
   if (siloExpandBtn) {
     siloExpandBtn.textContent =
-      "Expand Silo (Cost: " + (state.silo.capacity * 2) + ")";
+      "Expand Silo (Cost: " +
+      (state.silo.capacity * 20) +
+      ")";
+  }
+
+  const expandWaterTankBtn =
+    document.getElementById("expandWaterTankBtn");
+
+  if (expandWaterTankBtn) {
+    expandWaterTankBtn.textContent =
+      "Expand Tank (Cost: " +
+      (state.water.max * 100) +
+      ")";
+  }
+
+  const buyWellBtn =
+    document.getElementById("buyWellBtn");
+
+  if (buyWellBtn) {
+    buyWellBtn.textContent =
+      "Buy Well (Cost: " +
+      getWellCost(1) +
+      ")";
   }
 
 
@@ -1322,6 +1069,8 @@ resetBtn.addEventListener("click", () => {
 });
 
 load();
+
+initWell(state);
 
 expandBtn.textContent = "Expand Farm (Cost: " + (state.unlockedSize * 1000) + ")";
 
