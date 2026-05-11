@@ -833,15 +833,21 @@ function renderTiles() {
     }
 
     else if (info.stage === "planted") {
-      div.textContent = "🌱";
+      if (!tile.watered) {
+        div.textContent = "🌱💧";
+      } else {
+        div.textContent = "🌱";
+      }
     }
+    
+    
 
     else if (info.stage === "growing") {
       div.textContent = info.crop.emoji;
     }
 
     else if (info.stage === "ready") {
-      div.textContent = "✨";
+      div.textContent = info.crop.emoji;
     }
 
     else if (info.stage === "dead") {
