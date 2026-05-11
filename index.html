@@ -541,6 +541,7 @@ function openGame(path, gameName) {
   // Hide Krypton Arcade header + description
   document.getElementById("arcadeTitle").style.display = "none";
   document.getElementById("arcadeDesc").style.display = "none";
+  document.getElementById("faucetFrame").style.display = "none";
 
 
 
@@ -580,6 +581,7 @@ function closeGame() {
   document.getElementById("commentsSection").style.display = "none";
 
   document.getElementById("arcadeTitle").style.display = "block";
+  document.getElementById("arcadeDesc").style.display = "block";
   document.getElementById("arcadeDesc").style.display = "block";
 }
 
@@ -787,9 +789,13 @@ loadVisitorStats();
 setInterval(loadVisitorStats, 300000); // refresh every 5 minutes
 
 const uid = new URLSearchParams(window.location.search).get("uid");
+
 if (uid) {
   document.getElementById("faucetFrame").src = "faucet.html?uid=" + uid;
+} else {
+  document.getElementById("faucetFrame").style.display = "none";
 }
+
 
 
 
