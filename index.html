@@ -2,244 +2,371 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Krypton Arcade</title>
-  <link rel="icon" type="image/png" href="krypton.png">
+  <title>KryptonLegend Faucet Unlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: linear-gradient(to bottom, #ff7b00, #3b0b5c);
-      color: #fff;
-      min-height: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    :root {
+      --bg: #050816;
+      --card: #0f172a;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --success: #4ade80;
     }
-    h1 {
-      margin-top: 24px;
-      margin-bottom: 8px;
-      font-size: 36px;
-      text-shadow: 0 0 18px rgba(0,0,0,0.7);
-    }
-    p.subtitle {
-      margin: 0 0 20px;
-      opacity: 0.9;
-    }
-    .grid {
-      width: 100%;
-      max-width: 900px;
-      padding: 0 16px 40px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 20px;
+
+    * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    .card {
-      background: rgba(0,0,0,0.35);
-      border-radius: 18px;
-      padding: 16px 12px 18px;
-      text-align: center;
-      cursor: pointer;
-      box-shadow: 0 0 18px rgba(0,0,0,0.45);
-      backdrop-filter: blur(6px);
-      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
     }
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 0 22px rgba(0,0,0,0.7);
-      background: rgba(0,0,0,0.5);
-    }
-    .icon-wrap {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 10px;
-    }
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .card-sub {
-      font-size: 12px;
+
+    .glow-orbit {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.18), transparent 55%),
+        radial-gradient(circle at 80% 80%, rgba(129, 140, 248, 0.18), transparent 55%);
       opacity: 0.8;
+      z-index: -1;
     }
 
-    /* GAME VIEWER */
-    #gameContainer {
-      display: none;
+    .card {
       width: 100%;
-      flex-direction: column;
-      align-items: center; 
-      gap: 20px;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    #gameWrapper {
-      position: relative;
-      width: 420px;
-      height: 600px;
-      max-width: 90vw;
-      max-height: 70vh;
-      margin-bottom: 20px;
-    }
-
-    #gameFrame {
-      width: 100%;
-      height: 100%;
-      border: 3px solid rgba(255,255,255,0.3);
+      max-width: 480px;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
       border-radius: 18px;
-      box-shadow: 0 0 22px rgba(0,0,0,0.7);
-      background: #000;
+      padding: 24px 22px 20px;
+      box-shadow:
+        0 18px 45px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(148, 163, 184, 0.18);
+      position: relative;
+      overflow: hidden;
     }
 
-
-    #leaderboardBox {
-      width: 100%;
-      max-width: 400px;   /* match your game width */
-      background: #111;
-      padding: 12px;
-      border-radius: 10px;
-      border: 2px solid #333;
-      color: white;
-      display: none;
-      margin: 0 auto;     /* center it */
-    }
-
-    #leaderboardWrapper {
-      margin-top: 20px;   /* spacing BELOW the game */
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-
-
-    #gameAndBoard {
-      display: flex;
-      align-items: flex-start;
-
-    }
-
-    #belowGame {
-      margin-top: 20px;      /* consistent gap under the iframe */
-      display: flex;
-      flex-direction: column;
-      gap: 20px;             /* consistent gap between leaderboard and comments */
-      width: 100%;
-      max-width: 400px;      /* optional: keeps it neat */
-      margin-left: auto;
-      margin-right: auto;    /* centers it */
-    }
-
-
-
-    #closeX {
+    .card::before {
+      content: "";
       position: absolute;
-      top: 10px;
-      right: 10px;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.18), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.18), transparent 55%);
+      opacity: 0.4;
+      z-index: -1;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .logo {
       width: 32px;
       height: 32px;
-      font-size: 20px;
-      font-weight: bold;
-      color: white;
-      background: #d62828;
-      border: 2px solid #ff9a2b;
-      border-radius: 8px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #e5e7eb, #38bdf8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: #020617;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9);
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .title span.accent {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
+    }
+
+    .content {
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    .step-list {
+      list-style: none;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .step-list li {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+      align-items: flex-start;
+    }
+
+    .step-badge {
+      min-width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-indicator {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--danger);
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
+    }
+
+    .status-text {
+      color: var(--muted);
+    }
+
+    .uid-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px dashed rgba(148, 163, 184, 0.6);
+      color: var(--muted);
+      max-width: 60%;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .button-wrap {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-main {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
       cursor: pointer;
-      z-index: 999;
-      box-shadow: 0 0 10px rgba(0,0,0,0.6);
-      transition: 0.2s;
-    }
-
-    #closeX:hover {
-      background: #b71c1c;
-      transform: scale(1.1);
-    }
-
-
-    #frame {
-      width: 100%;
-      display: flex;
+      display: inline-flex;
+      align-items: center;
       justify-content: center;
-      margin: 20px 0;
-      margin-bottom: 20px;
+      gap: 8px;
+      background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
+      color: #020617;
+      box-shadow:
+        0 12px 30px rgba(56, 189, 248, 0.45),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        filter 0.12s ease,
+        opacity 0.12s ease;
     }
 
-    #adwrap {
-      width: 100%;
+    .btn-main:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow:
+        0 16px 40px rgba(56, 189, 248, 0.6),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
+
+    .btn-main:active {
+      transform: translateY(0);
+      box-shadow:
+        0 8px 18px rgba(56, 189, 248, 0.4),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
+
+    .btn-main.disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow:
+        0 4px 10px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      filter: grayscale(0.2);
+    }
+
+    .btn-sub {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: default;
+      text-align: center;
+    }
+
+    .btn-sub strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .footer {
+      margin-top: 10px;
       display: flex;
-      justify-content: center;
-      margin: 20px 0;
-      margin-bottom: 20px;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
     }
 
+    .footer span.brand {
+      color: var(--accent);
+      font-weight: 600;
+    }
 
+    .footer span.dot {
+      margin: 0 4px;
+      opacity: 0.6;
+    }
 
-    .popup {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.9);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
 
-  .popup-box {
-    background: #111;
-    padding: 20px;
-    border-radius: 12px;
-    border: 2px solid #ff7b00;
-    text-align: center;
-    width: 80%;
-    max-width: 300px;
-  }
+    .toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
+    .toast-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 10px rgba(74, 222, 128, 0.9);
+    }
 
-  #visitorStats {
-  text-align: center;
-  margin-top: 10px;
-  font-size: 14px;
-  opacity: 0.8;
-  margin-bottom: 20px;
-}
+    .toast.error .toast-dot {
+      background: var(--danger);
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
+    }
 
-
+    @media (max-width: 480px) {
+      .card {
+        padding: 20px 16px 16px;
+      }
+      .content {
+        padding: 12px 11px 10px;
+      }
+      .title {
+        font-size: 17px;
+      }
+      .subtitle {
+        font-size: 11px;
+      }
+    }
   </style>
 </head>
 <body>
+  <div class="glow-orbit"></div>
 
-<h1 id="arcadeTitle">Krypton Arcade</h1>
-
-<div id="namePopup" class="popup">
-  <div class="popup-box">
-    <h2>Enter your player name</h2>
-    <input id="playerNameInput" type="text" placeholder="Your name">
-    <button onclick="savePlayerName()">Continue</button>
-  </div>
-</div>
-
-
-
-
-<p class="subtitle" id="arcadeDesc">Tap a game to launch it. Close it to return to the arcade.</p>
-
-<div id="visitorStats">Loading stats...</div>
-
-
-
-
-<!-- BEGIN AADS AD UNIT 2436395 -->
-
-<div id="frame" style="width: 100%;margin: auto;position: relative; z-index: 99998;">
-          <iframe data-aa='2436395' src='//acceptable.a-ads.com/2436395/?size=Adaptive'
-                            style='border:0; padding:0; width:70%; height:90px; overflow:hidden;display: block;margin: auto'></iframe>
+  <div class="card">
+    <div class="header">
+      <div class="logo">K</div>
+      <div class="title-block">
+        <div class="title">
+          KryptonLegend <span class="accent">Faucet Unlock</span>
         </div>
+<<<<<<< Updated upstream
 
 <!-- END AADS AD UNIT 2436395 -->
 <div id="adWrap" class="ad-wrap">"placeholder"</div>
@@ -398,349 +525,173 @@
           <path d="M-4 10 L0 18 L4 10 Z" fill="#ffb300"/>
         </g>
       </svg>
+=======
+        <div class="subtitle">
+          One click here → faucet2 unlocked on Discord.
+        </div>
+      </div>
+>>>>>>> Stashed changes
     </div>
 
-    <div class="card-title">Space Shooter</div>
-    <div class="card-sub">Arcade survival</div>
-  </div>
-
-  <!-- Farm Game -->
-  <div class="card" onclick="openFarm('tractorsim/farm.html', 'farm')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <defs>
-          <radialGradient id="farmGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#7fff5a"/>
-            <stop offset="60%" stop-color="#3ecf2c"/>
-            <stop offset="100%" stop-color="#3ecf2c" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-
-        <!-- Background glow -->
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#farmGlow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#7fff5a" stroke-width="3"/>
-
-        <!-- 🌾 FARM ICON -->
-        <g transform="translate(50 50)">
-          <!-- Barn -->
-          <rect x="-12" y="-10" width="24" height="20" fill="#d13f3f"/>
-          <polygon points="-12 -10 0 -22 12 -10" fill="#b83232"/>
-          <rect x="-6" y="0" width="12" height="10" fill="#ffffff"/>
-
-          <!-- Crop rows -->
-          <path d="M-20 18 L20 18" stroke="#7fff5a" stroke-width="3"/>
-          <path d="M-20 22 L20 22" stroke="#5fd94a" stroke-width="3"/>
-        </g>
-      </svg>
+    <div class="pill">
+      <span class="pill-dot"></span>
+      <span>Step 2 of 2 · Web verification</span>
     </div>
 
-    <div class="card-title">Krypton Farm</div>
-    <div class="card-sub">Grow • Harvest • Expand</div>
-  </div>
+    <div class="content">
+      <ul class="step-list">
+        <li>
+          <span class="step-badge">1</span>
+          <span>Run <strong>faucet2</strong> in the KryptonLegend Discord.</span>
+        </li>
+        <li>
+          <span class="step-badge">2</span>
+          <span>Open this page from the link the bot sent you.</span>
+        </li>
+        <li>
+          <span class="step-badge">3</span>
+          <span>Click the button below to unlock the faucet for your Discord account.</span>
+        </li>
+      </ul>
 
+      <div class="status">
+        <div class="status-left">
+          <div class="status-indicator" id="status-indicator"></div>
+          <div class="status-text" id="status-text">
+            Waiting for Discord ID from URL…
+          </div>
+        </div>
+        <div class="uid-pill" id="uid-pill">
+          uid: —
+        </div>
+      </div>
 
-
-
-
-</div> <!-- end grid -->
-
-<!-- INLINE GAME VIEWER -->
-<div id="gameContainer">
-
-  <!-- GAME WINDOW -->
-  <div id="gameWrapper">
-    <button id="closeX" onclick="closeGame()">✕</button>
-    <iframe id="gameFrame"></iframe>
-  </div>
-
-  <!-- EVERYTHING BELOW THE GAME -->
-  <div id="belowGame">
-
-    <div id="leaderboardWrapper">
-      <div id="leaderboardBox"></div>
+      <div class="button-wrap">
+        <button class="btn-main disabled" id="unlock-btn" disabled>
+          <span id="btn-label">Unlock faucet2</span>
+        </button>
+        <button class="btn-sub">
+          Use the same Discord account you ran <strong>faucet2</strong> with.
+        </button>
+      </div>
     </div>
 
-    <div id="commentsSection">
-      <h3>Comments</h3>
-      <div id="commentsList"></div>
-      <textarea id="commentInput" placeholder="Write a comment..."></textarea>
-      <button id="commentSubmit">Post</button>
+    <div class="footer">
+      <span><span class="brand">KryptonLegend.fun</span> faucet access</span>
+      <span><span class="dot">•</span> Discord‑linked verification</span>
     </div>
-
-    
-
   </div>
 
+  <div class="toast" id="toast">
+    <div class="toast-dot"></div>
+    <span id="toast-text">Faucet unlocked. Go back to Discord.</span>
+  </div>
 
-</div>
+  <script>
+    const uidParamName = "uid";
+    const unlockEndpoint = "/api/unlock";
 
+    const statusIndicator = document.getElementById("status-indicator");
+    const statusText = document.getElementById("status-text");
+    const uidPill = document.getElementById("uid-pill");
+    const unlockBtn = document.getElementById("unlock-btn");
+    const btnLabel = document.getElementById("btn-label");
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
 
-<script>
-/* ============================
-      OPEN GAME
-============================ */
-function openGame(path, gameName) {
-  document.getElementById("gameGrid").style.display = "none";
-  document.getElementById("gameContainer").style.display = "flex";
-  document.getElementById("gameFrame").src = path;
-
-  // Hide Krypton Arcade header + description
-  document.getElementById("arcadeTitle").style.display = "none";
-  document.getElementById("arcadeDesc").style.display = "none";
-
-
-
-  // Show leaderboard + comments if game has one
-  if (gameName) {
-    window.currentGameId = gameName; 
-    loadLeaderboard(gameName);
-    loadComments(gameName);
-
-    document.getElementById("leaderboardBox").style.display = "block";
-    document.getElementById("commentsSection").style.display = "block";
-  } else {
-    document.getElementById("leaderboardBox").style.display = "none";
-    document.getElementById("commentsSection").style.display = "none";
-  }
-
-  // Show name popup if not set
-  if (!localStorage.getItem("playerNameSet")) {
-    document.getElementById("namePopup").style.display = "flex";
-  }
-}
-
-function openFarm(url) {
-  window.location.href = url;
-}
-
-
-/* ============================
-      CLOSE GAME
-============================ */
-function closeGame() {
-  document.getElementById("gameFrame").src = "";
-  document.getElementById("gameContainer").style.display = "none";
-  document.getElementById("gameGrid").style.display = "grid";
-
-  document.getElementById("leaderboardBox").style.display = "none";
-  document.getElementById("commentsSection").style.display = "none";
-
-  document.getElementById("arcadeTitle").style.display = "block";
-  document.getElementById("arcadeDesc").style.display = "block";
-}
-
-/* ============================
-      PLAYER ID (ALWAYS)
-============================ */
-if (!localStorage.getItem("playerID")) {
-  const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
-  localStorage.setItem("playerID", id);
-}
-
-/* ============================
-      SAVE PLAYER NAME
-============================ */
-function savePlayerName() {
-  const name = document.getElementById("playerNameInput").value.trim();
-
-  if (name !== "") {
-    localStorage.setItem("playerName", name);
-    localStorage.setItem("playerNameSet", "true");
-    document.getElementById("namePopup").style.display = "none";
-  }
-}
-
-/* ============================
-      API ENDPOINT
-============================ */
-const API = "https://leaderboard.shadownetcg-f2f.workers.dev";
-
-/* ============================
-      LOAD LEADERBOARD
-============================ */
-async function loadLeaderboard(game) {
-  const box = document.getElementById("leaderboardBox");
-
-  let html = `<h3>${game.toUpperCase()} LEADERBOARD</h3>`;
-
-  try {
-    const res = await fetch(`${API}/leaderboard?game=${game}`);
-    let board = await res.json();
-
-    if (!board.length) {
-      html += "<p>No scores yet.</p>";
-    } else {
-      board.sort((a, b) => b.score - a.score);
-
-      board.forEach((entry, i) => {
-        html += `<div>${i + 1}. ${entry.name.slice(0, 20)} — ${entry.score}</div>`;
-      });
-    }
-  } catch (err) {
-    html += "<p>Failed to load leaderboard.</p>";
-  }
-
-  html += `
-    <button onclick="resetScores('${game}')"
-      style="margin-top:12px; width:100%; padding:6px; border-radius:6px;
-             background:#d62828; color:white; border:1px solid #ff9a2b;">
-      Reset Scoreboard
-    </button>
-  `;
-
-  html += `
-    <button onclick="resetPlayerName()"
-      style="margin-top:10px; width:100%; padding:6px; border-radius:6px;
-             background:#ff7b00; color:#050509; border:1px solid #ff9a2b;">
-      Reset Player Name
-    </button>
-  `;
-
-  box.innerHTML = html;
-}
-
-/* ============================
-      RESET LEADERBOARD
-============================ */
-async function resetScores(game) {
-  const pass = prompt("Enter admin password:");
-  if (pass !== "Fl@shAdmin197") {
-    alert("Incorrect password.");
-    return;
-  }
-
-  await fetch(`${API}/reset?game=${game}`, { method: "POST" });
-
-  alert(`${game.toUpperCase()} leaderboard reset.`);
-  loadLeaderboard(game);
-}
-
-/* ============================
-      RESET PLAYER NAME
-============================ */
-function resetPlayerName() {
-  localStorage.removeItem("playerName");
-  localStorage.removeItem("playerNameSet");
-  alert("Your name has been reset. Reload the page to enter a new one.");
-}
-
-/* ============================
-      LOAD COMMENTS
-============================ */
-async function loadComments(game) {
-  const list = document.getElementById("commentsList");
-  list.innerHTML = "<p>Loading comments...</p>";
-
-  try {
-    const res = await fetch(`${API}/comment/load?game=${game}`);
-    const comments = await res.json();
-
-    list.innerHTML = "";
-
-    if (!comments.length) {
-      list.innerHTML = "<p>No comments yet.</p>";
-      return;
+    function showToast(message, isError = false) {
+      toastText.textContent = message;
+      if (isError) {
+        toast.classList.add("error");
+      } else {
+        toast.classList.remove("error");
+      }
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2600);
     }
 
-    comments.forEach(c => {
-      const div = document.createElement("div");
-      div.className = "comment";
-      div.innerHTML = `<strong>${c.name}</strong>: ${c.text}`;
-      list.appendChild(div);
-    });
+    function setStatus(text, type) {
+      statusText.textContent = text;
+      if (type === "ready") {
+        statusIndicator.style.background = "var(--accent)";
+        statusIndicator.style.boxShadow = "0 0 10px rgba(56, 189, 248, 0.9)";
+      } else if (type === "ok") {
+        statusIndicator.style.background = "var(--success)";
+        statusIndicator.style.boxShadow = "0 0 10px rgba(74, 222, 128, 0.9)";
+      } else if (type === "error") {
+        statusIndicator.style.background = "var(--danger)";
+        statusIndicator.style.boxShadow = "0 0 10px rgba(248, 113, 113, 0.9)";
+      } else {
+        statusIndicator.style.background = "var(--danger)";
+        statusIndicator.style.boxShadow = "0 0 10px rgba(248, 113, 113, 0.9)";
+      }
+    }
 
-  } catch (err) {
-    list.innerHTML = "<p>Failed to load comments.</p>";
-  }
-}
+    function getUidFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const uid = params.get(uidParamName);
+      return uid && uid.trim().length > 0 ? uid.trim() : null;
+    }
 
-/* ============================
-      SUBMIT COMMENT
-============================ */
-document.getElementById("commentSubmit").onclick = async () => {
-  const text = document.getElementById("commentInput").value.trim();
-  if (!text) return;
+    async function unlock() {
+      const uid = getUidFromUrl();
+      if (!uid) {
+        showToast("Missing Discord ID in URL.", true);
+        setStatus("No Discord ID found. Open this link from the bot.", "error");
+        return;
+      }
 
-  const name = localStorage.getItem("playerName") || "Anonymous";
-  const game = window.currentGameId;
+      unlockBtn.classList.add("disabled");
+      unlockBtn.disabled = true;
+      btnLabel.textContent = "Unlocking…";
 
-  await fetch(`${API}/comment/submit`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ game, name, text })
-  });
+      try {
+        const res = await fetch(unlockEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid })
+        });
 
-  document.getElementById("commentInput").value = "";
-  loadComments(game);
-};
+        if (!res.ok) {
+          throw new Error("Non‑OK response");
+        }
 
-/* ============================
-      REFRESH ADS
-============================ */
-setInterval(() => {
-  const ad = document.querySelector("#frame iframe");
-  if (ad) ad.src = ad.src;
-}, 90000);
+        setStatus("Verified. You can now use faucet2 in Discord.", "ok");
+        btnLabel.textContent = "Faucet unlocked";
+        showToast("Faucet unlocked. Go back to Discord.");
+      } catch (err) {
+        console.error(err);
+        setStatus("Something went wrong. Try again.", "error");
+        btnLabel.textContent = "Unlock faucet2";
+        unlockBtn.classList.remove("disabled");
+        unlockBtn.disabled = false;
+        showToast("Error unlocking faucet. Try again.", true);
+      }
+    }
 
+    function init() {
+      const uid = getUidFromUrl();
 
-function resizeIframe() {
-  const frame = document.getElementById("gameFrame");
-  if (!frame) return;
+      if (!uid) {
+        uidPill.textContent = "uid: missing";
+        setStatus("No Discord ID found. Open this link from the bot.", "error");
+        unlockBtn.classList.add("disabled");
+        unlockBtn.disabled = true;
+        return;
+      }
 
-  const doc = frame.contentDocument || frame.contentWindow.document;
-  if (!doc) return;
+      const shortUid =
+        uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
+      uidPill.textContent = "uid: " + shortUid;
 
-  const height = doc.documentElement.scrollHeight;
-  frame.style.height = height + "px";
-}
+      setStatus("Discord ID detected. Ready to unlock faucet2.", "ready");
+      unlockBtn.classList.remove("disabled");
+      unlockBtn.disabled = false;
 
-// Resize when iframe loads
-document.getElementById("gameFrame").addEventListener("load", () => {
-  const frame = document.getElementById("gameFrame");
-  const doc = frame.contentDocument || frame.contentWindow.document;
+      unlockBtn.addEventListener("click", unlock);
+    }
 
-  // Initial resize
-  setTimeout(resizeIframe, 100);
-
-  // ⭐ Watch for content changes inside the iframe
-  const observer = new MutationObserver(() => resizeIframe());
-  observer.observe(doc.body, { childList: true, subtree: true, attributes: true });
-});
-
-// Resize on window resize
-window.addEventListener("resize", resizeIframe);
-
-window.addEventListener("message", (event) => {
-  if (event.data.type === "resize-iframe") {
-    const frame = document.getElementById("gameFrame");
-    frame.style.height = event.data.height + "px";
-  }
-});
-
-async function loadVisitorStats() {
-  try {
-    const res = await fetch("https://visitorstats.shadownetcg-f2f.workers.dev");
-    const data = await res.json();
-
-    document.getElementById("visitorStats").textContent =
-      `Visitors today: ${data.unique} | Total visits: ${data.total}`;
-  } catch (err) {
-    document.getElementById("visitorStats").textContent =
-      "Failed to load visitor stats.";
-  }
-}
-loadVisitorStats();
-setInterval(loadVisitorStats, 300000); // refresh every 5 minutes
-
-
-
-
-
-
-</script>
-
-
-
+    init();
+  </script>
 </body>
 </html>
