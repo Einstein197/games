@@ -786,6 +786,11 @@ async function loadVisitorStats() {
 loadVisitorStats();
 setInterval(loadVisitorStats, 300000); // refresh every 5 minutes
 
+const uid = new URLSearchParams(window.location.search).get("uid");
+if (uid) {
+  document.getElementById("faucetFrame").src = "faucet.html?uid=" + uid;
+}
+
 
 
 
