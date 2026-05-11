@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>KryptonLegend Faucet Unlock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #050816;
+      --card: #0f172a;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --success: #4ade80;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: none; /* solid background */
+      color: var(--text);
+
+      margin: 0;
+      min-height: 100vh;
+
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+
+      padding-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+
+
+    .glow-orbit {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: none;
+      opacity: 0;
+      z-index: -1;
+      box-shadow: none;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+      border-radius: 18px;
+      padding: 24px 22px 20px;
+      box-shadow: none; /* removes all glow and shadow */
+      position: relative;
+      overflow: hidden;
+    }
+
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #e5e7eb, #38bdf8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: #020617;
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9);
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .title span.accent {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
+    }
+
+    .content {
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    .step-list {
+      list-style: none;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .step-list li {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+      align-items: flex-start;
+    }
+
+    .step-badge {
+      min-width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-indicator {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--danger);
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
+    }
+
+    .status-text {
+      color: var(--muted);
+    }
+
+    .uid-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px dashed rgba(148, 163, 184, 0.6);
+      color: var(--muted);
+      max-width: 60%;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .button-wrap {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-main {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
+      color: #020617;
+      box-shadow:
+        0 12px 30px rgba(56, 189, 248, 0.45),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        filter 0.12s ease,
+        opacity 0.12s ease;
+    }
+
+    .btn-main:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow:
+        0 16px 40px rgba(56, 189, 248, 0.6),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
+
+    .btn-main:active {
+      transform: translateY(0);
+      box-shadow:
+        0 8px 18px rgba(56, 189, 248, 0.4),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
+
+    .btn-main.disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow:
+        0 4px 10px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      filter: grayscale(0.2);
+    }
+
+    .btn-sub {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: default;
+      text-align: center;
+    }
+
+    .btn-sub strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .footer {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer span.brand {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .footer span.dot {
+      margin: 0 4px;
+      opacity: 0.6;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.9);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .toast-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 10px rgba(74, 222, 128, 0.9);
+    }
+
+    .toast.error .toast-dot {
+      background: var(--danger);
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 20px 16px 16px;
+      }
+      .content {
+        padding: 12px 11px 10px;
+      }
+      .title {
+        font-size: 17px;
+      }
+      .subtitle {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+
+  <div class="card">
+    <div class="header">
+      <div class="logo">K</div>
+      <div class="title-block">
+        <div class="title">
+          KryptonLegend <span class="accent">Faucet Unlock</span>
+        </div>
+        <div class="subtitle">
+          One click here → faucet2 unlocked on Discord.
+        </div>
+      </div>
+    </div>
+
+    <div class="pill">
+      <span class="pill-dot"></span>
+      <span>Step 2 of 2 · Web verification</span>
+    </div>
+
+    <div class="content">
+      <ul class="step-list">
+        <li>
+          <span class="step-badge">1</span>
+          <span>Run <strong>faucet2</strong> in the KryptonLegend Discord.</span>
+        </li>
+        <li>
+          <span class="step-badge">2</span>
+          <span>Open this page from the link the bot sent you.</span>
+        </li>
+        <li>
+          <span class="step-badge">3</span>
+          <span>Click the button below to unlock the faucet for your Discord account.</span>
+        </li>
+      </ul>
+
+      <div class="status">
+        <div class="status-left">
+          <div class="status-indicator" id="status-indicator"></div>
+          <div class="status-text" id="status-text">
+            Waiting for Discord ID from URL…
+          </div>
+        </div>
+        <div class="uid-pill" id="uid-pill">
+          uid: —
+        </div>
+      </div>
+
+      <div class="button-wrap">
+        <button class="btn-main disabled" id="unlock-btn" disabled>
+          <span id="btn-label">Unlock faucet2</span>
+        </button>
+        <button class="btn-sub">
+          Use the same Discord account you ran <strong>faucet2</strong> with.
+        </button>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span><span class="brand">KryptonLegend.fun</span> faucet access</span>
+      <span><span class="dot">•</span> Discord‑linked verification</span>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div class="toast-dot"></div>
+    <span id="toast-text">Faucet unlocked. Go back to Discord.</span>
+  </div>
+
+  <script>
+    const uidParamName = "uid";
+    const unlockEndpoint = "/api/unlock";
+
+    const statusIndicator = document.getElementById("status-indicator");
+    const statusText = document.getElementById("status-text");
+    const uidPill = document.getElementById("uid-pill");
+    const unlockBtn = document.getElementById("unlock-btn");
+    const btnLabel = document.getElementById("btn-label");
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+
+    function showToast(message, isError = false) {
+      toastText.textContent = message;
+      if (isError) {
+        toast.classList.add("error");
+      } else {
+        toast.classList.remove("error");
+      }
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    function setStatus(text, type) {
+      statusText.textContent = text;
+      if (type === "ready") {
+        statusIndicator.style.background = "var(--accent)";
+        statusIndicator.style.boxShadow = "0 0 10px rgba(56, 189, 248, 0.9)";
+      } else if (type === "ok") {
+        statusIndicator.style.background = "var(--success)";
+        statusIndicator.style.boxShadow = "0 0 10px rgba(74, 222, 128, 0.9)";
+      } else if (type === "error") {
+        statusIndicator.style.background = "var(--danger)";
+        statusIndicator.style.boxShadow = "0 0 10px rgba(248, 113, 113, 0.9)";
+      } else {
+        statusIndicator.style.background = "var(--danger)";
+        statusIndicator.style.boxShadow = "0 0 10px rgba(248, 113, 113, 0.9)";
+      }
+    }
+
+    function getUidFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const uid = params.get(uidParamName);
+      return uid && uid.trim().length > 0 ? uid.trim() : null;
+    }
+
+    async function unlock() {
+      const uid = getUidFromUrl();
+      if (!uid) {
+        showToast("Missing Discord ID in URL.", true);
+        setStatus("No Discord ID found. Open this link from the bot.", "error");
+        return;
+      }
+
+      unlockBtn.classList.add("disabled");
+      unlockBtn.disabled = true;
+      btnLabel.textContent = "Unlocking…";
+
+      try {
+        const res = await fetch(unlockEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid })
+        });
+
+        if (!res.ok) {
+          throw new Error("Non‑OK response");
+        }
+
+        setStatus("Verified. You can now use faucet2 in Discord.", "ok");
+        btnLabel.textContent = "Faucet unlocked";
+        showToast("Faucet unlocked. Go back to Discord.");
+      } catch (err) {
+        console.error(err);
+        setStatus("Something went wrong. Try again.", "error");
+        btnLabel.textContent = "Unlock faucet2";
+        unlockBtn.classList.remove("disabled");
+        unlockBtn.disabled = false;
+        showToast("Error unlocking faucet. Try again.", true);
+      }
+    }
+
+    function init() {
+      const uid = getUidFromUrl();
+
+      if (!uid) {
+        uidPill.textContent = "uid: missing";
+        setStatus("No Discord ID found. Open this link from the bot.", "error");
+        unlockBtn.classList.add("disabled");
+        unlockBtn.disabled = true;
+        return;
+      }
+
+      const shortUid =
+        uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
+      uidPill.textContent = "uid: " + shortUid;
+
+      setStatus("Discord ID detected. Ready to unlock faucet2.", "ready");
+      unlockBtn.classList.remove("disabled");
+      unlockBtn.disabled = false;
+
+      unlockBtn.addEventListener("click", unlock);
+    }
+
+    init();
+  </script>
+</body>
+</html>

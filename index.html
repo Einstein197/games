@@ -200,45 +200,7 @@
     max-width: 300px;
   }
 
-  .faucet-card {
-    margin-top: 40px;
-    background: #0b0f1a;
-    color: #e0f7ff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 0 20px rgba(56,189,248,0.3);
-    text-align: center;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .faucet-card .dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #f87171;
-    margin-right: 6px;
-  }
-
-  .faucet-card button {
-    background: #38bdf8;
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    padding: 12px 24px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-
-  .faucet-card button:hover {
-    background: #0ea5e9;
-  }
-
-
-
+  
   #visitorStats {
     text-align: center;
     margin-top: 10px;
@@ -246,6 +208,24 @@
     opacity: 0.8;
     margin-bottom: 20px;
   }
+
+  #faucetFrame {
+    width: 400px;
+    height: 600px;
+    border: none;            /* removes border */
+    border-radius: 18px;     /* rounded corners */
+    margin: 40px auto;
+    display: block;
+    overflow: hidden;        /* hides internal scrollbars */
+  }
+
+  @media (max-width: 768px) {
+    #faucetFrame {
+      width: 95%;
+      height: 640px;
+    }
+  }
+
 
 
 
@@ -504,32 +484,19 @@
 
 
 </div> <!-- end grid -->
-<div id="faucetUnlock" class="faucet-card">
-  <h3>KryptonLegend Faucet Unlock</h3>
-  <p>One click here → faucet2 unlocked on Discord.</p>
+  <!-- Faucet Unlock Embed -->
+  <iframe
+    src="faucet.html"
+    id="faucetFrame"
+    title="KryptonLegend Faucet Unlock"
+    loading="lazy"
+  ></iframe>
 
-  <div class="steps">
-    <ol>
-      <li>Run faucet2 in the KryptonLegend Discord.</li>
-      <li>Open this page from the link the bot sent you.</li>
-      <li>Click the button below to unlock the faucet for your Discord account.</li>
-    </ol>
-  </div>
 
-  <div class="verified">
-    <span class="dot"></span>
-    No Discord ID found. Open this link from the bot.
-    <span class="uid-pill">uid: missing</span>
-  </div>
 
-  <button id="unlockBtn">UNLOCK FAUCET2</button>
-  <p class="note">Use the same Discord account you ran faucet2 with.</p>
 
-  <footer class="footer-links">
-    <span>KryptonLegend.fun faucet access</span> •
-    <span>Discord‑linked verification</span>
-  </footer>
 </div>
+
 
 <!-- INLINE GAME VIEWER -->
 <div id="gameContainer">
