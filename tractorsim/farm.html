@@ -212,32 +212,41 @@ function playRewardedAd(onComplete) {
 
   console.log("Starting rewarded ad...");
 
-  // Optional: show a banner to confirm SDK works
+  // Optional: confirm SDK works
   sdk.showBanner();
 
-  // ✅ Correct method name is showRewarded
-  sdk.showRewardedVideo({
-    test: true,
-    callback: function(result) {
-      console.log("Ad result:", result);
+  // ✅ Works across most GameMonetize SDK builds
+  if (sdk.showRewarded) {
+    sdk.showRewarded({
+      test: true,
+      callback: handleResult
+    });
+  } else if (sdk.showRewardedAd) {
+    sdk.showRewardedAd(handleResult, () => setMessage("Ad not completed."));
+  } else if (sdk.showAd) {
+    sdk.showAd("rewarded", handleResult);
+  } else {
+    setMessage("Rewarded ads not supported in this SDK version.");
+  }
 
-      const success =
-        result === true ||
-        result?.success ||
-        result?.rewarded;
+  function handleResult(result) {
+    console.log("Ad result:", result);
+    const success =
+      result === true ||
+      result?.success ||
+      result?.rewarded;
 
-      if (success) {
-        console.log("Reward earned");
-        setMessage("Reward earned!");
-        onComplete(); // ✅ crops revive here
-      } else {
-        console.log("Ad failed or skipped");
-        setMessage("Ad not completed.");
-      }
+    if (success) {
+      console.log("Reward earned");
+      setMessage("Reward earned!");
+      onComplete(); // ✅ crops revive here
+    } else {
+      console.log("Ad failed or skipped");
+      setMessage("Ad not completed.");
     }
-  });
-
+  }
 }
+
 
 
 function buyWell() {
