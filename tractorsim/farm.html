@@ -137,10 +137,19 @@ const expandBtn = document.getElementById("expandBtn");
 const resetBtn = document.getElementById("resetBtn");
 const reviveBtn = document.getElementById("reviveBtn");
 reviveBtn.addEventListener("click", () => {
+
   playRewardedAd(() => {
+
+    console.log("Reviving crops...");
+
     reviveAllCrops();
+
+    save();
+
     render();
+
   });
+
 });
 
 
@@ -216,26 +225,33 @@ function playRewardedAd(onComplete) {
 
   if (typeof sdk === "undefined") {
     setMessage("SDK not loaded.");
-    console.log("SDK missing");
     return;
   }
 
-  console.log("Starting rewarded ad...");
-
-  sdk.showBanner(); // optional test to confirm sdk works
+  console.log("Showing rewarded ad...");
 
   sdk.showRewardedAd(
-    () => {
-      // SUCCESS / reward granted
-      console.log("Reward earned");
+
+    // REWARD EARNED
+    function() {
+
+      console.log("Reward callback fired");
+
       setMessage("Reward earned!");
-      onComplete();
+
+      if (typeof onComplete === "function") {
+        onComplete();
+      }
+
     },
-    () => {
-      // AD FAILED OR CLOSED
-      console.log("Ad failed or skipped");
-      setMessage("Ad not completed.");
+
+    // AD CLOSED / FAILED
+    function() {
+
+      console.log("Ad closed or failed");
+
     }
+
   );
 
 }
