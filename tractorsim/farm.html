@@ -216,7 +216,8 @@ function playRewardedAd(onComplete) {
   sdk.showBanner();
 
   // ✅ Correct method name is showRewarded
-  sdk.showRewarded({
+  sdk.showRewardedVideo({
+    test: true,
     callback: function(result) {
       console.log("Ad result:", result);
 
@@ -228,13 +229,14 @@ function playRewardedAd(onComplete) {
       if (success) {
         console.log("Reward earned");
         setMessage("Reward earned!");
-        onComplete(); // this revives crops
+        onComplete(); // ✅ crops revive here
       } else {
         console.log("Ad failed or skipped");
         setMessage("Ad not completed.");
       }
     }
   });
+
 }
 
 
