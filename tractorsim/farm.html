@@ -205,34 +205,31 @@ function reviveAllPrompt() {
 
 function playRewardedAd(onComplete) {
 
-  if (!window.sdk || !sdk.showRewarded) {
-    setMessage("Ads not available.");
+  if (typeof sdk === "undefined") {
+    setMessage("SDK not loaded.");
+    console.log("SDK missing");
     return;
   }
 
-  sdk.showRewarded({
-    test: true,
-    callback: function(result) {
+  console.log("Starting rewarded ad...");
 
-      console.log("Ad result:", result);
+  sdk.showBanner(); // optional test to confirm sdk works
 
-      const success =
-        result === true ||
-        result?.success ||
-        result?.rewarded;
-
-      if (success) {
-        onComplete();
-      } else {
-        setMessage("Ad not completed.");
-      }
+  sdk.showRewardedAd(
+    () => {
+      // SUCCESS / reward granted
+      console.log("Reward earned");
+      setMessage("Reward earned!");
+      onComplete();
+    },
+    () => {
+      // AD FAILED OR CLOSED
+      console.log("Ad failed or skipped");
+      setMessage("Ad not completed.");
     }
-  });
+  );
 
 }
-
-
-
 
 function buyWell() {
   const cost = 1000;
