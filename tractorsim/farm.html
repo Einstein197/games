@@ -44,6 +44,7 @@
 
   <button id="expandBtn">expand farm</button>
   <button id="resetBtn">Reset</button>
+  <button id="reviveBtn">Revive Dead Crops</button>
   <button id="closeFarm" onclick="window.location.href='/'">✕</button>
 
 
@@ -115,6 +116,12 @@ const machineInfoEl = document.getElementById("machineInfo");
 
 const expandBtn = document.getElementById("expandBtn");
 const resetBtn = document.getElementById("resetBtn");
+const reviveBtn = document.getElementById("reviveBtn");
+reviveBtn.addEventListener("click", () => {
+  reviveAllPrompt();
+});
+
+
 
 const seedSelectEl = document.getElementById("seedSelect");
 
@@ -171,6 +178,25 @@ let state = {
   }
 
 };
+
+function reviveAllPrompt() {
+  if (confirm("Watch a video to revive all dead crops?")) {
+    playRewardedAd(() => {
+      reviveAllCrops();
+      render();
+      setMessage("All dead crops revived!");
+    });
+  }
+}
+
+function playRewardedAd(onComplete) {
+  setMessage("Playing ad...");
+  setTimeout(() => {
+    setMessage("Ad finished!");
+    onComplete();
+  }, 3000); // simulate 3‑second ad
+}
+
 
 function buyWell() {
   const cost = 1000;
@@ -416,9 +442,12 @@ function getTileState(tile) {
     growTime - elapsed;
 
   if (
-    elapsed > growTime * 4 ||
-    tile.dead
+    elapsed > growTime * 4
   ) {
+    tile.dead = true;
+  }
+
+  if (tile.dead) {
 
     return {
       stage: "dead",
@@ -664,6 +693,46 @@ function harvest(index) {
   save();
   render();
 }
+
+function reviveAllCrops() {
+
+  let revived = 0;
+
+  for (const tile of state.tiles) {
+
+    // Only revive actual dead crops
+    if (tile.cropId && tile.dead === true) {
+
+      const crop = cropById(tile.cropId);
+
+      if (!crop) continue;
+
+      // Fully reset tile state
+      tile.dead = false;
+
+      tile.watered = true;
+
+      // Make crop instantly ready
+      tile.plantedAt =
+        now() - crop.growSeconds - 1;
+
+      revived++;
+
+    }
+
+  }
+
+  save();
+
+  render();
+
+  setMessage(
+    revived + " crops revived!"
+  );
+
+}
+
+
 
 
 function clearDead(index) {
