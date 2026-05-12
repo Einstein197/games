@@ -5,6 +5,16 @@
 <title>Krypton SimFarm Ultimate</title>
 <link rel="icon" type="image/png" href="barn.jpg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://html5.gamemonetize.com/sdk.js"></script>
+<script>
+window.addEventListener("load", () => {
+  if (window.sdk && sdk.init) {
+    sdk.init();
+    console.log("SDK initialized");
+  }
+});
+</script>
+
 
 <link rel="stylesheet" href="farm.css">
 <script src="js/crops.js"></script>
@@ -118,8 +128,12 @@ const expandBtn = document.getElementById("expandBtn");
 const resetBtn = document.getElementById("resetBtn");
 const reviveBtn = document.getElementById("reviveBtn");
 reviveBtn.addEventListener("click", () => {
-  reviveAllPrompt();
+  playRewardedAd(() => {
+    reviveAllCrops();
+    render();
+  });
 });
+
 
 
 
@@ -190,12 +204,32 @@ function reviveAllPrompt() {
 }
 
 function playRewardedAd(onComplete) {
-  setMessage("Playing ad...");
-  setTimeout(() => {
-    setMessage("Ad finished!");
-    onComplete();
-  }, 3000); // simulate 3‑second ad
+
+  if (!window.sdk || !sdk.showRewarded) {
+    setMessage("Ads not available.");
+    return;
+  }
+
+  sdk.showRewardedVideo({
+    callback: function(result) {
+
+      console.log("Ad result:", result);
+
+      const success =
+        result === true ||
+        result?.success ||
+        result?.rewarded;
+
+      if (success) {
+        onComplete();
+      } else {
+        setMessage("Ad not completed.");
+      }
+    }
+  });
+
 }
+
 
 
 function buyWell() {
