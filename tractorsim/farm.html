@@ -1206,6 +1206,22 @@ setMessage(
 
 setInterval(tick, 1000);
 
+
+window.addEventListener("load", () => {
+  sdk.showRewarded({
+    test: true,
+    callback: function(success) {
+      if (success) {
+        reviveAllCrops();
+        render();
+      } else {
+        setMessage("Ad not completed.");
+      }
+    }
+  });
+});
+
+
 </script>
 
 </body>
