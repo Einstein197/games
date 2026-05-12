@@ -204,7 +204,6 @@ function reviveAllPrompt() {
 }
 
 function playRewardedAd(onComplete) {
-
   if (typeof sdk === "undefined") {
     setMessage("SDK not loaded.");
     console.log("SDK missing");
@@ -213,23 +212,31 @@ function playRewardedAd(onComplete) {
 
   console.log("Starting rewarded ad...");
 
-  sdk.showBanner(); // optional test to confirm sdk works
+  // Optional: show a banner to confirm SDK works
+  sdk.showBanner();
 
-  sdk.showRewardedAd(
-    () => {
-      // SUCCESS / reward granted
-      console.log("Reward earned");
-      setMessage("Reward earned!");
-      onComplete();
-    },
-    () => {
-      // AD FAILED OR CLOSED
-      console.log("Ad failed or skipped");
-      setMessage("Ad not completed.");
+  // ✅ Correct method name is showRewarded
+  sdk.showRewarded({
+    callback: function(result) {
+      console.log("Ad result:", result);
+
+      const success =
+        result === true ||
+        result?.success ||
+        result?.rewarded;
+
+      if (success) {
+        console.log("Reward earned");
+        setMessage("Reward earned!");
+        onComplete(); // this revives crops
+      } else {
+        console.log("Ad failed or skipped");
+        setMessage("Ad not completed.");
+      }
     }
-  );
-
+  });
 }
+
 
 function buyWell() {
   const cost = 1000;
