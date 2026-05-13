@@ -13,11 +13,9 @@ window.SDK_OPTIONS = {
     switch (event.name) {
       case "SDK_GAME_PAUSE":
         adPlaying = true;
-        muteAllAudio();
         break;
       case "SDK_GAME_START":
         adPlaying = false;
-        unmuteAllAudio();
         break;
       case "SDK_READY":
         console.log("SDK READY");
