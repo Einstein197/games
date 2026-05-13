@@ -90,8 +90,6 @@ window.addEventListener("load", () => {
 <script>
 
 const SAVE_KEY = "krypton_simfarm_ultimate";
-let adPlaying = false;
-
 
 const SEASONS = [
   "Spring",
@@ -209,45 +207,28 @@ function reviveAllPrompt() {
 function playRewardedAd(onComplete) {
   if (typeof sdk === "undefined") {
     setMessage("SDK not loaded.");
+    console.log("SDK missing");
     return;
   }
 
   console.log("Starting rewarded ad...");
-  adPlaying = true; // ⬅️ PAUSE GAME
 
+  // Optional: confirm SDK works
+  sdk.showBanner();
+
+  // ✅ Works across most GameMonetize SDK builds
   if (sdk.showRewarded) {
     sdk.showRewarded({
       test: true,
       callback: handleResult
     });
   } else if (sdk.showRewardedAd) {
-    sdk.showRewardedAd(handleResult, () => {
-      adPlaying = false;
-      setMessage("Ad not completed.");
-    });
+    sdk.showRewardedAd(handleResult, () => setMessage("Ad not completed."));
   } else if (sdk.showAd) {
     sdk.showAd("rewarded", handleResult);
   } else {
-    adPlaying = false;
-    setMessage("Rewarded ads not supported.");
+    setMessage("Rewarded ads not supported in this SDK version.");
   }
-
-  function handleResult(result) {
-    adPlaying = false; // ⬅️ RESUME GAME
-
-    const success =
-      result === true ||
-      result?.success ||
-      result?.rewarded;
-
-    if (success) {
-      onComplete();
-    } else {
-      setMessage("Ad not completed.");
-    }
-  }
-
-
 
   function handleResult(result) {
     console.log("Ad result:", result);
