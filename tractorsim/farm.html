@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://html5.gamemonetize.com/sdk.js"></script>
 
+
 <script>
 window.addEventListener("load", () => {
   if (window.sdk && sdk.init) {
@@ -90,6 +91,8 @@ window.addEventListener("load", () => {
 <script>
 
 const SAVE_KEY = "krypton_simfarm_ultimate";
+let adPlaying = false;
+
 
 const SEASONS = [
   "Spring",
@@ -207,31 +210,41 @@ function reviveAllPrompt() {
 function playRewardedAd(onComplete) {
   if (typeof sdk === "undefined") {
     setMessage("SDK not loaded.");
-    console.log("SDK missing");
     return;
   }
 
   console.log("Starting rewarded ad...");
+  adPlaying = true; // PAUSE GAME
 
-  // Optional: confirm SDK works
-  sdk.showBanner();
-
-  // ✅ Works across most GameMonetize SDK builds
+  // Try all SDK variations safely
   if (sdk.showRewarded) {
     sdk.showRewarded({
       test: true,
       callback: handleResult
     });
+
   } else if (sdk.showRewardedAd) {
-    sdk.showRewardedAd(handleResult, () => setMessage("Ad not completed."));
+    sdk.showRewardedAd(
+      handleResult,
+      () => {
+        adPlaying = false;
+        setMessage("Ad not completed.");
+      }
+    );
+
   } else if (sdk.showAd) {
     sdk.showAd("rewarded", handleResult);
+
   } else {
-    setMessage("Rewarded ads not supported in this SDK version.");
+    adPlaying = false;
+    setMessage("Rewarded ads not supported.");
   }
 
   function handleResult(result) {
+    adPlaying = false; // RESUME GAME
+
     console.log("Ad result:", result);
+
     const success =
       result === true ||
       result?.success ||
@@ -240,13 +253,14 @@ function playRewardedAd(onComplete) {
     if (success) {
       console.log("Reward earned");
       setMessage("Reward earned!");
-      onComplete(); // ✅ crops revive here
+      onComplete(); // revive crops
     } else {
       console.log("Ad failed or skipped");
       setMessage("Ad not completed.");
     }
   }
 }
+
 
 
 
@@ -1102,6 +1116,8 @@ function renderUI() {
 }
 
 function render() {
+  if (adPlaying) return;
+
 
   renderTiles();
   renderUI();
@@ -1220,7 +1236,11 @@ setMessage(
   "Manage crops, seasons, weather, and progression."
 );
 
-setInterval(tick, 1000);
+setInterval(() => {
+  if (adPlaying) return;
+  tick();
+}, 1000);
+
 
 
 
