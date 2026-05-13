@@ -1,0 +1,1274 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Krypton SimFarm Ultimate</title>
+<link rel="icon" type="image/png" href="barn.jpg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+<script>
+window.addEventListener("load", () => {
+  if (window.sdk && sdk.init) {
+    sdk.init({ gameId: "ozd5vj6769wmo9gfc3t9myiuvtt8frhg" }); // publisher mode
+    console.log("SDK initialized");
+  }
+});
+</script>
+<script>
+window.SDK_OPTIONS = {
+  gameId: "ozd5vj6769wmo9gfc3t9myiuvtt8frhg",
+
+  onEvent: function(event) {
+
+    switch (event.name) {
+
+      case "SDK_READY":
+        console.log("SDK READY");
+        break;
+
+      case "SDK_GAME_PAUSE":
+        adPlaying = true;
+        console.log("GAME PAUSED");
+        break;
+
+      case "SDK_GAME_START":
+        adPlaying = false;
+        console.log("GAME RESUMED");
+        break;
+    }
+  }
+};
+
+(function(document, scriptTag, id) {
+
+  let js, fjs = document.getElementsByTagName(scriptTag)[0];
+
+  if (document.getElementById(id)) return;
+
+  js = document.createElement(scriptTag);
+  js.id = id;
+
+  js.src = "https://api.gamemonetize.com/sdk.js";
+
+  fjs.parentNode.insertBefore(js, fjs);
+
+}(document, "script", "gamemonetize-sdk"));
+</script>
+
+
+
+
+
+<link rel="stylesheet" href="farm.css">
+<script src="js/crops.js"></script>
+<script src="js/well.js"></script>
+</head>
+
+
+<body>
+
+<h1>Krypton SimFarm Ultimate</h1>
+
+<div id="topBar">
+
+  <div class="panel">
+    Coins: <span id="coins"></span>
+  </div>
+
+  <div class="panel">
+    Lv <span id="level"></span>
+    —
+    XP <span id="xp"></span>/<span id="xpNext"></span>
+  </div>
+
+  <div class="panel">
+    <span id="season"></span>
+    Day <span id="day"></span>
+  </div>
+
+  <div class="panel">
+    Weather:
+    <span id="weather"></span>
+  </div>
+
+  <div class="panel">
+    <select id="seedSelect"></select>
+  </div>
+
+  <button id="expandBtn">expand farm</button>
+  <button id="resetBtn">Reset</button>
+  <button id="reviveBtn">Revive Dead Crops</button>
+  <button id="closeFarm" onclick="window.location.href='/'">✕</button>
+
+
+</div>
+
+<div id="farm"></div>
+
+<div id="msg"></div>
+
+<div id="bottomBar">
+
+  <div class="small-panel" id="marketInfo"></div>
+
+  <div class="small-panel" id="townInfo"></div>
+
+  <div class="small-panel" id="machineInfo"></div>
+
+</div>
+
+<div id="levelPopup" class="popup hidden">
+  <div class="popupBox">
+
+    <h2>LEVEL UP!</h2>
+
+    <div id="popupText"></div>
+
+    <button id="popupBtn">OK</button>
+
+  </div>
+</div>
+
+<script>
+
+const SAVE_KEY = "krypton_simfarm_ultimate";
+let adPlaying = false;
+
+
+const SEASONS = [
+  "Spring",
+  "Summer",
+  "Fall",
+  "Winter"
+];
+
+const WEATHER_TYPES = [
+  "Sunny",
+  "Rain",
+  "Cloudy",
+  "Storm",
+  "Drought",
+  "Snow"
+];
+
+
+const GRID_SIZE = 10;
+
+const farmEl = document.getElementById("farm");
+
+const coinsEl = document.getElementById("coins");
+const levelEl = document.getElementById("level");
+const xpEl = document.getElementById("xp");
+const xpNextEl = document.getElementById("xpNext");
+
+const seasonEl = document.getElementById("season");
+const dayEl = document.getElementById("day");
+const weatherEl = document.getElementById("weather");
+
+const marketInfoEl = document.getElementById("marketInfo");
+const townInfoEl = document.getElementById("townInfo");
+const machineInfoEl = document.getElementById("machineInfo");
+
+const expandBtn = document.getElementById("expandBtn");
+const resetBtn = document.getElementById("resetBtn");
+const reviveBtn = document.getElementById("reviveBtn");
+reviveBtn.addEventListener("click", () => {
+  playRewardedAd(() => {
+    reviveAllCrops();
+    render();
+  });
+});
+
+
+
+
+const seedSelectEl = document.getElementById("seedSelect");
+
+const msgEl = document.getElementById("msg");
+
+const levelPopup =
+  document.getElementById("levelPopup");
+
+const popupText =
+  document.getElementById("popupText");
+
+const popupBtn =
+  document.getElementById("popupBtn");
+
+let tileElements = [];
+
+let state = {
+  coins: 50,
+  xp: 0,
+  level: 1,
+
+  unlockedSize: 3,
+
+  day: 1,
+  seasonIndex: 0,
+  weatherIndex: 0,
+
+  lastDayTick: now(),
+
+  tiles: [],
+  soil: [],
+
+  machinery: {
+    tractor: 0,
+    harvester: 0
+  },
+
+  market: {
+    prices: {},
+    demand: {}
+  },
+
+  town: {
+    population: 10,
+    prosperity: 1
+  },
+  water: {
+    current: 20,
+    max: 20
+  },
+  silo: {
+    capacity: 100,
+    stored: {}
+  }
+
+};
+
+function reviveAllPrompt() {
+  if (confirm("Watch a video to revive all dead crops?")) {
+    playRewardedAd(() => {
+      reviveAllCrops();
+      render();
+      setMessage("All dead crops revived!");
+    });
+  }
+}
+
+function playRewardedAd(onComplete) {
+
+  if (typeof sdk === "undefined") {
+    setMessage("SDK not loaded yet.");
+    return;
+  }
+
+  console.log("Showing rewarded ad...");
+
+  sdk.showRewarded();
+
+  window.addEventListener("SDK_REWARDED_WATCH_COMPLETE", function rewardHandler() {
+
+    console.log("Reward completed");
+
+    window.removeEventListener(
+      "SDK_REWARDED_WATCH_COMPLETE",
+      rewardHandler
+    );
+
+    if (typeof onComplete === "function") {
+      onComplete();
+    }
+
+  });
+
+}
+
+
+
+
+
+
+function buyWell() {
+  const cost = 1000;
+  if (state.coins < cost) return setMessage("Not enough coins!");
+  state.coins -= cost;
+  state.well.level = 1;
+  state.well.production = WELL_PRODUCTION[1];
+  setMessage("Well purchased!");
+  save();
+  render();
+}
+
+function upgradeWell() {
+  const nextLevel = state.well.level + 1;
+  const cost = nextLevel * 2000;
+  if (state.coins < cost) return setMessage("Not enough coins!");
+  state.coins -= cost;
+  state.well.level = nextLevel;
+  state.well.production = WELL_PRODUCTION[nextLevel];
+  setMessage(`Well upgraded to level ${nextLevel}!`);
+  save();
+  render();
+}
+
+
+function now() {
+  return Math.floor(Date.now()/1000);
+}
+
+function xpForLevel(level) {
+
+  if (level <= 0) return 0;
+
+  return level * 10000;
+
+}
+
+function currentSeason() {
+  return SEASONS[state.seasonIndex];
+}
+
+function currentWeather() {
+  return WEATHER_TYPES[state.weatherIndex];
+}
+
+function cropById(id) {
+  return CROPS.find(c => c.id === id);
+}
+
+function setMessage(text) {
+  msgEl.textContent = text;
+}
+
+function showLevelPopup(level) {
+
+  popupText.innerHTML =
+    `
+    You reached Level ${level}!<br><br>
+    New crops unlocked.
+    `;
+
+  levelPopup.classList.remove("hidden");
+
+}
+
+popupBtn.addEventListener("click", () => {
+
+  levelPopup.classList.add("hidden");
+
+});
+
+function save() {
+  localStorage.setItem(
+    SAVE_KEY,
+    JSON.stringify(state)
+  );
+}
+
+function load() {
+
+  const raw =
+    localStorage.getItem(SAVE_KEY);
+
+  if (!raw) return;
+
+  try {
+
+    const data = JSON.parse(raw);
+
+    state = Object.assign(state, data);
+
+  } catch {}
+
+}
+
+function initTiles() {
+
+  if (!state.tiles.length) {
+
+    state.tiles = Array.from(
+      { length: GRID_SIZE * GRID_SIZE },
+      () => ({
+        cropId: null,
+        plantedAt: 0,
+        dead: false,
+        quality: "normal",
+        lastCropId: null,
+        watered: false   // ← NEW
+      })
+    );
+
+  }
+
+  if (!state.soil.length) {
+
+    state.soil = Array.from(
+      { length: GRID_SIZE * GRID_SIZE },
+      () => .7
+    );
+
+  }
+}
+
+
+function randomChoice(arr) {
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function updateWeather() {
+
+  const season = currentSeason();
+
+  let pool;
+
+  if (season === "Spring") {
+    pool = ["Sunny","Rain","Rain","Cloudy"];
+  }
+
+  else if (season === "Summer") {
+    pool = ["Sunny","Sunny","Drought","Storm"];
+  }
+
+  else if (season === "Fall") {
+    pool = ["Sunny","Rain","Cloudy","Storm"];
+  }
+
+  else {
+    pool = ["Snow","Cloudy","Sunny"];
+  }
+
+  const chosen = randomChoice(pool);
+
+  state.weatherIndex =
+    WEATHER_TYPES.indexOf(chosen);
+
+}
+
+function updateMarket() {
+
+  CROPS.forEach(crop => {
+
+    let price = crop.baseSell;
+
+    if (
+      crop.bestSeasons.includes(
+        currentSeason()
+      )
+    ) {
+      price *= 1.2;
+    }
+
+    if (currentWeather() === "Drought") {
+      price *= 1.15;
+    }
+
+    if (currentWeather() === "Rain") {
+      price *= .95;
+    }
+
+    const demand =
+      state.market.demand[crop.id] || 0;
+
+    price *=
+      Math.max(.7, 1.2 - demand * .03);
+
+    price *= .9 + Math.random() * .25;
+
+    state.market.prices[crop.id] =
+      Math.round(price);
+
+  });
+
+}
+
+function advanceDay() {
+
+  state.day++;
+
+  if (state.day > 30) {
+
+    state.day = 1;
+
+    state.seasonIndex =
+      (state.seasonIndex + 1) %
+      SEASONS.length;
+
+  }
+
+  updateWeather();
+  if (currentWeather() === "Rain") {
+
+    state.water.current += 5;
+
+    if (state.water.current > state.water.max) {
+      state.water.current = state.water.max;
+    }
+
+  }
+  updateMarket();
+
+}
+
+function getTileState(tile) {
+
+  if (!tile.cropId) {
+    return {
+      stage: "empty"
+    };
+  }
+
+  const crop = cropById(tile.cropId);
+
+  let elapsed = 0;
+
+  if (tile.watered) {
+    elapsed = now() - tile.plantedAt;
+  }
+
+  const growTime =
+    crop.growSeconds;
+
+  const remaining =
+    growTime - elapsed;
+
+  if (
+    elapsed > growTime * 4
+  ) {
+    tile.dead = true;
+  }
+
+  if (tile.dead) {
+
+    return {
+      stage: "dead",
+      crop
+    };
+
+  }
+
+  if (remaining <= 0) {
+
+    return {
+      stage: "ready",
+      crop
+    };
+
+  }
+
+  if (elapsed > growTime * .5) {
+
+    return {
+      stage: "growing",
+      crop,
+      remaining
+    };
+
+  }
+
+  return {
+    stage: "planted",
+    crop,
+    remaining
+  };
+
+}
+
+function qualityRoll() {
+
+  const r = Math.random();
+
+  if (r > .995) return "golden";
+  if (r > .95) return "excellent";
+  if (r > .75) return "good";
+
+  return "normal";
+
+}
+
+function qualityMultiplier(q) {
+
+  if (q === "good") return 1.2;
+  if (q === "excellent") return 1.6;
+  if (q === "golden") return 3;
+
+  return 1;
+
+}
+
+function isLocked(index) {
+
+  const row =
+    Math.floor(index / GRID_SIZE);
+
+  const col =
+    index % GRID_SIZE;
+
+  return (
+    row >= state.unlockedSize ||
+    col >= state.unlockedSize
+  );
+
+}
+
+function plant(index) {
+
+  const tile = state.tiles[index];
+
+  if (tile.cropId) return;
+
+  const crop =
+    cropById(seedSelectEl.value);
+
+  const cost = crop.baseCost;
+
+  if (state.coins < cost) {
+    return setMessage("Not enough coins");
+  }
+
+  state.coins -= cost;
+
+  tile.cropId = crop.id;
+  tile.plantedAt = now();
+  tile.dead = false;
+  tile.quality = qualityRoll();
+
+  setMessage("Planted " + crop.name);
+
+  save();
+  render();
+
+}
+
+function siloUsed() {
+  return Object.values(state.silo.stored).reduce((a,b)=>a+b,0);
+}
+
+function siloFree() {
+  return state.silo.capacity - siloUsed();
+}
+
+function addToSilo(cropId, amount=1) {
+  if (!state.silo.stored[cropId]) {
+    state.silo.stored[cropId] = 0;
+  }
+  state.silo.stored[cropId] += amount;
+}
+
+function sellOne(cropId) {
+  if (!state.silo.stored[cropId]) return;
+
+  const price = state.market.prices[cropId] || cropById(cropId).baseSell;
+
+  state.silo.stored[cropId]--;
+  state.coins += price;
+
+  setMessage("Sold 1 " + cropById(cropId).name + " for " + price + " coins");
+  save();
+  render();
+}
+
+function sellMax(cropId) {
+  const qty = state.silo.stored[cropId] || 0;
+  if (qty <= 0) return;
+
+  const price = state.market.prices[cropId] || cropById(cropId).baseSell;
+  const total = qty * price;
+
+  state.silo.stored[cropId] = 0;
+  state.coins += total;
+
+  setMessage("Sold all " + cropById(cropId).name + " for " + total + " coins");
+  save();
+  render();
+}
+
+function sellPrompt(cropId) {
+  const qty = state.silo.stored[cropId] || 0;
+  if (qty <= 0) return;
+
+  const amount = parseInt(prompt("Sell how many? (Max " + qty + ")"));
+
+  if (!amount || amount <= 0) return;
+  if (amount > qty) return setMessage("You don't have that many.");
+
+  const price = state.market.prices[cropId] || cropById(cropId).baseSell;
+  const total = amount * price;
+
+  state.silo.stored[cropId] -= amount;
+  state.coins += total;
+
+  setMessage("Sold " + amount + " " + cropById(cropId).name + " for " + total + " coins");
+  save();
+  render();
+}
+
+
+function sellAllSilo() {
+  let total = 0;
+
+  for (const crop of CROPS) {
+    const id = crop.id;
+    const qty = state.silo.stored[id] || 0;
+    if (qty <= 0) continue;
+
+    const price = state.market.prices[id] || crop.baseSell;
+    total += qty * price;
+  }
+
+  state.coins += total;
+  state.silo.stored = {};
+
+  setMessage("Sold everything for " + total + " coins");
+  save();
+  render();
+}
+
+function expandSilo() {
+  const cost = state.silo.capacity * 20;
+
+  if (state.coins < cost) {
+    return setMessage("Not enough coins to expand silo");
+  }
+
+  state.coins -= cost;
+  state.silo.capacity += 50;
+
+  // Update button text
+  const siloExpandBtn = document.getElementById("siloExpandBtn");
+  if (siloExpandBtn) {
+    siloExpandBtn.textContent =
+      "Expand Silo (Cost: " + (state.silo.capacity * 20) + ")";
+  }
+
+  setMessage("Silo expanded! New capacity: " + state.silo.capacity);
+  save();
+  render();
+}
+
+
+
+function harvest(index) {
+
+  const tile = state.tiles[index];
+  const info = getTileState(tile);
+
+  if (info.stage !== "ready") return;
+
+  if (siloFree() <= 0) {
+    return setMessage("Silo full! Expand it.");
+  }
+
+  const crop = info.crop;
+
+  addToSilo(crop.id, 1);
+  state.xp += crop.xp;
+
+  while (
+    state.level < 99 &&
+    state.xp >= xpForLevel(state.level)
+  ) {
+    state.level++;
+    showLevelPopup(state.level);
+    initSeedSelect();
+    state.xp = xpForLevel(state.level - 1);
+    render();
+  }
+
+  tile.cropId = null;
+  tile.plantedAt = 0;
+  tile.watered = false;
+
+  setMessage("Stored " + crop.name + " in silo");
+
+  save();
+  render();
+}
+
+function reviveAllCrops() {
+
+  let revived = 0;
+
+  for (const tile of state.tiles) {
+
+    // Only revive actual dead crops
+    if (tile.cropId && tile.dead === true) {
+
+      const crop = cropById(tile.cropId);
+
+      if (!crop) continue;
+
+      // Fully reset tile state
+      tile.dead = false;
+
+      tile.watered = true;
+
+      // Make crop instantly ready
+      tile.plantedAt =
+        now() - crop.growSeconds - 1;
+
+      revived++;
+
+    }
+
+  }
+
+  save();
+
+  render();
+
+  setMessage(
+    revived + " crops revived!"
+  );
+
+}
+
+
+
+
+function clearDead(index) {
+
+  const tile = state.tiles[index];
+
+  tile.cropId = null;
+  tile.dead = false;
+
+  render();
+  save();
+
+}
+function expandWaterTank() {
+
+  const cost = state.water.max * 100;
+
+  if (state.coins < cost) {
+    return setMessage("Not enough coins.");
+  }
+
+  state.coins -= cost;
+
+  state.water.max += 20;
+  state.water.current += 20;
+
+  setMessage(
+    "Water tank expanded!"
+  );
+
+  save();
+  render();
+
+}
+function waterTile(index) {
+
+  const tile = state.tiles[index];
+
+  if (!tile.cropId) {
+    return setMessage("Nothing planted here.");
+  }
+
+  if (tile.watered) {
+    return setMessage("Already watered.");
+  }
+
+  if (state.water.current <= 0) {
+    return setMessage("Out of water!");
+  }
+
+  state.water.current--;
+
+  tile.watered = true;
+
+  setMessage(
+    "Crop watered 💧 (" +
+    state.water.current +
+    "/" +
+    state.water.max +
+    ")"
+  );
+
+  save();
+  render();
+
+}
+
+function tileClick(index) {
+
+  if (isLocked(index)) {
+    return setMessage("Expand farm first.");
+  }
+
+  const tile = state.tiles[index];
+
+  const info = getTileState(tile);
+
+  if (info.stage === "empty") {
+    return plant(index);
+  }
+
+  if (
+    tile.cropId &&
+    !tile.watered
+  ) {
+    return waterTile(index);
+  }
+
+  if (info.stage === "ready") {
+    return harvest(index);
+  }
+
+  if (info.stage === "dead") {
+    return clearDead(index);
+  }
+
+  setMessage(
+    info.crop.name +
+    " — " +
+    Math.ceil(info.remaining) +
+    "s"
+  );
+
+}
+
+function createFarm() {
+
+  farmEl.innerHTML = "";
+
+  tileElements = [];
+
+  for (
+    let i=0;
+    i<GRID_SIZE*GRID_SIZE;
+    i++
+  ) {
+
+    const div =
+      document.createElement("div");
+
+    div.className = "tile";
+
+    div.addEventListener(
+      "click",
+      () => tileClick(i)
+    );
+
+    farmEl.appendChild(div);
+
+    tileElements.push(div);
+
+  }
+
+}
+
+function renderTiles() {
+
+  for (
+    let i=0;
+    i<tileElements.length;
+    i++
+  ) {
+
+    const div = tileElements[i];
+
+    if (isLocked(i)) {
+
+      div.className = "tile locked";
+      div.textContent = "🔒";
+
+      continue;
+
+    }
+
+    const tile = state.tiles[i];
+
+    const info = getTileState(tile);
+
+    div.className =
+      "tile " +
+      info.stage +
+      " " +
+      (tile.quality || "");
+
+    if (info.stage === "empty") {
+      div.textContent = "";
+    }
+
+    else if (info.stage === "planted") {
+      if (!tile.watered) {
+        div.textContent = "🌱💧";
+      } else {
+        div.textContent = "🌱";
+      }
+    }
+    
+    
+
+    else if (info.stage === "growing") {
+      div.textContent = info.crop.emoji;
+    }
+
+    else if (info.stage === "ready") {
+      div.textContent = info.crop.emoji;
+    }
+
+    else if (info.stage === "dead") {
+      div.textContent = "💀";
+    }
+
+  }
+
+}
+
+function renderUI() {
+
+  coinsEl.textContent = state.coins;
+
+  levelEl.textContent = state.level;
+
+  const currentLevelXP =
+    xpForLevel(state.level - 1);
+
+  const nextLevelXP =
+    xpForLevel(state.level);
+
+  xpEl.textContent =
+    state.xp;
+
+  xpNextEl.textContent =
+    nextLevelXP;
+
+  seasonEl.textContent =
+    currentSeason();
+
+  dayEl.textContent =
+    state.day;
+
+  weatherEl.textContent =
+    currentWeather();
+
+  let marketHTML = "<b>Silo Storage</b><br>";
+
+  CROPS.forEach(crop => {
+    const qty = state.silo?.stored?.[crop.id] || 0;
+    const price = state.market.prices[crop.id] || crop.baseSell;
+
+    if (qty > 0) {
+      marketHTML += `
+        ${crop.emoji} ${crop.name}<br>
+        Stored: ${qty}<br>
+        Price: ${price}c each<br>
+        <button onclick="sellOne('${crop.id}')">Sell 1</button>
+        <button onclick="sellMax('${crop.id}')">Sell All</button>
+        <button onclick="sellPrompt('${crop.id}')">Sell Amount</button>
+        <br><br>
+      `;
+    }
+  });
+
+  marketInfoEl.innerHTML = marketHTML;
+
+
+
+  townInfoEl.innerHTML =
+    "<b>Town</b><br>" +
+    "Population: " +
+    state.town.population +
+    "<br>" +
+    "Prosperity: " +
+    state.town.prosperity;
+
+  machineInfoEl.innerHTML =
+    "<b>Water Tank</b><br>" +
+    Math.floor(state.water.current) +
+    "/" +
+    state.water.max +
+    "<br><button id='expandWaterTankBtn' onclick='expandWaterTank()'></button>" +
+
+    "<br><br>" +
+    "<b>Well</b><br>" +
+    "Level: " + state.well.level + "<br>" +
+    (
+      state.well.level === 0
+        ? "<button id='buyWellBtn' onclick='buyWell()'>Buy Well (Cost: 1000)</button>"
+        : "<button id='upgradeWellBtn' onclick='upgradeWell()'>Upgrade Well (Cost: " + ((state.well.level + 1) * 2000) + ")</button><br>" +
+          "Production: " + WELL_PRODUCTION[state.well.level] + "/hr"
+    )
+ +
+
+    "<br><br>" +
+
+    "<b>Silo</b><br>" +
+    "Used: " + siloUsed() + "/" + state.silo.capacity +
+    "<br><button id='siloExpandBtn' onclick='expandSilo()'></button>";
+
+
+  // ===============================
+  // BUTTON TEXT UPDATES
+  // ===============================
+
+  const siloExpandBtn =
+    document.getElementById("siloExpandBtn");
+
+  if (siloExpandBtn) {
+    siloExpandBtn.textContent =
+      "Expand Silo (Cost: " +
+      (state.silo.capacity * 20) +
+      ")";
+  }
+
+  const expandWaterTankBtn =
+    document.getElementById("expandWaterTankBtn");
+
+  if (expandWaterTankBtn) {
+    expandWaterTankBtn.textContent =
+      "Expand Tank (Cost: " +
+      (state.water.max * 100) +
+      ")";
+  }
+
+  const buyWellBtn =
+    document.getElementById("buyWellBtn");
+
+  if (buyWellBtn) {
+    buyWellBtn.textContent =
+      "Buy Well (Cost: " +
+      getWellCost(1) +
+      ")";
+  }
+
+
+
+
+}
+
+function render() {
+  if (adPlaying) return;
+
+
+  renderTiles();
+  renderUI();
+
+}
+
+function tick() {
+
+  const elapsed =
+    now() - state.lastDayTick;
+
+  if (elapsed >= 30) {
+
+    const skipped =
+      Math.floor(elapsed / 30);
+
+    for (let i=0;i<skipped;i++) {
+      advanceDay();
+    }
+
+    state.lastDayTick = now();
+
+    render();
+    save();
+
+  }
+
+  renderTiles();
+
+}
+
+function initSeedSelect() {
+
+  seedSelectEl.innerHTML = "";
+
+  const unlockedCrops =
+    CROPS.filter(
+      crop =>
+        state.level >=
+        crop.levelRequired
+    );
+
+  unlockedCrops.forEach(crop => {
+
+    const opt =
+      document.createElement("option");
+
+    opt.value = crop.id;
+
+    opt.textContent =
+      crop.emoji +
+      " " +
+      crop.name + " (" + crop.baseCost + " coins)";
+
+    seedSelectEl.appendChild(opt);
+
+  });
+
+}
+
+expandBtn.addEventListener("click", () => {
+  const cost = state.unlockedSize * 1000;
+
+  if (state.coins < cost) {
+    return setMessage("Not enough coins to expand.");
+  }
+
+  if (state.unlockedSize >= GRID_SIZE) {
+    return setMessage("Farm is fully expanded.");
+  }
+
+  state.coins -= cost;
+  state.unlockedSize++;
+
+  // Update button text dynamically
+  expandBtn.textContent = "Expand Farm (Cost: " + (state.unlockedSize * 1000) + ")";
+
+  setMessage("Farm expanded to " + state.unlockedSize + "×" + state.unlockedSize);
+  save();
+  render();
+});
+
+
+
+resetBtn.addEventListener("click", () => {
+
+  if (!confirm("Reset save?")) return;
+
+  localStorage.removeItem(SAVE_KEY);
+
+  location.reload();
+
+});
+
+load();
+
+initWell(state);
+
+expandBtn.textContent = "Expand Farm (Cost: " + (state.unlockedSize * 1000) + ")";
+
+
+initTiles();
+
+createFarm();
+
+initSeedSelect();
+
+updateWeather();
+
+updateMarket();
+
+render();
+
+
+setMessage(
+  "Manage crops, seasons, weather, and progression."
+);
+
+setInterval(() => {
+  if (adPlaying) return;
+  tick();
+}, 1000);
+
+
+
+function showBannerAd() {
+  if (typeof sdk !== "undefined" && typeof sdk.showBanner === "function") {
+    sdk.showBanner();
+  }
+}
+
+
+</script>
+
+</body>
+</html>
