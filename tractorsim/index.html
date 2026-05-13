@@ -232,31 +232,24 @@ function reviveAllPrompt() {
 
 function playRewardedAd(onComplete) {
 
-  // SDK exists?
   if (typeof sdk === "undefined") {
-    console.log("SDK missing");
     setMessage("SDK not loaded.");
     return;
   }
 
-  console.log("SDK object:", sdk);
-
-  // Prevent multiple ads
-  if (adPlaying) return;
+  console.log("Trying rewarded ad...");
 
   adPlaying = true;
 
-  // OLD GameMonetize API
-  if (typeof sdk.showRewardedAd === "function") {
+  try {
 
-    console.log("Using showRewardedAd");
+    // New GM SDK
+    if (sdk.showAd) {
 
-    sdk.showRewardedAd(
+      sdk.showAd("rewarded");
 
-      // SUCCESS
-      function() {
-
-        console.log("Reward earned");
+      // Wait for SDK resume event
+      setTimeout(() => {
 
         adPlaying = false;
 
@@ -264,61 +257,50 @@ function playRewardedAd(onComplete) {
           onComplete();
         }
 
-      },
+      }, 3000);
 
-      // FAILED / CLOSED
-      function(err) {
+      return;
+    }
 
-        console.log("Ad closed/skipped", err);
+    // Older SDK
+    if (sdk.showRewardedAd) {
 
-        adPlaying = false;
+      sdk.showRewardedAd(
+        function() {
 
-        setMessage("Ad not completed.");
+          adPlaying = false;
 
-      }
+          if (typeof onComplete === "function") {
+            onComplete();
+          }
 
-    );
+        },
+        function() {
 
-    return;
-  }
+          adPlaying = false;
 
-  // Alternate GM API
-  if (typeof sdk.showAd === "function") {
+          setMessage("Ad skipped.");
 
-    console.log("Using showAd rewarded");
-
-    sdk.showAd(
-      "rewarded",
-
-      function() {
-
-        console.log("Reward earned");
-
-        adPlaying = false;
-
-        if (typeof onComplete === "function") {
-          onComplete();
         }
+      );
 
-      }
+      return;
+    }
 
-    );
+    adPlaying = false;
 
-    return;
+    setMessage("Rewarded ads unavailable.");
+
+  } catch (err) {
+
+    console.error(err);
+
+    adPlaying = false;
+
+    setMessage("Ad failed.");
+
   }
-
-  // Unsupported
-  adPlaying = false;
-
-  console.log("No rewarded ad method found");
-
-  setMessage("Rewarded ads not supported.");
-
 }
-
-
-
-
 
 
 function buyWell() {
