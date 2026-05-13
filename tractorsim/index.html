@@ -379,21 +379,26 @@ function save() {
 }
 
 function load() {
-
-  const raw =
-    localStorage.getItem(SAVE_KEY);
-
+  const raw = localStorage.getItem(SAVE_KEY);
   if (!raw) return;
 
   try {
-
     const data = JSON.parse(raw);
-
     state = Object.assign(state, data);
 
-  } catch {}
+    // 🔥 FIX OLD SAVES
+    for (let i = 0; i < state.tiles.length; i++) {
+      const tile = state.tiles[i];
 
+      if (tile.watered === undefined) tile.watered = false;
+      if (tile.dead === undefined) tile.dead = false;
+      if (tile.quality === undefined) tile.quality = "normal";
+      if (tile.lastCropId === undefined) tile.lastCropId = null;
+    }
+
+  } catch {}
 }
+
 
 function initTiles() {
 
