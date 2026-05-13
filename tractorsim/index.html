@@ -6,55 +6,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 
-
-<script>
-window.addEventListener("load", () => {
-  if (window.sdk && sdk.init) {
-    sdk.init({ gameId: "ozd5vj6769wmo9gfc3t9myiuvtt8frhg" }); // publisher mode
-    console.log("SDK initialized");
-  }
-});
-</script>
 <script>
 window.SDK_OPTIONS = {
   gameId: "ozd5vj6769wmo9gfc3t9myiuvtt8frhg",
-
-  onEvent: function(event) {
-
+  onEvent: function (event) {
     switch (event.name) {
-
-      case "SDK_READY":
-        console.log("SDK READY");
-        break;
-
       case "SDK_GAME_PAUSE":
         adPlaying = true;
-        console.log("GAME PAUSED");
+        muteAllAudio();
         break;
-
       case "SDK_GAME_START":
         adPlaying = false;
-        console.log("GAME RESUMED");
+        unmuteAllAudio();
+        break;
+      case "SDK_READY":
+        console.log("SDK READY");
         break;
     }
   }
 };
-
-(function(document, scriptTag, id) {
-
-  let js, fjs = document.getElementsByTagName(scriptTag)[0];
-
-  if (document.getElementById(id)) return;
-
-  js = document.createElement(scriptTag);
-  js.id = id;
-
-  js.src = "https://api.gamemonetize.com/sdk.js";
-
-  fjs.parentNode.insertBefore(js, fjs);
-
-}(document, "script", "gamemonetize-sdk"));
+(function (doc, tag, id) {
+  var firstScript = doc.getElementsByTagName(tag)[0];
+  if (!doc.getElementById(id)) {
+    var js = doc.createElement(tag);
+    js.id = id;
+    js.src = "https://api.gamemonetize.com/sdk.js";
+    firstScript.parentNode.insertBefore(js, firstScript);
+  }
+})(document, "script", "gamemonetize-sdk");
 </script>
+
 
 
 
