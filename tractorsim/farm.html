@@ -213,7 +213,7 @@ function playRewardedAd(onComplete) {
   }
 
   console.log("Starting rewarded ad...");
-  adPlaying = true; // ⬅️ PAUSE GAME
+  adPlaying = true; // pause game
 
   if (sdk.showRewarded) {
     sdk.showRewarded({
@@ -233,7 +233,9 @@ function playRewardedAd(onComplete) {
   }
 
   function handleResult(result) {
-    adPlaying = false; // ⬅️ RESUME GAME
+    adPlaying = false; // resume game
+
+    console.log("Ad result:", result);
 
     const success =
       result === true ||
@@ -241,13 +243,15 @@ function playRewardedAd(onComplete) {
       result?.rewarded;
 
     if (success) {
-      onComplete();
+      console.log("Reward earned");
+      setMessage("Reward earned!");
+      onComplete(); // revive crops
     } else {
+      console.log("Ad failed or skipped");
       setMessage("Ad not completed.");
     }
   }
 }
-
 
 
 
