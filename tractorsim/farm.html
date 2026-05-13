@@ -90,6 +90,8 @@ window.addEventListener("load", () => {
 <script>
 
 const SAVE_KEY = "krypton_simfarm_ultimate";
+let adPlaying = false;
+
 
 const SEASONS = [
   "Spring",
@@ -124,8 +126,6 @@ const weatherEl = document.getElementById("weather");
 const marketInfoEl = document.getElementById("marketInfo");
 const townInfoEl = document.getElementById("townInfo");
 const machineInfoEl = document.getElementById("machineInfo");
-let adPlaying = false;
-
 
 const expandBtn = document.getElementById("expandBtn");
 const resetBtn = document.getElementById("resetBtn");
@@ -213,17 +213,27 @@ function playRewardedAd(onComplete) {
   }
 
   console.log("Starting rewarded ad...");
-  adPlaying = true; // ⬅️ pause game logic
+  adPlaying = true; // ⬅️ PAUSE GAME
 
   if (sdk.showRewarded) {
     sdk.showRewarded({
       test: true,
-      callback: (result) => handleResult(result)
+      callback: handleResult
     });
+  } else if (sdk.showRewardedAd) {
+    sdk.showRewardedAd(handleResult, () => {
+      adPlaying = false;
+      setMessage("Ad not completed.");
+    });
+  } else if (sdk.showAd) {
+    sdk.showAd("rewarded", handleResult);
+  } else {
+    adPlaying = false;
+    setMessage("Rewarded ads not supported.");
   }
 
   function handleResult(result) {
-    adPlaying = false; // ⬅️ resume game logic
+    adPlaying = false; // ⬅️ RESUME GAME
 
     const success =
       result === true ||
@@ -238,6 +248,24 @@ function playRewardedAd(onComplete) {
   }
 }
 
+
+  function handleResult(result) {
+    console.log("Ad result:", result);
+    const success =
+      result === true ||
+      result?.success ||
+      result?.rewarded;
+
+    if (success) {
+      console.log("Reward earned");
+      setMessage("Reward earned!");
+      onComplete(); // ✅ crops revive here
+    } else {
+      console.log("Ad failed or skipped");
+      setMessage("Ad not completed.");
+    }
+  }
+}
 
 
 
@@ -1093,6 +1121,8 @@ function renderUI() {
 }
 
 function render() {
+  if (adPlaying) return;
+
 
   renderTiles();
   renderUI();
@@ -1100,6 +1130,8 @@ function render() {
 }
 
 function tick() {
+  if (adPlaying) return;
+
 
   const elapsed =
     now() - state.lastDayTick;
@@ -1212,6 +1244,8 @@ setMessage(
 );
 
 setInterval(tick, 1000);
+if (adPlaying) return;
+
 
 
 
