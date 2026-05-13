@@ -251,29 +251,87 @@ function reviveAllPrompt() {
 
 function playRewardedAd(onComplete) {
 
+  // SDK exists?
   if (typeof sdk === "undefined") {
-    setMessage("SDK not loaded yet.");
+    console.log("SDK missing");
+    setMessage("SDK not loaded.");
     return;
   }
 
-  console.log("Showing rewarded ad...");
+  console.log("SDK object:", sdk);
 
-  sdk.showRewarded();
+  // Prevent multiple ads
+  if (adPlaying) return;
 
-  window.addEventListener("SDK_REWARDED_WATCH_COMPLETE", function rewardHandler() {
+  adPlaying = true;
 
-    console.log("Reward completed");
+  // OLD GameMonetize API
+  if (typeof sdk.showRewardedAd === "function") {
 
-    window.removeEventListener(
-      "SDK_REWARDED_WATCH_COMPLETE",
-      rewardHandler
+    console.log("Using showRewardedAd");
+
+    sdk.showRewardedAd(
+
+      // SUCCESS
+      function() {
+
+        console.log("Reward earned");
+
+        adPlaying = false;
+
+        if (typeof onComplete === "function") {
+          onComplete();
+        }
+
+      },
+
+      // FAILED / CLOSED
+      function(err) {
+
+        console.log("Ad closed/skipped", err);
+
+        adPlaying = false;
+
+        setMessage("Ad not completed.");
+
+      }
+
     );
 
-    if (typeof onComplete === "function") {
-      onComplete();
-    }
+    return;
+  }
 
-  });
+  // Alternate GM API
+  if (typeof sdk.showAd === "function") {
+
+    console.log("Using showAd rewarded");
+
+    sdk.showAd(
+      "rewarded",
+
+      function() {
+
+        console.log("Reward earned");
+
+        adPlaying = false;
+
+        if (typeof onComplete === "function") {
+          onComplete();
+        }
+
+      }
+
+    );
+
+    return;
+  }
+
+  // Unsupported
+  adPlaying = false;
+
+  console.log("No rewarded ad method found");
+
+  setMessage("Rewarded ads not supported.");
 
 }
 
