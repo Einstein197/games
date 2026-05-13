@@ -124,6 +124,8 @@ const weatherEl = document.getElementById("weather");
 const marketInfoEl = document.getElementById("marketInfo");
 const townInfoEl = document.getElementById("townInfo");
 const machineInfoEl = document.getElementById("machineInfo");
+let adPlaying = false;
+
 
 const expandBtn = document.getElementById("expandBtn");
 const resetBtn = document.getElementById("resetBtn");
@@ -207,46 +209,35 @@ function reviveAllPrompt() {
 function playRewardedAd(onComplete) {
   if (typeof sdk === "undefined") {
     setMessage("SDK not loaded.");
-    console.log("SDK missing");
     return;
   }
 
   console.log("Starting rewarded ad...");
+  adPlaying = true; // ⬅️ pause game logic
 
-  // Optional: confirm SDK works
-  sdk.showBanner();
-
-  // ✅ Works across most GameMonetize SDK builds
   if (sdk.showRewarded) {
     sdk.showRewarded({
       test: true,
-      callback: handleResult
+      callback: (result) => handleResult(result)
     });
-  } else if (sdk.showRewardedAd) {
-    sdk.showRewardedAd(handleResult, () => setMessage("Ad not completed."));
-  } else if (sdk.showAd) {
-    sdk.showAd("rewarded", handleResult);
-  } else {
-    setMessage("Rewarded ads not supported in this SDK version.");
   }
 
   function handleResult(result) {
-    console.log("Ad result:", result);
+    adPlaying = false; // ⬅️ resume game logic
+
     const success =
       result === true ||
       result?.success ||
       result?.rewarded;
 
     if (success) {
-      console.log("Reward earned");
-      setMessage("Reward earned!");
-      onComplete(); // ✅ crops revive here
+      onComplete();
     } else {
-      console.log("Ad failed or skipped");
       setMessage("Ad not completed.");
     }
   }
 }
+
 
 
 
