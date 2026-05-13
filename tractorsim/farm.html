@@ -213,7 +213,7 @@ function playRewardedAd(onComplete) {
   }
 
   console.log("Starting rewarded ad...");
-  adPlaying = true; // pause game
+  adPlaying = true; // ⬅️ PAUSE GAME
 
   if (sdk.showRewarded) {
     sdk.showRewarded({
@@ -233,10 +233,24 @@ function playRewardedAd(onComplete) {
   }
 
   function handleResult(result) {
-    adPlaying = false; // resume game
+    adPlaying = false; // ⬅️ RESUME GAME
 
+    const success =
+      result === true ||
+      result?.success ||
+      result?.rewarded;
+
+    if (success) {
+      onComplete();
+    } else {
+      setMessage("Ad not completed.");
+    }
+  }
+
+
+
+  function handleResult(result) {
     console.log("Ad result:", result);
-
     const success =
       result === true ||
       result?.success ||
@@ -245,7 +259,7 @@ function playRewardedAd(onComplete) {
     if (success) {
       console.log("Reward earned");
       setMessage("Reward earned!");
-      onComplete(); // revive crops
+      onComplete(); // ✅ crops revive here
     } else {
       console.log("Ad failed or skipped");
       setMessage("Ad not completed.");
@@ -1107,8 +1121,6 @@ function renderUI() {
 }
 
 function render() {
-  if (adPlaying) return;
-
 
   renderTiles();
   renderUI();
@@ -1116,8 +1128,6 @@ function render() {
 }
 
 function tick() {
-  if (adPlaying) return;
-
 
   const elapsed =
     now() - state.lastDayTick;
@@ -1230,8 +1240,6 @@ setMessage(
 );
 
 setInterval(tick, 1000);
-if (adPlaying) return;
-
 
 
 
