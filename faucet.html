@@ -361,7 +361,7 @@
           KryptonLegend <span class="accent">Faucet Unlock</span>
         </div>
         <div class="subtitle">
-          One click here → faucet2 unlocked on Discord.
+          One click here → faucet unlocked on Discord.
         </div>
       </div>
     </div>
@@ -375,7 +375,7 @@
       <ul class="step-list">
         <li>
           <span class="step-badge">1</span>
-          <span>Run <strong>faucet2</strong> in the KryptonLegend Discord.</span>
+          <span>Run <strong>faucet</strong> in the KryptonLegend Discord.</span>
         </li>
         <li>
           <span class="step-badge">2</span>
@@ -401,10 +401,10 @@
 
       <div class="button-wrap">
         <button class="btn-main disabled" id="unlock-btn" disabled>
-          <span id="btn-label">Unlock faucet2</span>
+          <span id="btn-label">Unlock faucet</span>
         </button>
         <button class="btn-sub">
-          Use the same Discord account you ran <strong>faucet2</strong> with.
+          Use the same Discord account you ran <strong>faucet</strong> with.
         </button>
       </div>
     </div>
@@ -489,13 +489,13 @@
           throw new Error("Non‑OK response");
         }
 
-        setStatus("Verified. You can now use faucet2 in Discord.", "ok");
+        setStatus("Verified. You can now use faucet in Discord.", "ok");
         btnLabel.textContent = "Faucet unlocked";
         showToast("Faucet unlocked. Go back to Discord.");
       } catch (err) {
         console.error(err);
         setStatus("Something went wrong. Try again.", "error");
-        btnLabel.textContent = "Unlock faucet2";
+        btnLabel.textContent = "Unlock faucet";
         unlockBtn.classList.remove("disabled");
         unlockBtn.disabled = false;
         showToast("Error unlocking faucet. Try again.", true);
@@ -517,7 +517,7 @@
         uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
       uidPill.textContent = "uid: " + shortUid;
 
-      setStatus("Discord ID detected. Ready to unlock faucet2.", "ready");
+      setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
       unlockBtn.classList.remove("disabled");
       unlockBtn.disabled = false;
 
