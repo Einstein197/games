@@ -6,33 +6,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 
+<script src="https://api.adinplay.com/sdk.js"></script>
 <script>
-window.SDK_OPTIONS = {
-  gameId: "ozd5vj6769wmo9gfc3t9myiuvtt8frhg",
-  onEvent: function (event) {
-    switch (event.name) {
-      case "SDK_GAME_PAUSE":
-        adPlaying = true;
-        break;
-      case "SDK_GAME_START":
-        adPlaying = false;
-        break;
-      case "SDK_READY":
-        console.log("SDK READY");
-        break;
-    }
-  }
-};
-(function (doc, tag, id) {
-  var firstScript = doc.getElementsByTagName(tag)[0];
-  if (!doc.getElementById(id)) {
-    var js = doc.createElement(tag);
-    js.id = id;
-    js.src = "https://api.gamemonetize.com/sdk.js";
-    firstScript.parentNode.insertBefore(js, firstScript);
-  }
-})(document, "script", "gamemonetize-sdk");
+function reviveAllPrompt() {
+  adinplay.rewarded.show(() => {
+    reviveAllCrops();
+    render();
+    setMessage("All crops revived!");
+  });
+}
 </script>
+
+
+
 
 
 
@@ -48,6 +34,17 @@ window.SDK_OPTIONS = {
 <body>
 
 <h1>Krypton SimFarm Ultimate</h1>
+
+ <script>
+  atOptions = {
+    'key' : '038d24b547d54cdddae17e5d45b3519f',
+    'format' : 'iframe',
+    'height' : 60,
+    'width' : 468,
+    'params' : {}
+  };
+</script>
+<script src="https://glamournakedemployee.com/038d24b547d54cdddae17e5d45b3519f/invoke.js"></script>
 
 <div id="topBar">
 
@@ -77,8 +74,9 @@ window.SDK_OPTIONS = {
 
   <button id="expandBtn">expand farm</button>
   <button id="resetBtn">Reset</button>
-  <button id="reviveBtn">Revive Dead Crops</button>
+  <button id="reviveBtn" onclick="reviveAllWithAd()">Revive Dead Crops</button>
   <button id="closeFarm" onclick="window.location.href='/'">✕</button>
+ 
 
 
 </div>
@@ -110,6 +108,10 @@ window.SDK_OPTIONS = {
 </div>
 
 <script>
+
+adinplay = window.adinplay || {};
+adinplay.unit = adinplay.unit || {};
+adinplay.unit['YOUR_ZONE_ID'] = {}; 
 
 const SAVE_KEY = "krypton_simfarm_ultimate";
 let adPlaying = false;
@@ -151,13 +153,13 @@ const machineInfoEl = document.getElementById("machineInfo");
 
 const expandBtn = document.getElementById("expandBtn");
 const resetBtn = document.getElementById("resetBtn");
-const reviveBtn = document.getElementById("reviveBtn");
-reviveBtn.addEventListener("click", () => {
-  playRewardedAd(() => {
-    reviveAllCrops();
-    render();
-  });
-});
+//const reviveBtn = document.getElementById("reviveBtn");
+//reviveBtn.addEventListener("click", () => {
+  //playRewardedAd(() => {
+    //reviveAllCrops();
+    //render();
+  //});
+//});
 
 
 
@@ -1291,6 +1293,19 @@ function showBannerAd() {
   }
 }
 
+function reviveAllWithAd() {
+  if (!window.adinplay || !adinplay.rewarded) {
+    setMessage("Ad not available right now.");
+    return;
+  }
+
+  adinplay.rewarded.show(() => {
+    // This runs ONLY when the ad is fully watched
+    reviveAllCrops();
+    render();
+    setMessage("All crops revived!");
+  });
+}
 
 </script>
 
