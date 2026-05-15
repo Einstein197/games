@@ -14,9 +14,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      overflow: hidden;   /* THIS kills iframe scroll */
       min-height: 100vh;
-      padding: 40px 20px 20px;
     }
     h1 { margin: 16px 0 4px; }
     p { margin: 0 0 10px; font-size: 14px; opacity: 0.8; }
@@ -47,15 +45,11 @@
       background: radial-gradient(circle at top, #222 0, #050509 60%);
       border: 2px solid #333;
       margin-top: 10px;
-
-      width: 100vw;
-      height: 70vh;
-
-      max-width: 420px;
-      max-height: 700px;
-
-      display: block;
+      width: 90vw;
+      max-width: 320px;
+      height: auto;
       touch-action: none;
+      margin-bottom: 20px;
     }
   </style>
 </head>
@@ -628,45 +622,45 @@
 
         } else {
   
-          e.x += e.speedX * dt;
+        e.x += e.speedX * dt;
 
-          const margin = 10;
+        const margin = 10;
 
-          // LEFT WALL
-          if (e.x <= margin) {
-            e.x = margin;
+        // LEFT WALL
+        if (e.x <= margin) {
+          e.x = margin;
 
-            // bounce RIGHT
-            e.speedX = Math.abs(e.speedX);
+          // bounce RIGHT
+          e.speedX = Math.abs(e.speedX);
 
-            // anti-freeze safeguard
-            if (e.speedX < 0.8) {
-              e.speedX = 0.8 + Math.random();
-            }
+          // anti-freeze safeguard
+          if (e.speedX < 0.8) {
+            e.speedX = 0.8 + Math.random();
           }
+        }
 
-          // RIGHT WALL
-          if (e.x + e.w >= canvas.width - margin) {
-            e.x = canvas.width - e.w - margin;
+        // RIGHT WALL
+        if (e.x + e.w >= canvas.width - margin) {
+          e.x = canvas.width - e.w - margin;
 
-            // bounce LEFT
-            e.speedX = -Math.abs(e.speedX);
+          // bounce LEFT
+          e.speedX = -Math.abs(e.speedX);
 
-            // anti-freeze safeguard
-            if (Math.abs(e.speedX) < 0.8) {
-              e.speedX = -(0.8 + Math.random());
-            }
+          // anti-freeze safeguard
+          if (Math.abs(e.speedX) < 0.8) {
+            e.speedX = -(0.8 + Math.random());
           }
+        }
 
-          // FINAL SAFETY CLAMP
-          e.x = Math.max(
-            margin,
-            Math.min(canvas.width - e.w - margin, e.x)
-          );
+        // FINAL SAFETY CLAMP
+        e.x = Math.max(
+          margin,
+          Math.min(canvas.width - e.w - margin, e.x)
+        );
 
-          e.y += Math.sin(
-            performance.now() * e.hoverSpeed + e.hoverOffset
-          ) * 0.3;
+        e.y += Math.sin(
+          performance.now() * e.hoverSpeed + e.hoverOffset
+        ) * 0.3;
 
 
 

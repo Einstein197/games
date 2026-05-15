@@ -79,15 +79,11 @@
 
     #gameWrapper {
       position: relative;
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 3 / 4;
-      margin: 0 auto;
-
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      width: 420px;
+      height: 600px;
+      max-width: 90vw;
+      max-height: 70vh;
+      margin-bottom: 20px;
     }
 
     #gameFrame {
@@ -95,18 +91,9 @@
       height: 100%;
       border: 3px solid rgba(255,255,255,0.3);
       border-radius: 18px;
-      display: block;
-
-      transform-origin: center;
-      transform: scale(2);
+      box-shadow: 0 0 22px rgba(0,0,0,0.7);
+      background: #000;
     }
-
-    @media (max-width: 600px) {
-      #gameFrame {
-        transform: scale(1);
-      }
-    }
-
 
 
     #leaderboardBox {
@@ -491,26 +478,6 @@
 </script>
 <script src="https://glamournakedemployee.com/038d24b547d54cdddae17e5d45b3519f/invoke.js"></script>
 
-<script>
-function refreshAd() {
-  const container = document.getElementById("ad-container");
-  container.innerHTML = `
-    <script>
-      atOptions = {
-        key: '038d24b547d54cdddae17e5d45b3519f',
-        format: 'iframe',
-        height: 60,
-        width: 468,
-        params: {}
-      };
-    <\/script>
-    <script src="https://glamournakedemployee.com/038d24b547d54cdddae17e5d45b3519f/invoke.js"><\/script>
-  `;
-}
-
-setInterval(refreshAd, 300000); // 5 minutes
-</script>
-
 
 
 
@@ -758,7 +725,39 @@ setInterval(() => {
 }, 90000);
 
 
+function resizeIframe() {
+  const frame = document.getElementById("gameFrame");
+  if (!frame) return;
 
+  const doc = frame.contentDocument || frame.contentWindow.document;
+  if (!doc) return;
+
+  const height = doc.documentElement.scrollHeight;
+  frame.style.height = height + "px";
+}
+
+// Resize when iframe loads
+document.getElementById("gameFrame").addEventListener("load", () => {
+  const frame = document.getElementById("gameFrame");
+  const doc = frame.contentDocument || frame.contentWindow.document;
+
+  // Initial resize
+  setTimeout(resizeIframe, 100);
+
+  // ⭐ Watch for content changes inside the iframe
+  const observer = new MutationObserver(() => resizeIframe());
+  observer.observe(doc.body, { childList: true, subtree: true, attributes: true });
+});
+
+// Resize on window resize
+window.addEventListener("resize", resizeIframe);
+
+window.addEventListener("message", (event) => {
+  if (event.data.type === "resize-iframe") {
+    const frame = document.getElementById("gameFrame");
+    frame.style.height = event.data.height + "px";
+  }
+});
 
 async function loadVisitorStats() {
   try {
