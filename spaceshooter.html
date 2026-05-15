@@ -93,11 +93,14 @@
     let gameLoopId = null;
     let lastTap = 0;
     let wave = 1;
-    let enemiesPerWave = 1;
+    let enemiesToSpawn = 0;
+    let enemiesAlive = 0;
+    let waveState = "spawning"; 
+    // states: "spawning" | "clearing" | "cooldown"
     let waveCooldown = 0;
+    let enemiesPerWave = 1;
     let waitingForNextWave = false;
     let patternTime = 0;
-
     // TEST MODE
     let TEST_MODE = false;
     let testIntervals = [];
@@ -347,26 +350,50 @@
       enemies.push(boss);
     }
 
-    function updateWaves(dt) {
-      if (enemies.length === 0 && !waitingForNextWave && running) {
-        waitingForNextWave = true;
-        waveCooldown = 3000;
+    function startWave() {
+
+      waveState = "clearing";
+
+      if (wave % 5 === 0) {
+        spawnBoss();
+        enemiesToSpawn = 1;
+        return;
       }
 
-      if (waitingForNextWave) {
-        waveCooldown -= dt * 16.67;
-        if (waveCooldown <= 0) {
-          waitingForNextWave = false;
-          wave++;
+      let base = 2 + wave;
+      let bonus = Math.floor(Math.random() * 3);
 
-          if (wave % 5 === 0) {
-            spawnBoss();
-          } else {
-            let baseWaveSize = 1 + wave;
-            let randomBonus = Math.floor(Math.random() * 2);
-            enemiesPerWave = Math.min(10, baseWaveSize + randomBonus);
-            spawnFormation(enemiesPerWave);
-          }
+      enemiesToSpawn = Math.min(12, base + bonus);
+
+      spawnFormation(enemiesToSpawn);
+    }
+
+    function updateWaves(dt) {
+
+      // If wave not started yet, start it
+      if (waveState === "spawning") {
+        if (enemiesToSpawn === 0) {
+          startWave();
+        }
+      }
+
+      // Detect enemies killed in real time (NOT array length)
+      enemiesAlive = enemies.filter(e => e && e.hp > 0).length;
+
+      // Wave completed condition
+      if (waveState === "clearing" && enemiesAlive === 0) {
+        waveState = "cooldown";
+        waveCooldown = 1800; // 1.8 sec break between waves
+      }
+
+      // Handle cooldown
+      if (waveState === "cooldown") {
+        waveCooldown -= dt * 16.67;
+
+        if (waveCooldown <= 0) {
+          wave++;
+          waveState = "spawning";
+          enemiesToSpawn = 0; // triggers next wave
         }
       }
     }
@@ -556,6 +583,7 @@
     }
 
     function updateSpace(dt) {
+      dt = Math.min(dt, 2.5);
       shootCooldown = Math.max(0, shootCooldown - dt * 0.2);
       updateWaves(dt);
 
@@ -593,13 +621,48 @@
           if (e.phase >= 3 && Math.random() < 0.02 * dt) fireBossSpiral(e);
 
         } else {
+  
           e.x += e.speedX * dt;
 
-          if (e.x < 0 || e.x + e.w > canvas.width) {
-            e.speedX *= -1;
+          const margin = 10;
+
+          // LEFT WALL
+          if (e.x <= margin) {
+            e.x = margin;
+
+            // bounce RIGHT
+            e.speedX = Math.abs(e.speedX);
+
+            // anti-freeze safeguard
+            if (e.speedX < 0.8) {
+              e.speedX = 0.8 + Math.random();
+            }
           }
 
-          e.y += Math.sin(performance.now() * e.hoverSpeed + e.hoverOffset) * 0.3;
+          // RIGHT WALL
+          if (e.x + e.w >= canvas.width - margin) {
+            e.x = canvas.width - e.w - margin;
+
+            // bounce LEFT
+            e.speedX = -Math.abs(e.speedX);
+
+            // anti-freeze safeguard
+            if (Math.abs(e.speedX) < 0.8) {
+              e.speedX = -(0.8 + Math.random());
+            }
+          }
+
+          // FINAL SAFETY CLAMP
+          e.x = Math.max(
+            margin,
+            Math.min(canvas.width - e.w - margin, e.x)
+          );
+
+          e.y += Math.sin(
+            performance.now() * e.hoverSpeed + e.hoverOffset
+          ) * 0.3;
+
+
 
           const maxEnemyY = ship.y - 80;
           if (e.y > maxEnemyY) e.y = maxEnemyY;
@@ -784,16 +847,34 @@
       }
 
       // ---------- ENEMY BODY VS SHIP ----------
-      for (const e of enemies) {
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+
         if (
           e.x < ship.x + ship.w &&
           e.x + e.w > ship.x &&
           e.y < ship.y + ship.h &&
           e.y + e.h > ship.y
         ) {
+          enemies.splice(i, 1);
           if (damage(35)) return;
         }
       }
+
+      // ---------- HARD SAFETY CLEANUP ----------
+      enemies = enemies.filter(e => {
+
+        if (!e) return false;
+        if (e.hp <= 0) return false;
+
+        // MUCH tighter bounds
+        if (e.x < -80) return false;
+        if (e.x > canvas.width + 80) return false;
+        if (e.y < -80) return false;
+        if (e.y > canvas.height + 120) return false;
+
+        return true;
+      });
     }
     // ---------- DRAWING ----------
 
