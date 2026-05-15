@@ -468,15 +468,39 @@
   ></iframe>
 
  <script>
-  atOptions = {
-    'key' : '038d24b547d54cdddae17e5d45b3519f',
-    'format' : 'iframe',
-    'height' : 60,
-    'width' : 468,
-    'params' : {}
-  };
+function loadAd() {
+    const container = document.getElementById("ad-container");
+    container.innerHTML = ""; // clear old ad
+
+    // Create atOptions script
+    const optScript = document.createElement("script");
+    optScript.type = "text/javascript";
+    optScript.innerHTML = `
+      atOptions = {
+        'key' : '038d24b547d54cdddae17e5d45b3519f',
+        'format' : 'iframe',
+        'height' : 60,
+        'width' : 468,
+        'params' : {}
+      };
+    `;
+
+    // Create invoke.js script
+    const invokeScript = document.createElement("script");
+    invokeScript.type = "text/javascript";
+    invokeScript.src = "https://glamournakedemployee.com/038d24b547d54cdddae17e5d45b3519f/invoke.js";
+
+    // Append both scripts
+    container.appendChild(optScript);
+    container.appendChild(invokeScript);
+}
+
+// Initial load
+loadAd();
+
+// Refresh every 5 minutes (300000 ms)
+setInterval(loadAd, 300000);
 </script>
-<script src="https://glamournakedemployee.com/038d24b547d54cdddae17e5d45b3519f/invoke.js"></script>
 
 
 
