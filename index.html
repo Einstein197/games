@@ -79,11 +79,11 @@
 
     #gameWrapper {
       position: relative;
-      width: 420px;
-      height: 600px;
-      max-width: 90vw;
-      max-height: 70vh;
-      margin-bottom: 20px;
+      width: 100%;
+      max-width: 420px;
+      aspect-ratio: 2 / 3;   /* matches 240x320 better */
+      margin: 0 auto;
+      overflow: hidden;      /* IMPORTANT */
     }
 
     #gameFrame {
@@ -92,8 +92,11 @@
       border: 3px solid rgba(255,255,255,0.3);
       border-radius: 18px;
       box-shadow: 0 0 22px rgba(0,0,0,0.7);
-      background: #000;
+      display: block;
+
+      overflow: hidden;  /* IMPORTANT */
     }
+
 
 
     #leaderboardBox {
@@ -745,39 +748,7 @@ setInterval(() => {
 }, 90000);
 
 
-function resizeIframe() {
-  const frame = document.getElementById("gameFrame");
-  if (!frame) return;
 
-  const doc = frame.contentDocument || frame.contentWindow.document;
-  if (!doc) return;
-
-  const height = doc.documentElement.scrollHeight;
-  frame.style.height = height + "px";
-}
-
-// Resize when iframe loads
-document.getElementById("gameFrame").addEventListener("load", () => {
-  const frame = document.getElementById("gameFrame");
-  const doc = frame.contentDocument || frame.contentWindow.document;
-
-  // Initial resize
-  setTimeout(resizeIframe, 100);
-
-  // ⭐ Watch for content changes inside the iframe
-  const observer = new MutationObserver(() => resizeIframe());
-  observer.observe(doc.body, { childList: true, subtree: true, attributes: true });
-});
-
-// Resize on window resize
-window.addEventListener("resize", resizeIframe);
-
-window.addEventListener("message", (event) => {
-  if (event.data.type === "resize-iframe") {
-    const frame = document.getElementById("gameFrame");
-    frame.style.height = event.data.height + "px";
-  }
-});
 
 async function loadVisitorStats() {
   try {
