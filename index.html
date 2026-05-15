@@ -81,9 +81,13 @@
       position: relative;
       width: 100%;
       max-width: 420px;
-      aspect-ratio: 2 / 3;   /* matches 240x320 better */
+      aspect-ratio: 3 / 4;
       margin: 0 auto;
-      overflow: hidden;      /* IMPORTANT */
+
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     #gameFrame {
