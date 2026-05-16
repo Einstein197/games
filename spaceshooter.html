@@ -402,15 +402,24 @@
       if (!running) return;
       if (shootCooldown > 0) return;
 
-      let shots = power.multishot;
+      // ---------- INFINITE SCALING SHOOTING ----------
+
+      // bullet count
+      const shots = Math.min(
+        100, // emergency cap
+        Math.max(1, Math.floor(power.multishot))
+      );
+
+      // wider spread for large shot counts
+      const spread = Math.min(0.8, shots * 0.02);
 
       for (let i = 0; i < shots; i++) {
-        let angle;
-        if (shots === 1) {
-          angle = 0;
-        } else {
+
+        let angle = 0;
+
+        if (shots > 1) {
           let t = (i - (shots - 1) / 2) / ((shots - 1) / 2);
-          angle = t * Math.abs(t) * 0.08;
+          angle = t * spread;
         }
 
         bullets.push({
@@ -423,8 +432,19 @@
         });
       }
 
-      // ⭐ Stacking rapid-fire fix
-      shootCooldown = Math.max(2, 10 - power.rapid * 2);
+      // rapid-fire scaling
+      const rapidBonus = power.rapid * 0.35;
+
+      // cooldown can get very fast but never zero
+      shootCooldown = Math.max(
+        0.5,
+        10 / (1 + rapidBonus)
+      );
+
+      // prevent insane lag
+      if (bullets.length > 800) {
+        bullets = bullets.slice(-800);
+      }
     }
 
     // ---------- DAMAGE ----------
@@ -805,10 +825,11 @@
             power.shieldTime += 10000;
           }
           if (p.type === "rapid") {
-            power.rapid++;
+            power.rapid += 1;
           }
+
           if (p.type === "double") {
-            power.multishot = Math.min(10, power.multishot + 1);
+            power.multishot += 1;
           }
           if (p.type === "life") {
             lives++;
