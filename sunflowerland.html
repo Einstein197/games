@@ -43,39 +43,72 @@
     margin-bottom: 30px;
   }
 
-  /* Game Frame Placeholder */
-  .game-frame {
-    width: 100%;
-    height: 600px;
-    background: #111827;
-    border: 2px solid #1f2937;
-    border-radius: 12px;
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: #0d1117;
     overflow: hidden;
-    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+  }
+
+  .game-frame {
+    position: fixed;
+    top: 100px; /* space for your ad */
+    left: 0;
+    width: 100%;
+    height: calc(100% - 60px);
+    background: #111827;
+    border-top: 2px solid #1f2937;
   }
 
   .game-frame iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-}
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
 </style>
 </head>
 
 <body>
 
-<div class="page-wrapper">
+  <div id="ad-container" style="text-align:center; padding:10px;"></div>
 
-  <div class="header">
-    <img src="https://sunflower-land.com/social-card.png" alt="Sunflower Land">
-    <h1>Sunflower Land</h1>
-  </div>
 
-  <p class="description">
-    Grow crops, craft items, expand your land, and build your dream farm.  
-    Sunflower Land is a blockchain‑powered farming game with a huge community.
-  </p>
+  <script>
+function loadAd() {
+    const container = document.getElementById("ad-container");
+    container.innerHTML = ""; // clear old ad
+
+    // Create atOptions script
+    const optScript = document.createElement("script");
+    optScript.type = "text/javascript";
+    optScript.innerHTML = `
+      atOptions = {
+        'key' : '038d24b547d54cdddae17e5d45b3519f',
+        'format' : 'iframe',
+        'height' : 60,
+        'width' : 468,
+        'params' : {}
+      };
+    `;
+
+    // Create invoke.js script
+    const invokeScript = document.createElement("script");
+    invokeScript.type = "text/javascript";
+    invokeScript.src = "https://glamournakedemployee.com/038d24b547d54cdddae17e5d45b3519f/invoke.js";
+
+    // Append both scripts
+    container.appendChild(optScript);
+    container.appendChild(invokeScript);
+}
+
+// Initial load
+loadAd();
+
+// Refresh every 5 minutes (300000 ms)
+setInterval(loadAd, 300000);
+</script>
 
 
   <div class="game-frame" id="gameFrame">
