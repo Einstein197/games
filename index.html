@@ -260,101 +260,128 @@
   <h2 style="text-align:center;color:#f7931a;">Multi‑Crypto Converter</h2>
 
   <label>BTC</label>
-  <input id="btcInput" type="number" step="0.00000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="btcInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>Satoshis</label>
-  <input id="satInput" type="number" step="1" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="satInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>ETH</label>
-  <input id="ethInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="ethInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>SOL</label>
-  <input id="solInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
-
-  <label>MATIC</label>
-  <input id="maticInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="solInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>DOGE</label>
-  <input id="dogeInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="dogeInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>LTC</label>
-  <input id="ltcInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="ltcInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>WAX</label>
-  <input id="waxInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="waxInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>TLM</label>
-  <input id="tlmInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="tlmInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>USD</label>
-  <input id="usdInput" type="number" step="0.01" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="usdInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <p id="priceInfo" style="text-align:center;margin-top:15px;color:#9ca3af;">Loading prices…</p>
 </div>
 
 <script>
+let WORKER = "https://cryptoconverter.shadownetcg-f2f.workers.dev";
+
 let prices = {
-  btc: 0, eth: 0, sol: 0, matic: 0, doge: 0, ltc: 0, wax: 0, tlm: 0
+  btc: 0, eth: 0, sol: 0, doge: 0, ltc: 0, wax: 0, tlm: 0
 };
 
 let pricesLoaded = false;
 let lock = false;
+let usdClean = 0;
+let activeField = null;
+
+// --- fetch from KV-backed Worker ---
+async function loadPrice(id) {
+  const r = await fetch(`${WORKER}/price?coin=${id}`);
+  const data = await r.json();
+  if (!data[id] || typeof data[id].usd !== "number") {
+    throw new Error("No price in KV for " + id);
+  }
+  return data[id].usd;
+}
 
 async function fetchPrices() {
   try {
-    const url =
-      "https://api.coingecko.com/api/v3/simple/price?ids=" +
-      "bitcoin,ethereum,solana,polygon,dogecoin,litecoin,wax,alien-worlds" +
-      "&vs_currencies=usd&cachebuster=" + Date.now();
+    const [
+      btcP, ethP, solP, 
+      dogeP, ltcP, waxP, tlmP
+    ] = await Promise.all([
+      loadPrice("bitcoin"),
+      loadPrice("ethereum"),
+      loadPrice("solana"),
+      loadPrice("dogecoin"),
+      loadPrice("litecoin"),
+      loadPrice("wax"),
+      loadPrice("alien-worlds")
+    ]);
 
-    const r = await fetch(url);
-    const data = await r.json();
-
-    prices.btc = data.bitcoin.usd;
-    prices.eth = data.ethereum.usd;
-    prices.sol = data.solana.usd;
-    prices.matic = data.polygon.usd;
-    prices.doge = data.dogecoin.usd;
-    prices.ltc = data.litecoin.usd;
-    prices.wax = data.wax.usd;
-    prices.tlm = data["alien-worlds"].usd;
+    prices.btc   = btcP;
+    prices.eth   = ethP;
+    prices.sol   = solP;
+    prices.doge  = dogeP;
+    prices.ltc   = ltcP;
+    prices.wax   = waxP;
+    prices.tlm   = tlmP;
 
     pricesLoaded = true;
 
     document.getElementById("priceInfo").innerText =
-      `BTC $${prices.btc} | ETH $${prices.eth} | SOL $${prices.sol} | MATIC $${prices.matic} | DOGE $${prices.doge} | LTC $${prices.ltc} | WAX $${prices.wax} | TLM $${prices.tlm}`;
+      `BTC $${prices.btc} | ETH $${prices.eth} | SOL $${prices.sol} | ` +
+      `DOGE $${prices.doge} | LTC $${prices.ltc} | ` +
+      `WAX $${prices.wax} | TLM $${prices.tlm}`;
   } catch (e) {
-    document.getElementById("priceInfo").innerText = "Price load failed";
+    document.getElementById("priceInfo").innerText = "Price load failed (KV empty or Worker error)";
   }
 }
 
 fetchPrices();
-setInterval(fetchPrices, 30000);
+setInterval(fetchPrices, 5 * 60 * 1000);
 
-// Inputs
-const btc = document.getElementById("btcInput");
-const sat = document.getElementById("satInput");
-const eth = document.getElementById("ethInput");
-const sol = document.getElementById("solInput");
-const matic = document.getElementById("maticInput");
-const doge = document.getElementById("dogeInput");
-const ltc = document.getElementById("ltcInput");
-const wax = document.getElementById("waxInput");
-const tlm = document.getElementById("tlmInput");
-const usd = document.getElementById("usdInput");
+// --- inputs ---
+const btc   = document.getElementById("btcInput");
+const sat   = document.getElementById("satInput");
+const eth   = document.getElementById("ethInput");
+const sol   = document.getElementById("solInput");
+const doge  = document.getElementById("dogeInput");
+const ltc   = document.getElementById("ltcInput");
+const wax   = document.getElementById("waxInput");
+const tlm   = document.getElementById("tlmInput");
+const usd   = document.getElementById("usdInput");
+
+// Track active field
+[btc, sat, eth, sol, doge, ltc, wax, tlm, usd].forEach((el) => {
+  el.onfocus = () => activeField = el.id;
+  el.onblur  = () => activeField = null;
+});
 
 function updateAllFromUSD(u) {
   if (!pricesLoaded) return;
 
-  btc.value = (u / prices.btc).toFixed(8);
-  sat.value = Math.round((u / prices.btc) * 100000000);
-  eth.value = (u / prices.eth).toFixed(6);
-  sol.value = (u / prices.sol).toFixed(6);
-  matic.value = (u / prices.matic).toFixed(6);
-  doge.value = (u / prices.doge).toFixed(6);
-  ltc.value = (u / prices.ltc).toFixed(6);
-  wax.value = (u / prices.wax).toFixed(6);
-  tlm.value = (u / prices.tlm).toFixed(6);
+  usdClean = u;
+
+  if (activeField !== "usdInput") {
+    usd.value = usdClean.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  if (activeField !== "btcInput")   btc.value   = (u / prices.btc).toFixed(8);
+  if (activeField !== "satInput")   sat.value   = Math.round((u / prices.btc) * 100000000);
+  if (activeField !== "ethInput")   eth.value   = (u / prices.eth).toFixed(6);
+  if (activeField !== "solInput")   sol.value   = (u / prices.sol).toFixed(6);
+  if (activeField !== "dogeInput")  doge.value  = (u / prices.doge).toFixed(6);
+  if (activeField !== "ltcInput")   ltc.value   = (u / prices.ltc).toFixed(6);
+  if (activeField !== "waxInput")   wax.value   = (u / prices.wax).toFixed(6);
+  if (activeField !== "tlmInput")   tlm.value   = (u / prices.tlm).toFixed(6);
 }
 
 function convert(handler) {
@@ -365,17 +392,26 @@ function convert(handler) {
   lock = false;
 }
 
-btc.oninput = () => convert(() => updateAllFromUSD((parseFloat(btc.value) || 0) * prices.btc));
-sat.oninput = () => convert(() => updateAllFromUSD((parseFloat(sat.value) || 0) / 100000000 * prices.btc));
-eth.oninput = () => convert(() => updateAllFromUSD((parseFloat(eth.value) || 0) * prices.eth));
-sol.oninput = () => convert(() => updateAllFromUSD((parseFloat(sol.value) || 0) * prices.sol));
-matic.oninput = () => convert(() => updateAllFromUSD((parseFloat(matic.value) || 0) * prices.matic));
-doge.oninput = () => convert(() => updateAllFromUSD((parseFloat(doge.value) || 0) * prices.doge));
-ltc.oninput = () => convert(() => updateAllFromUSD((parseFloat(ltc.value) || 0) * prices.ltc));
-wax.oninput = () => convert(() => updateAllFromUSD((parseFloat(wax.value) || 0) * prices.wax));
-tlm.oninput = () => convert(() => updateAllFromUSD((parseFloat(tlm.value) || 0) * prices.tlm));
-usd.oninput = () => convert(() => updateAllFromUSD(parseFloat(usd.value) || 0));
+// --- crypto inputs ---
+btc.oninput   = () => convert(() => updateAllFromUSD((parseFloat(btc.value)   || 0) * prices.btc));
+sat.oninput   = () => convert(() => updateAllFromUSD((parseFloat(sat.value)   || 0) / 100000000 * prices.btc));
+eth.oninput   = () => convert(() => updateAllFromUSD((parseFloat(eth.value)   || 0) * prices.eth));
+sol.oninput   = () => convert(() => updateAllFromUSD((parseFloat(sol.value)   || 0) * prices.sol));
+doge.oninput  = () => convert(() => updateAllFromUSD((parseFloat(doge.value)  || 0) * prices.doge));
+ltc.oninput   = () => convert(() => updateAllFromUSD((parseFloat(ltc.value)   || 0) * prices.ltc));
+wax.oninput   = () => convert(() => updateAllFromUSD((parseFloat(wax.value)   || 0) * prices.wax));
+tlm.oninput   = () => convert(() => updateAllFromUSD((parseFloat(tlm.value)   || 0) * prices.tlm));
+
+// --- USD input ---
+usd.oninput = () => convert(() => {
+  let raw = usd.value.replace(/,/g, "");
+  let num = parseFloat(raw) || 0;
+  usdClean = num;
+  updateAllFromUSD(num);
+});
 </script>
+
+
 
 
 
