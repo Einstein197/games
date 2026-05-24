@@ -318,9 +318,8 @@ let currentGameId = null;
 /* VISITOR STATS */
 async function loadVisitorStats(){
   try{
-    const r = await fetch(
-      "kryptonlegend.fun/stats"
-    );
+    const r = await fetch("https://kryptonlegend.fun/stats");
+
 
     const d = await r.json();
 
