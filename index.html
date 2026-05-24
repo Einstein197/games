@@ -302,7 +302,12 @@ let lock = false;
 
 async function fetchPrices() {
   try {
-    const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,polygon,dogecoin,litecoin,wax,alien-worlds&vs_currencies=usd");
+    const url =
+      "https://api.coingecko.com/api/v3/simple/price?ids=" +
+      "bitcoin,ethereum,solana,polygon,dogecoin,litecoin,wax,alien-worlds" +
+      "&vs_currencies=usd&cachebuster=" + Date.now();
+
+    const r = await fetch(url);
     const data = await r.json();
 
     prices.btc = data.bitcoin.usd;
@@ -318,8 +323,8 @@ async function fetchPrices() {
 
     document.getElementById("priceInfo").innerText =
       `BTC $${prices.btc} | ETH $${prices.eth} | SOL $${prices.sol} | MATIC $${prices.matic} | DOGE $${prices.doge} | LTC $${prices.ltc} | WAX $${prices.wax} | TLM $${prices.tlm}`;
-  } catch {
-    document.getElementById("priceInfo").innerText = "Price unavailable";
+  } catch (e) {
+    document.getElementById("priceInfo").innerText = "Price load failed";
   }
 }
 
@@ -339,6 +344,8 @@ const tlm = document.getElementById("tlmInput");
 const usd = document.getElementById("usdInput");
 
 function updateAllFromUSD(u) {
+  if (!pricesLoaded) return;
+
   btc.value = (u / prices.btc).toFixed(8);
   sat.value = Math.round((u / prices.btc) * 100000000);
   eth.value = (u / prices.eth).toFixed(6);
@@ -369,6 +376,7 @@ wax.oninput = () => convert(() => updateAllFromUSD((parseFloat(wax.value) || 0) 
 tlm.oninput = () => convert(() => updateAllFromUSD((parseFloat(tlm.value) || 0) * prices.tlm));
 usd.oninput = () => convert(() => updateAllFromUSD(parseFloat(usd.value) || 0));
 </script>
+
 
 
   <!-- Faucet Unlock Embed -->
