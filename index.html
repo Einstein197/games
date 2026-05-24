@@ -319,17 +319,18 @@ let currentGameId = null;
 async function loadVisitorStats(){
   try{
     const r = await fetch(
-      "https://visitorstats.shadownetcg-f2f.workers.dev"
+      "kryptonlegend.fun/stats"
     );
 
     const d = await r.json();
 
     visitorStats.textContent =
-      `Visitors today: ${d.unique} | Total visits: ${d.total}`;
+      `Unique visitors today: ${d.today_unique}`;
   }catch{
     visitorStats.textContent = "Failed to load stats";
   }
 }
+
 
 loadVisitorStats();
 setInterval(loadVisitorStats,300000);
