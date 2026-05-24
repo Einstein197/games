@@ -256,35 +256,107 @@
 
 <!-- END AADS AD UNIT 2436395 -->
 
-<div id="cryptoCalc" style="max-width:420px;margin:20px auto;padding:20px;background:#0d1117;border-radius:12px;color:#fff;font-family:Arial;">
-  <h2 style="text-align:center;color:#f7931a;">Multi‑Crypto Converter</h2>
+<style>
+  .crypto-grid {
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+    justify-content:center;
+  }
 
-  <label>BTC</label>
-  <input id="btcInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  .crypto-card {
+    background:#111827;
+    padding:16px;
+    border-radius:14px;
+    border:1px solid #1f2937;
 
-  <label>Satoshis</label>
-  <input id="satInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+    /* ⭐ Dynamic card resizing */
+    flex:0 1 240px;
+    max-width:260px;
 
-  <label>ETH</label>
-  <input id="ethInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+    box-sizing:border-box;
+  }
 
-  <label>SOL</label>
-  <input id="solInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  .crypto-card h3 {
+    margin:0 0 12px;
+    font-size:16px;
+    color:#facc15;
+    letter-spacing:0.5px;
+  }
 
-  <label>DOGE</label>
-  <input id="dogeInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  .crypto-label {
+    font-size:13px;
+    margin-bottom:4px;
+    display:block;
+    color:#d1d5db;
+  }
 
-  <label>LTC</label>
-  <input id="ltcInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  .crypto-input {
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:8px;
+    border:none;
+    background:#0d1117;
+    color:#fff;
+    font-size:14px;
 
-  <label>WAX</label>
-  <input id="waxInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+    /* ⭐ Auto-resize enabled */
+    width:auto;
+    min-width:60px;
+    max-width:100%;
+    display:inline-block;
+    transition:width 0.15s ease;
+  }
 
-  <label>TLM</label>
-  <input id="tlmInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  .usd-card {
+    border-color:#f97316;
+    flex:1 1 100%;
+  }
+</style>
 
-  <label>USD</label>
-  <input id="usdInput" type="text" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+<div style="max-width:1100px;margin:20px auto;color:#fff;font-family:Arial;">
+
+  <div class="crypto-grid">
+
+    <div class="crypto-card">
+      <h3>Bitcoin</h3>
+      <label class="crypto-label">BTC</label>
+      <input id="btcInput" type="text" class="crypto-input">
+      <label class="crypto-label">Satoshis</label>
+      <input id="satInput" type="text" class="crypto-input">
+    </div>
+
+    <div class="crypto-card">
+      <h3>Major Coins</h3>
+      <label class="crypto-label">ETH</label>
+      <input id="ethInput" type="text" class="crypto-input">
+      <label class="crypto-label">SOL</label>
+      <input id="solInput" type="text" class="crypto-input">
+      <label class="crypto-label">LTC</label>
+      <input id="ltcInput" type="text" class="crypto-input">
+    </div>
+
+    <div class="crypto-card">
+      <h3>DOGE</h3>
+      <label class="crypto-label">DOGE</label>
+      <input id="dogeInput" type="text" class="crypto-input">
+    </div>
+
+    <div class="crypto-card">
+      <h3>WAX Ecosystem</h3>
+      <label class="crypto-label">WAX</label>
+      <input id="waxInput" type="text" class="crypto-input">
+      <label class="crypto-label">TLM</label>
+      <input id="tlmInput" type="text" class="crypto-input">
+    </div>
+
+    <div class="crypto-card usd-card">
+      <h3>Fiat (USD)</h3>
+      <label class="crypto-label">USD</label>
+      <input id="usdInput" type="text" class="crypto-input">
+    </div>
+
+  </div>
 
   <p id="priceInfo" style="text-align:center;margin-top:15px;color:#9ca3af;">Loading prices…</p>
 </div>
@@ -301,13 +373,53 @@ let lock = false;
 let usdClean = 0;
 let activeField = null;
 
-// --- fetch from KV-backed Worker ---
+/* ⭐ Smart formatting */
+function formatCrypto(num, decimals = 8) {
+  if (!num || num === 0) return "0.0";
+
+  // Full precision first
+  let str = num.toFixed(decimals);
+
+  // Remove trailing zeros
+  str = str.replace(/0+$/, "");
+
+  // Fix edge cases
+  if (str.endsWith(".")) str += "0";
+  if (str === "0.") str = "0.0";
+
+  // Split integer + decimal
+  let parts = str.split(".");
+  let intPart = parts[0];
+  let decPart = parts[1] || "";
+
+  // Add commas to integer part
+  intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  return decPart ? intPart + "." + decPart : intPart;
+}
+
+function formatIntWithCommas(num) {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+
+
+/* ⭐ Auto-resize */
+function autoSizeInput(el) {
+  const tmp = document.createElement("span");
+  tmp.style.visibility = "hidden";
+  tmp.style.whiteSpace = "pre";
+  tmp.style.font = window.getComputedStyle(el).font;
+  tmp.innerText = el.value || el.placeholder || "";
+  document.body.appendChild(tmp);
+  el.style.width = (tmp.clientWidth + 20) + "px";
+  tmp.remove();
+}
+
+/* Fetch prices */
 async function loadPrice(id) {
   const r = await fetch(`${WORKER}/price?coin=${id}`);
   const data = await r.json();
-  if (!data[id] || typeof data[id].usd !== "number") {
-    throw new Error("No price in KV for " + id);
-  }
   return data[id].usd;
 }
 
@@ -326,29 +438,20 @@ async function fetchPrices() {
       loadPrice("alien-worlds")
     ]);
 
-    prices.btc   = btcP;
-    prices.eth   = ethP;
-    prices.sol   = solP;
-    prices.doge  = dogeP;
-    prices.ltc   = ltcP;
-    prices.wax   = waxP;
-    prices.tlm   = tlmP;
-
+    prices = { btc:btcP, eth:ethP, sol:solP, doge:dogeP, ltc:ltcP, wax:waxP, tlm:tlmP };
     pricesLoaded = true;
 
     document.getElementById("priceInfo").innerText =
-      `BTC $${prices.btc} | ETH $${prices.eth} | SOL $${prices.sol} | ` +
-      `DOGE $${prices.doge} | LTC $${prices.ltc} | ` +
-      `WAX $${prices.wax} | TLM $${prices.tlm}`;
+      `BTC $${prices.btc} | ETH $${prices.eth} | SOL $${prices.sol} | DOGE $${prices.doge} | LTC $${prices.ltc} | WAX $${prices.wax} | TLM $${prices.tlm}`;
   } catch (e) {
-    document.getElementById("priceInfo").innerText = "Price load failed (KV empty or Worker error)";
+    document.getElementById("priceInfo").innerText = "Price load failed";
   }
 }
 
 fetchPrices();
-setInterval(fetchPrices, 5 * 60 * 1000);
+setInterval(fetchPrices, 300000);
 
-// --- inputs ---
+/* Inputs */
 const btc   = document.getElementById("btcInput");
 const sat   = document.getElementById("satInput");
 const eth   = document.getElementById("ethInput");
@@ -359,31 +462,39 @@ const wax   = document.getElementById("waxInput");
 const tlm   = document.getElementById("tlmInput");
 const usd   = document.getElementById("usdInput");
 
-// Track active field
+/* Track active field */
 [btc, sat, eth, sol, doge, ltc, wax, tlm, usd].forEach((el) => {
   el.onfocus = () => activeField = el.id;
   el.onblur  = () => activeField = null;
 });
 
+/* Update all fields */
 function updateAllFromUSD(u) {
   if (!pricesLoaded) return;
 
   usdClean = u;
 
   if (activeField !== "usdInput") {
-    usd.value = usdClean.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    usd.value = u.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    autoSizeInput(usd);
   }
 
-  if (activeField !== "btcInput")   btc.value   = (u / prices.btc).toFixed(8);
-  if (activeField !== "satInput")   sat.value   = Math.round((u / prices.btc) * 100000000);
-  if (activeField !== "ethInput")   eth.value   = (u / prices.eth).toFixed(6);
-  if (activeField !== "solInput")   sol.value   = (u / prices.sol).toFixed(6);
-  if (activeField !== "dogeInput")  doge.value  = (u / prices.doge).toFixed(6);
-  if (activeField !== "ltcInput")   ltc.value   = (u / prices.ltc).toFixed(6);
-  if (activeField !== "waxInput")   wax.value   = (u / prices.wax).toFixed(6);
-  if (activeField !== "tlmInput")   tlm.value   = (u / prices.tlm).toFixed(6);
+  if (activeField !== "btcInput")   { btc.value   = formatCrypto(u / prices.btc, 8); autoSizeInput(btc); }
+
+  if (activeField !== "satInput") {
+    let sats = Math.round((u / prices.btc) * 100000000);
+    sat.value = formatIntWithCommas(sats);
+    autoSizeInput(sat);
+  }
+  if (activeField !== "ethInput")   { eth.value   = formatCrypto(u / prices.eth, 6); autoSizeInput(eth); }
+  if (activeField !== "solInput")   { sol.value   = formatCrypto(u / prices.sol, 6); autoSizeInput(sol); }
+  if (activeField !== "dogeInput")  { doge.value  = formatCrypto(u / prices.doge, 6); autoSizeInput(doge); }
+  if (activeField !== "ltcInput")   { ltc.value   = formatCrypto(u / prices.ltc, 6); autoSizeInput(ltc); }
+  if (activeField !== "waxInput")   { wax.value   = formatCrypto(u / prices.wax, 6); autoSizeInput(wax); }
+  if (activeField !== "tlmInput")   { tlm.value   = formatCrypto(u / prices.tlm, 6); autoSizeInput(tlm); }
 }
 
+/* Convert wrapper */
 function convert(handler) {
   if (!pricesLoaded) return;
   if (lock) return;
@@ -392,24 +503,27 @@ function convert(handler) {
   lock = false;
 }
 
-// --- crypto inputs ---
-btc.oninput   = () => convert(() => updateAllFromUSD((parseFloat(btc.value)   || 0) * prices.btc));
-sat.oninput   = () => convert(() => updateAllFromUSD((parseFloat(sat.value)   || 0) / 100000000 * prices.btc));
-eth.oninput   = () => convert(() => updateAllFromUSD((parseFloat(eth.value)   || 0) * prices.eth));
-sol.oninput   = () => convert(() => updateAllFromUSD((parseFloat(sol.value)   || 0) * prices.sol));
-doge.oninput  = () => convert(() => updateAllFromUSD((parseFloat(doge.value)  || 0) * prices.doge));
-ltc.oninput   = () => convert(() => updateAllFromUSD((parseFloat(ltc.value)   || 0) * prices.ltc));
-wax.oninput   = () => convert(() => updateAllFromUSD((parseFloat(wax.value)   || 0) * prices.wax));
-tlm.oninput   = () => convert(() => updateAllFromUSD((parseFloat(tlm.value)   || 0) * prices.tlm));
+/* Input handlers */
+btc.oninput   = () => convert(() => { autoSizeInput(btc); updateAllFromUSD((parseFloat(btc.value)   || 0) * prices.btc); });
+sat.oninput   = () => convert(() => { autoSizeInput(sat); updateAllFromUSD((parseFloat(sat.value)   || 0) / 100000000 * prices.btc); });
+eth.oninput   = () => convert(() => { autoSizeInput(eth); updateAllFromUSD((parseFloat(eth.value)   || 0) * prices.eth); });
+sol.oninput   = () => convert(() => { autoSizeInput(sol); updateAllFromUSD((parseFloat(sol.value)   || 0) * prices.sol); });
+doge.oninput  = () => convert(() => { autoSizeInput(doge); updateAllFromUSD((parseFloat(doge.value)  || 0) * prices.doge); });
+ltc.oninput   = () => convert(() => { autoSizeInput(ltc); updateAllFromUSD((parseFloat(ltc.value)   || 0) * prices.ltc); });
+wax.oninput   = () => convert(() => { autoSizeInput(wax); updateAllFromUSD((parseFloat(wax.value)   || 0) * prices.wax); });
+tlm.oninput   = () => convert(() => { autoSizeInput(tlm); updateAllFromUSD((parseFloat(tlm.value)   || 0) * prices.tlm); });
 
-// --- USD input ---
 usd.oninput = () => convert(() => {
   let raw = usd.value.replace(/,/g, "");
   let num = parseFloat(raw) || 0;
-  usdClean = num;
+  autoSizeInput(usd);
   updateAllFromUSD(num);
 });
+
+/* Initial resize */
+[btc, sat, eth, sol, doge, ltc, wax, tlm, usd].forEach(autoSizeInput);
 </script>
+
 
 
 
