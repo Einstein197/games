@@ -256,10 +256,8 @@
 
 <!-- END AADS AD UNIT 2436395 -->
 
-<div id="gap" style="height: 40px;"></div>
-
-<div id="btcCalc" style="max-width:420px;margin:20px auto;padding:20px;background:#0d1117;border-radius:12px;color:#fff;font-family:Arial;">
-  <h2 style="text-align:center;color:#f7931a;">BTC → SAT → USD Calculator</h2>
+<div id="cryptoCalc" style="max-width:420px;margin:20px auto;padding:20px;background:#0d1117;border-radius:12px;color:#fff;font-family:Arial;">
+  <h2 style="text-align:center;color:#f7931a;">Crypto Converter</h2>
 
   <label>BTC</label>
   <input id="btcInput" type="number" step="0.00000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
@@ -267,53 +265,126 @@
   <label>Satoshis</label>
   <input id="satInput" type="number" step="1" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
+  <label>WAX</label>
+  <input id="waxInput" type="number" step="0.0001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+
+  <label>TLM</label>
+  <input id="tlmInput" type="number" step="0.0001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+
   <label>USD</label>
   <input id="usdInput" type="number" step="0.01" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
-  <p id="priceInfo" style="text-align:center;margin-top:15px;color:#9ca3af;">Loading BTC price…</p>
+  <p id="priceInfo" style="text-align:center;margin-top:15px;color:#9ca3af;">Loading prices…</p>
 </div>
 
 <script>
-let btcPrice = 0;
+let prices = {
+  btc: 0,
+  wax: 0,
+  tlm: 0
+};
 
-async function fetchPrice() {
+async function fetchPrices() {
   try {
-    const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
+    const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,wax,alien-worlds&vs_currencies=usd");
     const data = await r.json();
-    btcPrice = data.bitcoin.usd;
-    document.getElementById("priceInfo").innerText = "1 BTC = $" + btcPrice.toLocaleString();
+
+    prices.btc = data.bitcoin.usd;
+    prices.wax = data.wax.usd;
+    prices.tlm = data["alien-worlds"].usd;
+
+    document.getElementById("priceInfo").innerText =
+      `1 BTC = $${prices.btc.toLocaleString()} | 1 WAX = $${prices.wax} | 1 TLM = $${prices.tlm}`;
   } catch {
     document.getElementById("priceInfo").innerText = "Price unavailable";
   }
 }
 
-fetchPrice();
-setInterval(fetchPrice, 30000); // refresh every 30s
+fetchPrices();
+setInterval(fetchPrices, 30000);
 
+// Inputs
 const btc = document.getElementById("btcInput");
 const sat = document.getElementById("satInput");
+const wax = document.getElementById("waxInput");
+const tlm = document.getElementById("tlmInput");
 const usd = document.getElementById("usdInput");
 
-btc.oninput = () => {
+// Prevent infinite loops
+let lock = false;
+
+function updateFromBTC() {
+  if (lock) return; lock = true;
+
   const b = parseFloat(btc.value) || 0;
   sat.value = Math.round(b * 100000000);
-  usd.value = (b * btcPrice).toFixed(2);
-};
+  usd.value = (b * prices.btc).toFixed(2);
+  wax.value = (usd.value / prices.wax).toFixed(4);
+  tlm.value = (usd.value / prices.tlm).toFixed(4);
 
-sat.oninput = () => {
+  lock = false;
+}
+
+function updateFromSAT() {
+  if (lock) return; lock = true;
+
   const s = parseFloat(sat.value) || 0;
   const b = s / 100000000;
   btc.value = b;
-  usd.value = (b * btcPrice).toFixed(2);
-};
+  usd.value = (b * prices.btc).toFixed(2);
+  wax.value = (usd.value / prices.wax).toFixed(4);
+  tlm.value = (usd.value / prices.tlm).toFixed(4);
 
-usd.oninput = () => {
+  lock = false;
+}
+
+function updateFromWAX() {
+  if (lock) return; lock = true;
+
+  const w = parseFloat(wax.value) || 0;
+  const u = w * prices.wax;
+  usd.value = u.toFixed(2);
+  btc.value = (u / prices.btc).toFixed(8);
+  sat.value = Math.round((u / prices.btc) * 100000000);
+  tlm.value = (u / prices.tlm).toFixed(4);
+
+  lock = false;
+}
+
+function updateFromTLM() {
+  if (lock) return; lock = true;
+
+  const t = parseFloat(tlm.value) || 0;
+  const u = t * prices.tlm;
+  usd.value = u.toFixed(2);
+  btc.value = (u / prices.btc).toFixed(8);
+  sat.value = Math.round((u / prices.btc) * 100000000);
+  wax.value = (u / prices.wax).toFixed(4);
+
+  lock = false;
+}
+
+function updateFromUSD() {
+  if (lock) return; lock = true;
+
   const u = parseFloat(usd.value) || 0;
-  const b = u / btcPrice;
-  btc.value = b;
-  sat.value = Math.round(b * 100000000);
-};
+  btc.value = (u / prices.btc).toFixed(8);
+  sat.value = Math.round((u / prices.btc) * 100000000);
+  wax.value = (u / prices.wax).toFixed(4);
+  tlm.value = (u / prices.tlm).toFixed(4);
+
+  lock = false;
+}
+
+// Event bindings
+btc.oninput = updateFromBTC;
+sat.oninput = updateFromSAT;
+wax.oninput = updateFromWAX;
+tlm.oninput = updateFromTLM;
+usd.oninput = updateFromUSD;
 </script>
+
+
 
 
 <!-- GAME GRID -->
