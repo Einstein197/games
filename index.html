@@ -1,895 +1,559 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Krypton Arcade</title>
-  <link rel="icon" type="image/png" href="krypton.png">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krypton Tools</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: linear-gradient(to bottom, #ff7b00, #3b0b5c);
-      color: #fff;
-      min-height: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h1 {
-      margin-top: 24px;
-      margin-bottom: 8px;
-      font-size: 36px;
-      text-shadow: 0 0 18px rgba(0,0,0,0.7);
-    }
-    p.subtitle {
-      margin: 0 0 20px;
-      opacity: 0.9;
-    }
-    .grid {
-      width: 100%;
-      max-width: 900px;
-      padding: 0 16px 40px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 20px;
-      box-sizing: border-box;
-    }
-    .card {
-      background: rgba(0,0,0,0.35);
-      border-radius: 18px;
-      padding: 16px 12px 18px;
-      text-align: center;
-      cursor: pointer;
-      box-shadow: 0 0 18px rgba(0,0,0,0.45);
-      backdrop-filter: blur(6px);
-      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-    }
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 0 22px rgba(0,0,0,0.7);
-      background: rgba(0,0,0,0.5);
-    }
-    .icon-wrap {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 10px;
-    }
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .card-sub {
-      font-size: 12px;
-      opacity: 0.8;
-    }
+<style>
+body{
+  margin:0;
+  font-family:system-ui,sans-serif;
+  background:linear-gradient(to bottom,#ff7b00,#3b0b5c);
+  color:#fff;
+  overflow-x:hidden;
+}
 
-    /* GAME VIEWER */
-    #gameContainer {
-      display: none;
-      width: 100%;
-      flex-direction: column;
-      align-items: center; 
-      gap: 20px;
-      justify-content: center;
-      margin-top: 20px;
-    }
+h1{
+  text-align:center;
+  margin:20px 10px 8px;
+  font-size:32px;
+}
 
-    #gameWrapper {
-      position: relative;
-      width: 420px;
-      height: 600px;
-      max-width: 90vw;
-      max-height: 70vh;
-      margin-bottom: 20px;
-    }
+#visitorStats{
+  text-align:center;
+  opacity:.8;
+  margin-bottom:20px;
+  font-size:14px;
+}
 
-    #gameFrame {
-      width: 100%;
-      height: 100%;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-radius: 18px;
-      box-shadow: 0 0 22px rgba(0,0,0,0.7);
-      background: #000;
-    }
+/* ADS */
+#frame{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  margin:20px 0;
+}
 
+#frame iframe{
+  width:min(100%,728px);
+  height:90px;
+  border:0;
+}
 
-    #leaderboardBox {
-      width: 100%;
-      max-width: 400px;   /* match your game width */
-      background: #111;
-      padding: 12px;
-      border-radius: 10px;
-      border: 2px solid #333;
-      color: white;
-      display: none;
-      margin: 0 auto;     /* center it */
-    }
+/* CRYPTO */
+.crypto-wrapper{
+  width:min(1100px,95%);
+  margin:auto;
+}
 
-    #leaderboardWrapper {
-      margin-top: 20px;   /* spacing BELOW the game */
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
+.crypto-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+}
 
+.crypto-card{
+  background:#111827;
+  padding:16px;
+  border-radius:14px;
+  border:1px solid #1f2937;
+  box-sizing:border-box;
+}
 
-    #gameAndBoard {
-      display: flex;
-      align-items: flex-start;
+.crypto-card h3{
+  margin:0 0 12px;
+  color:#facc15;
+}
 
-    }
+.crypto-label{
+  display:block;
+  font-size:13px;
+  margin-bottom:4px;
+}
 
-    #belowGame {
-      margin-top: 20px;      /* consistent gap under the iframe */
-      display: flex;
-      flex-direction: column;
-      gap: 20px;             /* consistent gap between leaderboard and comments */
-      width: 100%;
-      max-width: 400px;      /* optional: keeps it neat */
-      margin-left: auto;
-      margin-right: auto;    /* centers it */
-    }
+.crypto-input{
+  width:100%;
+  box-sizing:border-box;
+  padding:10px;
+  margin-bottom:10px;
+  border:none;
+  border-radius:8px;
+  background:#0d1117;
+  color:white;
+}
 
+.usd-card{
+  border-color:#f97316;
+}
 
+#priceInfo{
+  text-align:center;
+  margin-top:15px;
+  color:#9ca3af;
+}
 
-    #closeX {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 32px;
-      height: 32px;
-      font-size: 20px;
-      font-weight: bold;
-      color: white;
-      background: #d62828;
-      border: 2px solid #ff9a2b;
-      border-radius: 8px;
-      cursor: pointer;
-      z-index: 999;
-      box-shadow: 0 0 10px rgba(0,0,0,0.6);
-      transition: 0.2s;
-    }
+/* FAUCET */
+#faucetFrame{
+  width:min(100%,420px);
+  height:650px;
+  border:none;
+  border-radius:18px;
+  display:block;
+  margin:30px auto;
+  background:#000;
+}
 
-    #closeX:hover {
-      background: #b71c1c;
-      transform: scale(1.1);
-    }
+/* GAME */
+#gameContainer{
+  display:none;
+  width:100%;
+  flex-direction:column;
+  align-items:center;
+  margin-top:20px;
+}
 
+#gameWrapper{
+  position:relative;
+  width:min(95vw,420px);
+  height:650px;
+}
 
-    #frame {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      margin: 20px 0;
-      margin-bottom: 40px;
-    }
+#gameFrame{
+  width:100%;
+  height:100%;
+  border:none;
+  border-radius:18px;
+  background:#000;
+}
 
+#closeX{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:32px;
+  height:32px;
+  border:none;
+  border-radius:8px;
+  background:#d62828;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+}
 
+#belowGame{
+  width:min(95%,420px);
+  margin-top:20px;
+}
 
-    .popup {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
+#leaderboardBox,
+#commentsSection{
+  background:#111;
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:20px;
+}
+
+#commentInput{
+  width:100%;
+  min-height:80px;
+  box-sizing:border-box;
+  margin-top:10px;
+  border-radius:8px;
+  border:none;
+  padding:10px;
+}
+
+#commentSubmit{
+  margin-top:10px;
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#ff7b00;
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.comment{
+  padding:8px 0;
+  border-bottom:1px solid #333;
+}
+
+@media(max-width:768px){
+
+  h1{
+    font-size:26px;
   }
 
-  .popup-box {
-    background: #111;
-    padding: 20px;
-    border-radius: 12px;
-    border: 2px solid #ff7b00;
-    text-align: center;
-    width: 80%;
-    max-width: 300px;
+  #frame iframe{
+    height:70px;
   }
 
-  
-  #visitorStats {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 14px;
-    opacity: 0.8;
-    margin-bottom: 20px;
+  #gameWrapper{
+    height:75vh;
   }
 
-  #faucetFrame {
-    width: 400px;
-    height: 600px;
-    border: none;            /* removes border */
-    border-radius: 18px;     /* rounded corners */
-    margin: 40px auto;
-    display: block;
-    overflow: hidden;        /* hides internal scrollbars */
+  #faucetFrame{
+    height:620px;
   }
-
-  @media (max-width: 768px) {
-    #faucetFrame {
-      width: 95%;
-      height: 640px;
-    }
-  }
-
-
-
-
-
-
-  </style>
+}
+</style>
 </head>
 <body>
 
-<h1 id="arcadeTitle">Krypton Arcade</h1>
-
-<div id="namePopup" class="popup">
-  <div class="popup-box">
-    <h2>Enter your player name</h2>
-    <input id="playerNameInput" type="text" placeholder="Your name">
-    <button onclick="savePlayerName()">Continue</button>
-  </div>
-</div>
-
-
-
-
-<p class="subtitle" id="arcadeDesc">Tap a game to launch it. Close it to return to the arcade.</p>
+<h1 id="arcadeTitle">Krypton Tools</h1>
 
 <div id="visitorStats">Loading stats...</div>
 
+<!-- AADS -->
+<div id="frame">
+  <iframe
+    data-aa="2436395"
+    src="//acceptable.a-ads.com/2436395/?size=Adaptive">
+  </iframe>
+</div>
 
+<!-- CRYPTO -->
+<div class="crypto-wrapper">
 
+<div class="crypto-grid">
 
-<!-- BEGIN AADS AD UNIT 2436395 -->
+<div class="crypto-card">
+  <h3>Bitcoin</h3>
 
-<div id="frame" style="width: 100%;margin: auto;position: relative; z-index: 99998;">
-          <iframe data-aa='2436395' src='//acceptable.a-ads.com/2436395/?size=Adaptive'
-                            style='border:0; padding:0; width:70%; height:90px; overflow:hidden;display: block;margin: auto'></iframe>
-        </div>
+  <label class="crypto-label">BTC</label>
+  <input id="btcInput" class="crypto-input">
 
-<!-- END AADS AD UNIT 2436395 -->
+  <label class="crypto-label">Satoshis</label>
+  <input id="satInput" class="crypto-input">
+</div>
 
-<style>
-  .crypto-grid {
-    display:flex;
-    flex-wrap:wrap;
-    gap:16px;
-    justify-content:center;
-  }
+<div class="crypto-card">
+  <h3>Major Coins</h3>
 
-  .crypto-card {
-    background:#111827;
-    padding:16px;
-    border-radius:14px;
-    border:1px solid #1f2937;
+  <label class="crypto-label">ETH</label>
+  <input id="ethInput" class="crypto-input">
 
-    /* ⭐ Dynamic card resizing */
-    flex:0 1 240px;
-    max-width:260px;
+  <label class="crypto-label">SOL</label>
+  <input id="solInput" class="crypto-input">
 
-    box-sizing:border-box;
-  }
+  <label class="crypto-label">LTC</label>
+  <input id="ltcInput" class="crypto-input">
+</div>
 
-  .crypto-card h3 {
-    margin:0 0 12px;
-    font-size:16px;
-    color:#facc15;
-    letter-spacing:0.5px;
-  }
+<div class="crypto-card">
+  <h3>DOGE</h3>
 
-  .crypto-label {
-    font-size:13px;
-    margin-bottom:4px;
-    display:block;
-    color:#d1d5db;
-  }
+  <label class="crypto-label">DOGE</label>
+  <input id="dogeInput" class="crypto-input">
+</div>
 
-  .crypto-input {
-    padding:10px;
-    margin-bottom:10px;
-    border-radius:8px;
-    border:none;
-    background:#0d1117;
-    color:#fff;
-    font-size:14px;
+<div class="crypto-card">
+  <h3>WAX Ecosystem</h3>
 
-    /* ⭐ Auto-resize enabled */
-    width:auto;
-    min-width:60px;
-    max-width:100%;
-    display:inline-block;
-    transition:width 0.15s ease;
-  }
+  <label class="crypto-label">WAX</label>
+  <input id="waxInput" class="crypto-input">
 
-  .usd-card {
-    border-color:#f97316;
-    flex:1 1 100%;
-  }
-</style>
+  <label class="crypto-label">TLM</label>
+  <input id="tlmInput" class="crypto-input">
+</div>
 
-<div style="max-width:1100px;margin:20px auto;color:#fff;font-family:Arial;">
+<div class="crypto-card usd-card">
+  <h3>USD</h3>
 
-  <div class="crypto-grid">
+  <label class="crypto-label">USD</label>
+  <input id="usdInput" class="crypto-input">
+</div>
 
-    <div class="crypto-card">
-      <h3>Bitcoin</h3>
-      <label class="crypto-label">BTC</label>
-      <input id="btcInput" type="text" class="crypto-input">
-      <label class="crypto-label">Satoshis</label>
-      <input id="satInput" type="text" class="crypto-input">
-    </div>
+</div>
 
-    <div class="crypto-card">
-      <h3>Major Coins</h3>
-      <label class="crypto-label">ETH</label>
-      <input id="ethInput" type="text" class="crypto-input">
-      <label class="crypto-label">SOL</label>
-      <input id="solInput" type="text" class="crypto-input">
-      <label class="crypto-label">LTC</label>
-      <input id="ltcInput" type="text" class="crypto-input">
-    </div>
+<p id="priceInfo">Loading prices...</p>
 
-    <div class="crypto-card">
-      <h3>DOGE</h3>
-      <label class="crypto-label">DOGE</label>
-      <input id="dogeInput" type="text" class="crypto-input">
-    </div>
+</div>
 
-    <div class="crypto-card">
-      <h3>WAX Ecosystem</h3>
-      <label class="crypto-label">WAX</label>
-      <input id="waxInput" type="text" class="crypto-input">
-      <label class="crypto-label">TLM</label>
-      <input id="tlmInput" type="text" class="crypto-input">
-    </div>
+<!-- FAUCET -->
+<iframe
+  src="faucet.html"
+  id="faucetFrame"
+  loading="lazy">
+</iframe>
 
-    <div class="crypto-card usd-card">
-      <h3>Fiat (USD)</h3>
-      <label class="crypto-label">USD</label>
-      <input id="usdInput" type="text" class="crypto-input">
-    </div>
+<!-- GAME -->
+<div id="gameContainer">
 
+<div id="gameWrapper">
+  <button id="closeX" onclick="closeGame()">✕</button>
+  <iframe id="gameFrame"></iframe>
+</div>
+
+<div id="belowGame">
+
+  <div id="leaderboardBox"></div>
+
+  <div id="commentsSection">
+    <h3>Comments</h3>
+
+    <div id="commentsList"></div>
+
+    <textarea
+      id="commentInput"
+      placeholder="Write a comment..."></textarea>
+
+    <button id="commentSubmit">Post</button>
   </div>
 
-  <p id="priceInfo" style="text-align:center;margin-top:15px;color:#9ca3af;">Loading prices…</p>
+</div>
 </div>
 
 <script>
-let WORKER = "https://cryptoconverter.shadownetcg-f2f.workers.dev";
+const WORKER =
+"https://cryptoconverter.shadownetcg-f2f.workers.dev";
 
-let prices = {
-  btc: 0, eth: 0, sol: 0, doge: 0, ltc: 0, wax: 0, tlm: 0
-};
+const API =
+"https://leaderboard.shadownetcg-f2f.workers.dev";
 
-let pricesLoaded = false;
-let lock = false;
-let usdClean = 0;
-let activeField = null;
+let prices = {};
+let currentGameId = null;
 
-/* ⭐ Smart formatting */
-function formatCrypto(num, decimals = 8) {
-  if (!num || num === 0) return "0.0";
+/* VISITOR STATS */
+async function loadVisitorStats(){
+  try{
+    const r = await fetch(
+      "https://visitorstats.shadownetcg-f2f.workers.dev"
+    );
 
-  // Full precision first
-  let str = num.toFixed(decimals);
+    const d = await r.json();
 
-  // Remove trailing zeros
-  str = str.replace(/0+$/, "");
-
-  // Fix edge cases
-  if (str.endsWith(".")) str += "0";
-  if (str === "0.") str = "0.0";
-
-  // Split integer + decimal
-  let parts = str.split(".");
-  let intPart = parts[0];
-  let decPart = parts[1] || "";
-
-  // Add commas to integer part
-  intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-  return decPart ? intPart + "." + decPart : intPart;
+    visitorStats.textContent =
+      `Visitors today: ${d.unique} | Total visits: ${d.total}`;
+  }catch{
+    visitorStats.textContent = "Failed to load stats";
+  }
 }
 
-function formatIntWithCommas(num) {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+loadVisitorStats();
+setInterval(loadVisitorStats,300000);
+
+/* PRICE LOADING */
+async function loadPrice(id){
+  const r = await fetch(
+    `${WORKER}/price?coin=${id}`
+  );
+
+  const d = await r.json();
+
+  return d[id].usd;
 }
 
+async function fetchPrices(){
 
+  try{
 
-/* ⭐ Auto-resize */
-function autoSizeInput(el) {
-  const tmp = document.createElement("span");
-  tmp.style.visibility = "hidden";
-  tmp.style.whiteSpace = "pre";
-  tmp.style.font = window.getComputedStyle(el).font;
-  tmp.innerText = el.value || el.placeholder || "";
-  document.body.appendChild(tmp);
-  el.style.width = (tmp.clientWidth + 20) + "px";
-  tmp.remove();
-}
+    prices = {
+      btc:await loadPrice("bitcoin"),
+      eth:await loadPrice("ethereum"),
+      sol:await loadPrice("solana"),
+      doge:await loadPrice("dogecoin"),
+      ltc:await loadPrice("litecoin"),
+      wax:await loadPrice("wax"),
+      tlm:await loadPrice("alien-worlds")
+    };
 
-/* Fetch prices */
-async function loadPrice(id) {
-  const r = await fetch(`${WORKER}/price?coin=${id}`);
-  const data = await r.json();
-  return data[id].usd;
-}
+    priceInfo.textContent =
+      `BTC $${prices.btc} | ETH $${prices.eth} | SOL $${prices.sol} | DOGE $${prices.doge}`;
 
-async function fetchPrices() {
-  try {
-    const [
-      btcP, ethP, solP, 
-      dogeP, ltcP, waxP, tlmP
-    ] = await Promise.all([
-      loadPrice("bitcoin"),
-      loadPrice("ethereum"),
-      loadPrice("solana"),
-      loadPrice("dogecoin"),
-      loadPrice("litecoin"),
-      loadPrice("wax"),
-      loadPrice("alien-worlds")
-    ]);
-
-    prices = { btc:btcP, eth:ethP, sol:solP, doge:dogeP, ltc:ltcP, wax:waxP, tlm:tlmP };
-    pricesLoaded = true;
-
-    document.getElementById("priceInfo").innerText =
-      `BTC $${prices.btc} | ETH $${prices.eth} | SOL $${prices.sol} | DOGE $${prices.doge} | LTC $${prices.ltc} | WAX $${prices.wax} | TLM $${prices.tlm}`;
-  } catch (e) {
-    document.getElementById("priceInfo").innerText = "Price load failed";
+  }catch{
+    priceInfo.textContent = "Failed loading prices";
   }
 }
 
 fetchPrices();
-setInterval(fetchPrices, 300000);
-
-/* Inputs */
-const btc   = document.getElementById("btcInput");
-const sat   = document.getElementById("satInput");
-const eth   = document.getElementById("ethInput");
-const sol   = document.getElementById("solInput");
-const doge  = document.getElementById("dogeInput");
-const ltc   = document.getElementById("ltcInput");
-const wax   = document.getElementById("waxInput");
-const tlm   = document.getElementById("tlmInput");
-const usd   = document.getElementById("usdInput");
-
-/* Track active field */
-[btc, sat, eth, sol, doge, ltc, wax, tlm, usd].forEach((el) => {
-  el.onfocus = () => activeField = el.id;
-  el.onblur  = () => activeField = null;
-});
-
-/* Update all fields */
-function updateAllFromUSD(u) {
-  if (!pricesLoaded) return;
-
-  usdClean = u;
-
-  if (activeField !== "usdInput") {
-    usd.value = u.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    autoSizeInput(usd);
-  }
-
-  if (activeField !== "btcInput")   { btc.value   = formatCrypto(u / prices.btc, 8); autoSizeInput(btc); }
-
-  if (activeField !== "satInput") {
-    let sats = Math.round((u / prices.btc) * 100000000);
-    sat.value = formatIntWithCommas(sats);
-    autoSizeInput(sat);
-  }
-  if (activeField !== "ethInput")   { eth.value   = formatCrypto(u / prices.eth, 6); autoSizeInput(eth); }
-  if (activeField !== "solInput")   { sol.value   = formatCrypto(u / prices.sol, 6); autoSizeInput(sol); }
-  if (activeField !== "dogeInput")  { doge.value  = formatCrypto(u / prices.doge, 6); autoSizeInput(doge); }
-  if (activeField !== "ltcInput")   { ltc.value   = formatCrypto(u / prices.ltc, 6); autoSizeInput(ltc); }
-  if (activeField !== "waxInput")   { wax.value   = formatCrypto(u / prices.wax, 6); autoSizeInput(wax); }
-  if (activeField !== "tlmInput")   { tlm.value   = formatCrypto(u / prices.tlm, 6); autoSizeInput(tlm); }
-}
-
-/* Convert wrapper */
-function convert(handler) {
-  if (!pricesLoaded) return;
-  if (lock) return;
-  lock = true;
-  handler();
-  lock = false;
-}
-
-/* Input handlers */
-btc.oninput   = () => convert(() => { autoSizeInput(btc); updateAllFromUSD((parseFloat(btc.value)   || 0) * prices.btc); });
-sat.oninput   = () => convert(() => { autoSizeInput(sat); updateAllFromUSD((parseFloat(sat.value)   || 0) / 100000000 * prices.btc); });
-eth.oninput   = () => convert(() => { autoSizeInput(eth); updateAllFromUSD((parseFloat(eth.value)   || 0) * prices.eth); });
-sol.oninput   = () => convert(() => { autoSizeInput(sol); updateAllFromUSD((parseFloat(sol.value)   || 0) * prices.sol); });
-doge.oninput  = () => convert(() => { autoSizeInput(doge); updateAllFromUSD((parseFloat(doge.value)  || 0) * prices.doge); });
-ltc.oninput   = () => convert(() => { autoSizeInput(ltc); updateAllFromUSD((parseFloat(ltc.value)   || 0) * prices.ltc); });
-wax.oninput   = () => convert(() => { autoSizeInput(wax); updateAllFromUSD((parseFloat(wax.value)   || 0) * prices.wax); });
-tlm.oninput   = () => convert(() => { autoSizeInput(tlm); updateAllFromUSD((parseFloat(tlm.value)   || 0) * prices.tlm); });
-
-usd.oninput = () => convert(() => {
-  let raw = usd.value.replace(/,/g, "");
-  let num = parseFloat(raw) || 0;
-  autoSizeInput(usd);
-  updateAllFromUSD(num);
-});
-
-/* Initial resize */
-[btc, sat, eth, sol, doge, ltc, wax, tlm, usd].forEach(autoSizeInput);
-</script>
-
-
-
-
-
-
-  <!-- Faucet Unlock Embed -->
-  <iframe
-    src="faucet.html"
-    id="faucetFrame"
-    title="KryptonLegend Faucet Unlock"
-    loading="lazy"
-  ></iframe>
-
-
-
-<div id="ad-container"></div>
-
-<script>
-function loadAd() {
-    const container = document.getElementById("ad-container");
-    container.innerHTML = ""; // clear old ad
-
-    // Create atOptions script
-    const optScript = document.createElement("script");
-    optScript.type = "text/javascript";
-    optScript.innerHTML = `
-      atOptions = {
-        'key' : '038d24b547d54cdddae17e5d45b3519f',
-        'format' : 'iframe',
-        'height' : 60,
-        'width' : 468,
-        'params' : {}
-      };
-    `;
-
-    // Create invoke.js script
-    const invokeScript = document.createElement("script");
-    invokeScript.type = "text/javascript";
-    invokeScript.src = "https://glamournakedemployee.com/038d24b547d54cdddae17e5d45b3519f/invoke.js";
-
-    // Append both scripts
-    container.appendChild(optScript);
-    container.appendChild(invokeScript);
-}
-
-// Initial load
-loadAd();
-
-// Refresh every 5 minutes (300000 ms)
-setInterval(loadAd, 300000);
-</script>
-
-
-
-</div>
-
-
-
-
-<!-- INLINE GAME VIEWER -->
-<div id="gameContainer">
-
-  <!-- GAME WINDOW -->
-  <div id="gameWrapper">
-    <button id="closeX" onclick="closeGame()">✕</button>
-    <iframe id="gameFrame"></iframe>
-  </div>
-
-  <!-- EVERYTHING BELOW THE GAME -->
-  <div id="belowGame">
-
-    <div id="leaderboardWrapper">
-      <div id="leaderboardBox"></div>
-    </div>
-
-    <div id="commentsSection">
-      <h3>Comments</h3>
-      <div id="commentsList"></div>
-      <textarea id="commentInput" placeholder="Write a comment..."></textarea>
-      <button id="commentSubmit">Post</button>
-    </div>
-
-    
-
-  </div>
-
-
-</div>
-
-
-<script>
-/* ============================
-      OPEN GAME
-============================ */
-function openGame(path, gameName) {
-  document.getElementById("gameGrid").style.display = "none";
-  document.getElementById("gameContainer").style.display = "flex";
-  document.getElementById("gameFrame").src = path;
-
-  // Hide Krypton Arcade header + description
-  document.getElementById("arcadeTitle").style.display = "none";
-  document.getElementById("arcadeDesc").style.display = "none";
-  document.getElementById("faucetFrame").style.display = "none";
-
-
-
-  // Show leaderboard + comments if game has one
-  if (gameName) {
-    window.currentGameId = gameName; 
-    loadLeaderboard(gameName);
-    loadComments(gameName);
-
-    document.getElementById("leaderboardBox").style.display = "block";
-    document.getElementById("commentsSection").style.display = "block";
-  } else {
-    document.getElementById("leaderboardBox").style.display = "none";
-    document.getElementById("commentsSection").style.display = "none";
-  }
-
-  // Show name popup if not set
-  if (!localStorage.getItem("playerNameSet")) {
-    document.getElementById("namePopup").style.display = "flex";
-  }
-}
-
-function openFarm(url) {
-  window.location.href = url;
-}
-
-
-/* ============================
-      CLOSE GAME
-============================ */
-function closeGame() {
-  document.getElementById("gameFrame").src = "";
-  document.getElementById("gameContainer").style.display = "none";
-  document.getElementById("gameGrid").style.display = "grid";
-
-  document.getElementById("leaderboardBox").style.display = "none";
-  document.getElementById("commentsSection").style.display = "none";
-
-  document.getElementById("arcadeTitle").style.display = "block";
-  document.getElementById("arcadeDesc").style.display = "block";
-  document.getElementById("arcadeDesc").style.display = "block";
-}
-
-/* ============================
-      PLAYER ID (ALWAYS)
-============================ */
-if (!localStorage.getItem("playerID")) {
-  const id = "player_" + Math.random().toString(16).slice(2, 8).toUpperCase();
-  localStorage.setItem("playerID", id);
-}
-
-/* ============================
-      SAVE PLAYER NAME
-============================ */
-function savePlayerName() {
-  const name = document.getElementById("playerNameInput").value.trim();
-
-  if (name !== "") {
-    localStorage.setItem("playerName", name);
-    localStorage.setItem("playerNameSet", "true");
-    document.getElementById("namePopup").style.display = "none";
-  }
-}
-
-/* ============================
-      API ENDPOINT
-============================ */
-const API = "https://leaderboard.shadownetcg-f2f.workers.dev";
-
-/* ============================
-      LOAD LEADERBOARD
-============================ */
-async function loadLeaderboard(game) {
-  const box = document.getElementById("leaderboardBox");
-
-  let html = `<h3>${game.toUpperCase()} LEADERBOARD</h3>`;
-
-  try {
-    const res = await fetch(`${API}/leaderboard?game=${game}`);
-    let board = await res.json();
-
-    if (!board.length) {
-      html += "<p>No scores yet.</p>";
-    } else {
-      board.sort((a, b) => b.score - a.score);
-
-      board.forEach((entry, i) => {
-        html += `<div>${i + 1}. ${entry.name.slice(0, 20)} — ${entry.score}</div>`;
-      });
-    }
-  } catch (err) {
-    html += "<p>Failed to load leaderboard.</p>";
-  }
-
-  html += `
-    <button onclick="resetScores('${game}')"
-      style="margin-top:12px; width:100%; padding:6px; border-radius:6px;
-             background:#d62828; color:white; border:1px solid #ff9a2b;">
-      Reset Scoreboard
-    </button>
-  `;
-
-  html += `
-    <button onclick="resetPlayerName()"
-      style="margin-top:10px; width:100%; padding:6px; border-radius:6px;
-             background:#ff7b00; color:#050509; border:1px solid #ff9a2b;">
-      Reset Player Name
-    </button>
-  `;
-
-  box.innerHTML = html;
-}
-
-/* ============================
-      RESET LEADERBOARD
-============================ */
-async function resetScores(game) {
-  const pass = prompt("Enter admin password:");
-  if (pass !== "Fl@shAdmin197") {
-    alert("Incorrect password.");
-    return;
-  }
-
-  await fetch(`${API}/reset?game=${game}`, { method: "POST" });
-
-  alert(`${game.toUpperCase()} leaderboard reset.`);
-  loadLeaderboard(game);
-}
-
-/* ============================
-      RESET PLAYER NAME
-============================ */
-function resetPlayerName() {
-  localStorage.removeItem("playerName");
-  localStorage.removeItem("playerNameSet");
-  alert("Your name has been reset. Reload the page to enter a new one.");
-}
-
-/* ============================
-      LOAD COMMENTS
-============================ */
-async function loadComments(game) {
-  const list = document.getElementById("commentsList");
-  list.innerHTML = "<p>Loading comments...</p>";
-
-  try {
-    const res = await fetch(`${API}/comment/load?game=${game}`);
-    const comments = await res.json();
-
-    list.innerHTML = "";
-
-    if (!comments.length) {
-      list.innerHTML = "<p>No comments yet.</p>";
-      return;
-    }
-
-    comments.forEach(c => {
-      const div = document.createElement("div");
-      div.className = "comment";
-      div.innerHTML = `<strong>${c.name}</strong>: ${c.text}`;
-      list.appendChild(div);
-    });
-
-  } catch (err) {
-    list.innerHTML = "<p>Failed to load comments.</p>";
-  }
-}
-
-/* ============================
-      SUBMIT COMMENT
-============================ */
-document.getElementById("commentSubmit").onclick = async () => {
-  const text = document.getElementById("commentInput").value.trim();
-  if (!text) return;
-
-  const name = localStorage.getItem("playerName") || "Anonymous";
-  const game = window.currentGameId;
-
-  await fetch(`${API}/comment/submit`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ game, name, text })
-  });
-
-  document.getElementById("commentInput").value = "";
-  loadComments(game);
+setInterval(fetchPrices,300000);
+
+/* INPUTS */
+const map = {
+  btcInput:"btc",
+  ethInput:"eth",
+  solInput:"sol",
+  dogeInput:"doge",
+  ltcInput:"ltc",
+  waxInput:"wax",
+  tlmInput:"tlm"
 };
 
-/* ============================
-      REFRESH ADS
-============================ */
-setInterval(() => {
-  const ad = document.querySelector("#frame iframe");
-  if (ad) ad.src = ad.src;
-}, 90000);
-
-
-function resizeIframe() {
-  const frame = document.getElementById("gameFrame");
-  if (!frame) return;
-
-  const doc = frame.contentDocument || frame.contentWindow.document;
-  if (!doc) return;
-
-  const height = doc.documentElement.scrollHeight;
-  frame.style.height = height + "px";
+function format(num,d=8){
+  return Number(num || 0)
+    .toLocaleString(undefined,{
+      maximumFractionDigits:d
+    });
 }
 
-// Resize when iframe loads
-document.getElementById("gameFrame").addEventListener("load", () => {
-  const frame = document.getElementById("gameFrame");
-  const doc = frame.contentDocument || frame.contentWindow.document;
+function updateUSD(u){
 
-  // Initial resize
-  setTimeout(resizeIframe, 100);
+  usdInput.value = format(u,2);
 
-  // ⭐ Watch for content changes inside the iframe
-  const observer = new MutationObserver(() => resizeIframe());
-  observer.observe(doc.body, { childList: true, subtree: true, attributes: true });
+  btcInput.value  = format(u/prices.btc);
+  ethInput.value  = format(u/prices.eth,6);
+  solInput.value  = format(u/prices.sol,6);
+  dogeInput.value = format(u/prices.doge,2);
+  ltcInput.value  = format(u/prices.ltc,6);
+  waxInput.value  = format(u/prices.wax,2);
+  tlmInput.value  = format(u/prices.tlm,2);
+
+  satInput.value =
+    Math.round(
+      (u/prices.btc)*100000000
+    ).toLocaleString();
+}
+
+Object.keys(map).forEach(id=>{
+
+  document.getElementById(id).oninput = e => {
+
+    const coin = map[id];
+    const val =
+      parseFloat(
+        e.target.value.replace(/,/g,"")
+      ) || 0;
+
+    updateUSD(val * prices[coin]);
+  };
 });
 
-// Resize on window resize
-window.addEventListener("resize", resizeIframe);
+usdInput.oninput = e => {
 
-window.addEventListener("message", (event) => {
-  if (event.data.type === "resize-iframe") {
-    const frame = document.getElementById("gameFrame");
-    frame.style.height = event.data.height + "px";
-  }
-});
+  const val =
+    parseFloat(
+      e.target.value.replace(/,/g,"")
+    ) || 0;
 
-async function loadVisitorStats() {
-  try {
-    const res = await fetch("https://visitorstats.shadownetcg-f2f.workers.dev");
-    const data = await res.json();
+  updateUSD(val);
+};
 
-    document.getElementById("visitorStats").textContent =
-      `Visitors today: ${data.unique} | Total visits: ${data.total}`;
-  } catch (err) {
-    document.getElementById("visitorStats").textContent =
-      "Failed to load visitor stats.";
+satInput.oninput = e => {
+
+  const sats =
+    parseFloat(
+      e.target.value.replace(/,/g,"")
+    ) || 0;
+
+  updateUSD(
+    (sats/100000000)*prices.btc
+  );
+};
+
+/* GAME */
+function openGame(path,game){
+
+  gameContainer.style.display = "flex";
+  gameFrame.src = path;
+
+  currentGameId = game;
+
+  loadLeaderboard(game);
+  loadComments(game);
+}
+
+function closeGame(){
+
+  gameFrame.src = "";
+  gameContainer.style.display = "none";
+}
+
+/* LEADERBOARD */
+async function loadLeaderboard(game){
+
+  try{
+
+    const r =
+      await fetch(
+        `${API}/leaderboard?game=${game}`
+      );
+
+    const board = await r.json();
+
+    leaderboardBox.innerHTML =
+      `<h3>${game}</h3>` +
+      board.map((x,i)=>
+        `<div>${i+1}. ${x.name} - ${x.score}</div>`
+      ).join("");
+
+  }catch{
+    leaderboardBox.innerHTML =
+      "Failed loading leaderboard";
   }
 }
-loadVisitorStats();
-setInterval(loadVisitorStats, 300000); // refresh every 5 minutes
 
-const uid = new URLSearchParams(window.location.search).get("uid");
+/* COMMENTS */
+async function loadComments(game){
 
-if (uid) {
-  document.getElementById("faucetFrame").src = "faucet.html?uid=" + uid;
-} else {
-  document.getElementById("faucetFrame").style.display = "none";
+  try{
+
+    const r =
+      await fetch(
+        `${API}/comment/load?game=${game}`
+      );
+
+    const comments = await r.json();
+
+    commentsList.innerHTML =
+      comments.map(c=>
+        `<div class="comment">
+          <strong>${c.name}</strong>: ${c.text}
+        </div>`
+      ).join("");
+
+  }catch{
+    commentsList.innerHTML =
+      "Failed loading comments";
+  }
 }
 
+/* POST COMMENT */
+commentSubmit.onclick = async ()=>{
 
+  const text =
+    commentInput.value.trim();
 
+  if(!text) return;
 
+  await fetch(
+    `${API}/comment/submit`,
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        game:currentGameId,
+        name:
+          localStorage.getItem("playerName")
+          || "Anonymous",
+        text
+      })
+    }
+  );
 
+  commentInput.value = "";
 
+  loadComments(currentGameId);
+};
 
+/* UID */
+const uid =
+  new URLSearchParams(location.search)
+  .get("uid");
+
+if(uid){
+  faucetFrame.src =
+    "faucet.html?uid=" + uid;
+}else{
+  faucetFrame.style.display = "none";
+}
 </script>
-
-
 
 </body>
 </html>
+
