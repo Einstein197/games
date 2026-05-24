@@ -257,7 +257,7 @@
 <!-- END AADS AD UNIT 2436395 -->
 
 <div id="cryptoCalc" style="max-width:420px;margin:20px auto;padding:20px;background:#0d1117;border-radius:12px;color:#fff;font-family:Arial;">
-  <h2 style="text-align:center;color:#f7931a;">Crypto Converter</h2>
+  <h2 style="text-align:center;color:#f7931a;">Multi‑Crypto Converter</h2>
 
   <label>BTC</label>
   <input id="btcInput" type="number" step="0.00000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
@@ -265,11 +265,26 @@
   <label>Satoshis</label>
   <input id="satInput" type="number" step="1" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
+  <label>ETH</label>
+  <input id="ethInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+
+  <label>SOL</label>
+  <input id="solInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+
+  <label>MATIC</label>
+  <input id="maticInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+
+  <label>DOGE</label>
+  <input id="dogeInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+
+  <label>LTC</label>
+  <input id="ltcInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+
   <label>WAX</label>
-  <input id="waxInput" type="number" step="0.0001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="waxInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>TLM</label>
-  <input id="tlmInput" type="number" step="0.0001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
+  <input id="tlmInput" type="number" step="0.000001" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
 
   <label>USD</label>
   <input id="usdInput" type="number" step="0.01" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;background:#111827;color:#fff;">
@@ -279,22 +294,30 @@
 
 <script>
 let prices = {
-  btc: 0,
-  wax: 0,
-  tlm: 0
+  btc: 0, eth: 0, sol: 0, matic: 0, doge: 0, ltc: 0, wax: 0, tlm: 0
 };
+
+let pricesLoaded = false;
+let lock = false;
 
 async function fetchPrices() {
   try {
-    const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,wax,alien-worlds&vs_currencies=usd");
+    const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,polygon,dogecoin,litecoin,wax,alien-worlds&vs_currencies=usd");
     const data = await r.json();
 
     prices.btc = data.bitcoin.usd;
+    prices.eth = data.ethereum.usd;
+    prices.sol = data.solana.usd;
+    prices.matic = data.polygon.usd;
+    prices.doge = data.dogecoin.usd;
+    prices.ltc = data.litecoin.usd;
     prices.wax = data.wax.usd;
     prices.tlm = data["alien-worlds"].usd;
 
+    pricesLoaded = true;
+
     document.getElementById("priceInfo").innerText =
-      `1 BTC = $${prices.btc.toLocaleString()} | 1 WAX = $${prices.wax} | 1 TLM = $${prices.tlm}`;
+      `BTC $${prices.btc} | ETH $${prices.eth} | SOL $${prices.sol} | MATIC $${prices.matic} | DOGE $${prices.doge} | LTC $${prices.ltc} | WAX $${prices.wax} | TLM $${prices.tlm}`;
   } catch {
     document.getElementById("priceInfo").innerText = "Price unavailable";
   }
@@ -306,328 +329,48 @@ setInterval(fetchPrices, 30000);
 // Inputs
 const btc = document.getElementById("btcInput");
 const sat = document.getElementById("satInput");
+const eth = document.getElementById("ethInput");
+const sol = document.getElementById("solInput");
+const matic = document.getElementById("maticInput");
+const doge = document.getElementById("dogeInput");
+const ltc = document.getElementById("ltcInput");
 const wax = document.getElementById("waxInput");
 const tlm = document.getElementById("tlmInput");
 const usd = document.getElementById("usdInput");
 
-// Prevent infinite loops
-let lock = false;
-
-function updateFromBTC() {
-  if (lock) return; lock = true;
-
-  const b = parseFloat(btc.value) || 0;
-  sat.value = Math.round(b * 100000000);
-  usd.value = (b * prices.btc).toFixed(2);
-  wax.value = (usd.value / prices.wax).toFixed(4);
-  tlm.value = (usd.value / prices.tlm).toFixed(4);
-
-  lock = false;
-}
-
-function updateFromSAT() {
-  if (lock) return; lock = true;
-
-  const s = parseFloat(sat.value) || 0;
-  const b = s / 100000000;
-  btc.value = b;
-  usd.value = (b * prices.btc).toFixed(2);
-  wax.value = (usd.value / prices.wax).toFixed(4);
-  tlm.value = (usd.value / prices.tlm).toFixed(4);
-
-  lock = false;
-}
-
-function updateFromWAX() {
-  if (lock) return; lock = true;
-
-  const w = parseFloat(wax.value) || 0;
-  const u = w * prices.wax;
-  usd.value = u.toFixed(2);
+function updateAllFromUSD(u) {
   btc.value = (u / prices.btc).toFixed(8);
   sat.value = Math.round((u / prices.btc) * 100000000);
-  tlm.value = (u / prices.tlm).toFixed(4);
+  eth.value = (u / prices.eth).toFixed(6);
+  sol.value = (u / prices.sol).toFixed(6);
+  matic.value = (u / prices.matic).toFixed(6);
+  doge.value = (u / prices.doge).toFixed(6);
+  ltc.value = (u / prices.ltc).toFixed(6);
+  wax.value = (u / prices.wax).toFixed(6);
+  tlm.value = (u / prices.tlm).toFixed(6);
+}
 
+function convert(handler) {
+  if (!pricesLoaded) return;
+  if (lock) return;
+  lock = true;
+  handler();
   lock = false;
 }
 
-function updateFromTLM() {
-  if (lock) return; lock = true;
-
-  const t = parseFloat(tlm.value) || 0;
-  const u = t * prices.tlm;
-  usd.value = u.toFixed(2);
-  btc.value = (u / prices.btc).toFixed(8);
-  sat.value = Math.round((u / prices.btc) * 100000000);
-  wax.value = (u / prices.wax).toFixed(4);
-
-  lock = false;
-}
-
-function updateFromUSD() {
-  if (lock) return; lock = true;
-
-  const u = parseFloat(usd.value) || 0;
-  btc.value = (u / prices.btc).toFixed(8);
-  sat.value = Math.round((u / prices.btc) * 100000000);
-  wax.value = (u / prices.wax).toFixed(4);
-  tlm.value = (u / prices.tlm).toFixed(4);
-
-  lock = false;
-}
-
-// Event bindings
-btc.oninput = updateFromBTC;
-sat.oninput = updateFromSAT;
-wax.oninput = updateFromWAX;
-tlm.oninput = updateFromTLM;
-usd.oninput = updateFromUSD;
+btc.oninput = () => convert(() => updateAllFromUSD((parseFloat(btc.value) || 0) * prices.btc));
+sat.oninput = () => convert(() => updateAllFromUSD((parseFloat(sat.value) || 0) / 100000000 * prices.btc));
+eth.oninput = () => convert(() => updateAllFromUSD((parseFloat(eth.value) || 0) * prices.eth));
+sol.oninput = () => convert(() => updateAllFromUSD((parseFloat(sol.value) || 0) * prices.sol));
+matic.oninput = () => convert(() => updateAllFromUSD((parseFloat(matic.value) || 0) * prices.matic));
+doge.oninput = () => convert(() => updateAllFromUSD((parseFloat(doge.value) || 0) * prices.doge));
+ltc.oninput = () => convert(() => updateAllFromUSD((parseFloat(ltc.value) || 0) * prices.ltc));
+wax.oninput = () => convert(() => updateAllFromUSD((parseFloat(wax.value) || 0) * prices.wax));
+tlm.oninput = () => convert(() => updateAllFromUSD((parseFloat(tlm.value) || 0) * prices.tlm));
+usd.oninput = () => convert(() => updateAllFromUSD(parseFloat(usd.value) || 0));
 </script>
 
 
-
-
-<!-- GAME GRID -->
-<div class="grid" id="gameGrid">
-
-  <!-- Snake -->
-  <div class="card" onclick="openGame('snake.html', 'snake')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <defs><radialGradient id="snakeGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#ffb366"/>
-          <stop offset="60%" stop-color="#ff7b00"/>
-          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-        </radialGradient></defs>
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#snakeGlow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-        <path d="M30 60 Q40 40 50 50 T70 40" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="68" cy="38" r="2" fill="#ffffff"/>
-      </svg>
-    </div>
-    <div class="card-title">Snake</div>
-    <div class="card-sub">Swipe or arrows</div>
-  </div>
-
-  <!-- Flappy -->
-  <div class="card" onclick="openGame('flappy.html', 'flappy')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <defs><radialGradient id="flappyGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#ffb366"/>
-          <stop offset="60%" stop-color="#ff7b00"/>
-          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-        </radialGradient></defs>
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#flappyGlow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-        <path d="M30 55 Q40 35 60 40 Q70 43 65 50 Q60 57 50 55 Z" fill="#ffffff"/>
-        <circle cx="56" cy="44" r="2" fill="#050509"/>
-      </svg>
-    </div>
-    <div class="card-title">Flappy Bird</div>
-    <div class="card-sub">Tap to flap</div>
-  </div>
-
-  <!-- Dodge -->
-  <div class="card" onclick="openGame('dodge.html', 'dodge')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <defs><radialGradient id="dodgeGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#ffb366"/>
-          <stop offset="60%" stop-color="#ff7b00"/>
-          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-        </radialGradient></defs>
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#dodgeGlow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-        <rect x="30" y="60" width="18" height="10" fill="#ffffff"/>
-        <rect x="55" y="30" width="12" height="12" fill="#ffffff"/>
-        <line x1="61" y1="42" x2="61" y2="55" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3"/>
-      </svg>
-    </div>
-    <div class="card-title">Dodge</div>
-    <div class="card-sub">Avoid the block</div>
-  </div>
-
-  <!-- 2048 -->
-  <div class="card" onclick="openGame('2048.html', '2048')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <defs><radialGradient id="g2048Glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#ffb366"/>
-          <stop offset="60%" stop-color="#ff7b00"/>
-          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-        </radialGradient></defs>
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#g2048Glow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-        <rect x="30" y="35" width="40" height="30" rx="6" fill="#ff9a2b"/>
-        <text x="50" y="55" text-anchor="middle" fill="#ffffff" font-size="16" font-family="system-ui">2048</text>
-      </svg>
-    </div>
-    <div class="card-title">2048</div>
-    <div class="card-sub">Swipe or arrows</div>
-  </div>
-
-  <!-- Coin -->
-  <div class="card" onclick="openGame('coin.html', 'coin')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <defs><radialGradient id="coinGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#ffb366"/>
-          <stop offset="60%" stop-color="#ff7b00"/>
-          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-        </radialGradient></defs>
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#coinGlow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-        <circle cx="50" cy="50" r="16" fill="#ffcc4d" stroke="#ffe38a" stroke-width="2"/>
-        <circle cx="50" cy="50" r="10" fill="#ffb700"/>
-      </svg>
-    </div>
-    <div class="card-title">Click the Coin</div>
-    <div class="card-sub">Tap fast for score</div>
-  </div>
-
-
-  <!-- Gravity Warp -->
-  <div class="card" onclick="openGame('gravitywarp.html', 'gravitywarp')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <defs><radialGradient id="warpGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#ffb366"/>
-          <stop offset="60%" stop-color="#ff7b00"/>
-          <stop offset="100%" stop-color="#ff7b00" stop-opacity="0"/>
-        </radialGradient></defs>
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#warpGlow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#ff9a2b" stroke-width="3"/>
-        <circle cx="50" cy="50" r="10" fill="#ffffff"/>
-        <circle cx="50" cy="50" r="4" fill="#ff7b00"/>
-      </svg>
-    </div>
-    <div class="card-title">Gravity Warp</div>
-    <div class="card-sub">Direct control</div>
-  </div>
-
-
-  <!-- Space Shooter -->
-  <div class="card" onclick="openGame('spaceshooter.html', 'spaceshooter')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <defs>
-          <radialGradient id="shipGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#4fd5ff"/>
-            <stop offset="60%" stop-color="#00aaff"/>
-            <stop offset="100%" stop-color="#00aaff" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-
-        <!-- Background glow -->
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#shipGlow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#4fd5ff" stroke-width="3"/>
-
-        <!-- ⭐ SPACESHIP ICON ⭐ -->
-        <g transform="translate(50 50)">
-          <!-- Body -->
-          <path d="M0 -20 L10 10 L0 5 L-10 10 Z" fill="#4fd5ff"/>
-          <!-- Cockpit -->
-          <ellipse cx="0" cy="-10" rx="4" ry="6" fill="#00ffa8"/>
-          <!-- Thruster flame -->
-          <path d="M-4 10 L0 18 L4 10 Z" fill="#ffb300"/>
-        </g>
-      </svg>
-    </div>
-
-    <div class="card-title">Space Shooter</div>
-    <div class="card-sub">Arcade survival</div>
-  </div>
-
-  <!-- Farm Game -->
-  <div class="card" onclick="openFarm('tractorsim/index.html', 'farm')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <defs>
-          <radialGradient id="farmGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#7fff5a"/>
-            <stop offset="60%" stop-color="#3ecf2c"/>
-            <stop offset="100%" stop-color="#3ecf2c" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-
-        <!-- Background glow -->
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#farmGlow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#7fff5a" stroke-width="3"/>
-
-        <!-- 🌾 FARM ICON -->
-        <g transform="translate(50 50)">
-          <!-- Barn -->
-          <rect x="-12" y="-10" width="24" height="20" fill="#d13f3f"/>
-          <polygon points="-12 -10 0 -22 12 -10" fill="#b83232"/>
-          <rect x="-6" y="0" width="12" height="10" fill="#ffffff"/>
-
-          <!-- Crop rows -->
-          <path d="M-20 18 L20 18" stroke="#7fff5a" stroke-width="3"/>
-          <path d="M-20 22 L20 22" stroke="#5fd94a" stroke-width="3"/>
-        </g>
-      </svg>
-    </div>
-
-    <div class="card-title">Krypton Farm</div>
-    <div class="card-sub">Grow • Harvest • Expand</div>
-  </div>
-  
-  <!-- Sunflower Land Game -->
-  <div class="card" onclick="openFarm('sunflowerland.html', 'sunflowerland')">
-    <div class="icon-wrap">
-      <svg viewBox="0 0 100 100">
-        <!-- Glow -->
-        <defs>
-          <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#facc15"/>
-            <stop offset="60%" stop-color="#eab308"/>
-            <stop offset="100%" stop-color="#eab308" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-
-        <circle cx="50" cy="50" r="40" fill="#050509"/>
-        <circle cx="50" cy="50" r="40" fill="url(#sunGlow)"/>
-        <circle cx="50" cy="50" r="32" fill="#050509" stroke="#facc15" stroke-width="3"/>
-
-        <!-- 🌻 Sunflower Icon -->
-        <g transform="translate(50 50)">
-          <!-- Petals -->
-          <g fill="#facc15">
-            <circle r="20" cx="0" cy="-20"/>
-            <circle r="20" cx="14" cy="-14"/>
-            <circle r="20" cx="20" cy="0"/>
-            <circle r="20" cx="14" cy="14"/>
-            <circle r="20" cx="0" cy="20"/>
-            <circle r="20" cx="-14" cy="14"/>
-            <circle r="20" cx="-20" cy="0"/>
-            <circle r="20" cx="-14" cy="-14"/>
-          </g>
-
-          <!-- Center -->
-          <circle r="18" fill="#5b3a1a"/>
-        </g>
-      </svg>
-    </div>
-
-    <div class="card-title">Sunflower Land</div>
-    <div class="card-sub">Grow • Craft • Expand</div>
-  </div>
-
-
-
-
-
-
-</div> <!-- end grid -->
   <!-- Faucet Unlock Embed -->
   <iframe
     src="faucet.html"
