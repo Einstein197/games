@@ -5,6 +5,22 @@
   <title>KryptonLegend Faucet Unlock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+<script>
+function sendHeight() {
+  const height = document.body.scrollHeight;
+
+  parent.postMessage({
+    type: "resize-faucet",
+    height
+  }, "*");
+}
+
+window.addEventListener("load", sendHeight);
+window.addEventListener("resize", sendHeight);
+
+setTimeout(sendHeight, 300);
+</script>
+
   <style>
     :root {
       --bg: #050816;

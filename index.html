@@ -93,16 +93,6 @@ h1{
   color:#9ca3af;
 }
 
-/* FAUCET */
-#faucetFrame{
-  width:min(100%,420px);
-  height:440px; /* smaller height */
-  border:none;
-  border-radius:18px;
-  display:block;
-  margin:30px auto;
-  background:transparent;
-}
 
 /* GAME */
 #gameContainer{
@@ -552,6 +542,18 @@ if(uid){
 }else{
   faucetFrame.style.display = "none";
 }
+
+window.addEventListener("message", (event) => {
+
+  if (event.data.type === "resize-faucet") {
+
+    const frame =
+      document.getElementById("faucetFrame");
+
+    frame.style.height =
+      event.data.height + "px";
+  }
+});
 </script>
 
 </body>
