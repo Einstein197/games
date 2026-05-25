@@ -437,110 +437,113 @@ setTimeout(sendHeight, 300);
   </div>
 
   <script>
-    const uidParamName = "uid";
-    const unlockEndpoint = "/api/unlock";
+  const uidParamName = "uid";
 
-    const statusIndicator = document.getElementById("status-indicator");
-    const statusText = document.getElementById("status-text");
-    const uidPill = document.getElementById("uid-pill");
-    const unlockBtn = document.getElementById("unlock-btn");
-    const btnLabel = document.getElementById("btn-label");
-    const toast = document.getElementById("toast");
-    const toastText = document.getElementById("toast-text");
+  // ALWAYS hit the Worker directly
+  const unlockEndpoint = "https://kryptonlegend.fun/api/unlock";
+  const checkEndpoint  = "https://kryptonlegend.fun/api/check";
 
-    function showToast(message, isError = false) {
-      toastText.textContent = message;
-      if (isError) {
-        toast.classList.add("error");
-      } else {
-        toast.classList.remove("error");
-      }
-      toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 2600);
+  const statusIndicator = document.getElementById("status-indicator");
+  const statusText = document.getElementById("status-text");
+  const uidPill = document.getElementById("uid-pill");
+  const unlockBtn = document.getElementById("unlock-btn");
+  const btnLabel = document.getElementById("btn-label");
+  const toast = document.getElementById("toast");
+  const toastText = document.getElementById("toast-text");
+
+  function showToast(message, isError = false) {
+    toastText.textContent = message;
+    toast.classList.toggle("error", isError);
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2600);
+  }
+
+  function setStatus(text, type) {
+    statusText.textContent = text;
+    const colors = {
+      ready:  "var(--accent)",
+      ok:     "var(--success)",
+      error:  "var(--danger)"
+    };
+    statusIndicator.style.background = colors[type] || colors.error;
+    statusIndicator.style.boxShadow =
+      `0 0 10px ${colors[type] || colors.error}AA`;
+  }
+
+  function getUidFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const uid = params.get(uidParamName);
+    return uid && uid.trim().length > 0 ? uid.trim() : null;
+  }
+
+  async function unlock() {
+    const uid = getUidFromUrl();
+    if (!uid) {
+      showToast("Missing Discord ID in URL.", true);
+      setStatus("No Discord ID found. Open this link from the bot.", "error");
+      return;
     }
 
-    function setStatus(text, type) {
-      statusText.textContent = text;
-      if (type === "ready") {
-        statusIndicator.style.background = "var(--accent)";
-        statusIndicator.style.boxShadow = "0 0 10px rgba(56, 189, 248, 0.9)";
-      } else if (type === "ok") {
-        statusIndicator.style.background = "var(--success)";
-        statusIndicator.style.boxShadow = "0 0 10px rgba(74, 222, 128, 0.9)";
-      } else if (type === "error") {
-        statusIndicator.style.background = "var(--danger)";
-        statusIndicator.style.boxShadow = "0 0 10px rgba(248, 113, 113, 0.9)";
-      } else {
-        statusIndicator.style.background = "var(--danger)";
-        statusIndicator.style.boxShadow = "0 0 10px rgba(248, 113, 113, 0.9)";
-      }
-    }
+    unlockBtn.disabled = true;
+    unlockBtn.classList.add("disabled");
+    btnLabel.textContent = "Unlocking…";
 
-    function getUidFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      const uid = params.get(uidParamName);
-      return uid && uid.trim().length > 0 ? uid.trim() : null;
-    }
+    try {
+      // Write to KV
+      const res = await fetch(unlockEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid })
+      });
 
-    async function unlock() {
-      const uid = getUidFromUrl();
-      if (!uid) {
-        showToast("Missing Discord ID in URL.", true);
-        setStatus("No Discord ID found. Open this link from the bot.", "error");
-        return;
-      }
+      if (!res.ok) throw new Error("Non‑OK response");
 
-      unlockBtn.classList.add("disabled");
-      unlockBtn.disabled = true;
-      btnLabel.textContent = "Unlocking…";
+      // Confirm KV write
+      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
+      const checkData = await checkRes.json();
 
-      try {
-        const res = await fetch(unlockEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uid })
-        });
-
-        if (!res.ok) {
-          throw new Error("Non‑OK response");
-        }
-
+      if (checkData.verified) {
         setStatus("Verified. You can now use faucet in Discord.", "ok");
         btnLabel.textContent = "Faucet unlocked";
         showToast("Faucet unlocked. Go back to Discord.");
-      } catch (err) {
-        console.error(err);
-        setStatus("Something went wrong. Try again.", "error");
-        btnLabel.textContent = "Unlock faucet";
-        unlockBtn.classList.remove("disabled");
-        unlockBtn.disabled = false;
-        showToast("Error unlocking faucet. Try again.", true);
-      }
-    }
-
-    function init() {
-      const uid = getUidFromUrl();
-
-      if (!uid) {
-        uidPill.textContent = "uid: missing";
-        setStatus("No Discord ID found. Open this link from the bot.", "error");
-        unlockBtn.classList.add("disabled");
-        unlockBtn.disabled = true;
-        return;
+      } else {
+        throw new Error("KV write failed");
       }
 
-      const shortUid =
-        uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
-      uidPill.textContent = "uid: " + shortUid;
-
-      setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
-      unlockBtn.classList.remove("disabled");
+    } catch (err) {
+      console.error(err);
+      setStatus("Something went wrong. Try again.", "error");
+      btnLabel.textContent = "Unlock faucet";
       unlockBtn.disabled = false;
+      unlockBtn.classList.remove("disabled");
+      showToast("Error unlocking faucet. Try again.", true);
+    }
+  }
 
-      unlockBtn.addEventListener("click", unlock);
+  function init() {
+    const uid = getUidFromUrl();
+
+    if (!uid) {
+      uidPill.textContent = "uid: missing";
+      setStatus("No Discord ID found. Open this link from the bot.", "error");
+      unlockBtn.disabled = true;
+      unlockBtn.classList.add("disabled");
+      return;
     }
 
-    init();
-  </script>
+    const shortUid =
+      uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
+    uidPill.textContent = "uid: " + shortUid;
+
+    setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
+    unlockBtn.disabled = false;
+    unlockBtn.classList.remove("disabled");
+
+    unlockBtn.addEventListener("click", unlock);
+  }
+
+  init();
+</script>
+
 </body>
 </html>
