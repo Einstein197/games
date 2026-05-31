@@ -1315,6 +1315,27 @@ if (userId) {
   faucetFrame.style.display = "none";
 }
 
+window.addEventListener("message", (event) => {
+
+  if (event.data?.type === "resize-faucet") {
+    const frame = document.getElementById("faucetFrame");
+    if (frame) {
+      frame.style.height = event.data.height + "px";
+    }
+  }
+
+  if (event.data?.type === "faucet-complete") {
+    const frame = document.getElementById("faucetFrame");
+
+    if (frame) {
+      frame.style.display = "none";
+    }
+
+    setMessage("Faucet unlocked!");
+  }
+
+});
+
 </script>
 
 </body>
