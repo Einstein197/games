@@ -33,9 +33,10 @@ function reviveAllPrompt() {
 
 <!-- FAUCET -->
 <iframe
-  src="faucet.html"
+  src="about:blank"
   id="faucetFrame"
-  loading="lazy">
+  loading="lazy"
+  style="display:none;">
 </iframe>
 
 <div id="ad-container"></div>
@@ -1299,6 +1300,21 @@ function reviveAllWithAd() {
     render();
     setMessage("All crops revived!");
   });
+}
+
+const params = new URLSearchParams(window.location.search);
+const userId = params.get("id");
+
+if (userId) {
+
+  const faucetFrame =
+    document.getElementById("faucetFrame");
+
+  faucetFrame.style.display = "block";
+
+  faucetFrame.src =
+    "faucet.html?id=" +
+    encodeURIComponent(userId);
 }
 
 </script>
