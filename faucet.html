@@ -506,8 +506,13 @@ setTimeout(sendHeight, 300);
         setStatus("Verified. You can now use faucet in Discord.", "ok");
         btnLabel.textContent = "Faucet unlocked";
         showToast("Faucet unlocked. Go back to Discord.");
-      } else {
-        throw new Error("KV write failed");
+
+        // Tell parent page to hide faucet iframe
+        if (window.parent !== window) {
+          window.parent.postMessage({
+            type: "faucet-complete"
+          }, "*");
+        }
       }
 
     } catch (err) {
