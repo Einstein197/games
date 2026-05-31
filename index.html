@@ -1303,18 +1303,16 @@ function reviveAllWithAd() {
 }
 
 const params = new URLSearchParams(window.location.search);
-const userId = params.get("id");
+const userId = params.get("uid");
+
+const faucetFrame = document.getElementById("faucetFrame");
 
 if (userId) {
-
-  const faucetFrame =
-    document.getElementById("faucetFrame");
-
   faucetFrame.style.display = "block";
-
   faucetFrame.src =
-    "faucet.html?id=" +
-    encodeURIComponent(userId);
+    "faucet.html?uid=" + encodeURIComponent(userId);
+} else {
+  faucetFrame.style.display = "none";
 }
 
 </script>
