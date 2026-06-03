@@ -995,36 +995,20 @@
   // Faucet iframe wiring
   // ===============================
   const params = new URLSearchParams(window.location.search);
-  const userId = params.get("uid");
+const userId = params.get("uid");
 
-  const faucetFrame = document.getElementById("faucetFrame");
+const faucetFrame = document.getElementById("faucetFrame");
 
-  if (userId) {
-    faucetFrame.style.display = "block";
-    faucetFrame.src =
-      "faucet.html?uid=" + encodeURIComponent(userId);
-  } else {
-    faucetFrame.style.display = "none";
-  }
+const faucetUnlocked =
+  localStorage.getItem("faucetUnlocked") === "true";
 
-  window.addEventListener("message", (event) => {
-    if (event.data?.type === "resize-faucet") {
-      const frame = document.getElementById("faucetFrame");
-      if (frame) {
-        frame.style.height = event.data.height + "px";
-      }
-    }
-
-    if (event.data?.type === "faucet-complete") {
-      const frame = document.getElementById("faucetFrame");
-
-      if (frame) {
-        frame.style.display = "none";
-      }
-
-      setMessage("Faucet unlocked!");
-    }
-  });
+if (userId && !faucetUnlocked) {
+  faucetFrame.style.display = "block";
+  faucetFrame.src =
+    "faucet.html?uid=" + encodeURIComponent(userId);
+} else {
+  faucetFrame.style.display = "none";
+}
 </script>
 
 </body>
