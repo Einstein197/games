@@ -505,19 +505,14 @@ setTimeout(sendHeight, 300);
       if (checkData.verified) {
         setStatus("Verified. You can now use faucet in Discord.", "ok");
         btnLabel.textContent = "Faucet unlocked";
-        showToast("Faucet unlocked. Redirecting...");
+        showToast("Faucet unlocked. Go back to Discord.");
 
-        localStorage.setItem("faucetUnlocked", "true");
-
+        // Tell parent page to hide faucet iframe
         if (window.parent !== window) {
           window.parent.postMessage({
             type: "faucet-complete"
           }, "*");
         }
-
-        setTimeout(() => {
-          window.location.href = "https://kryptonlegend.fun/";
-        }, 1500);
       }
 
     } catch (err) {
