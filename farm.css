@@ -42,7 +42,8 @@ body {
   display:block;
   margin:30px auto;
   background:transparent;
-  height: 100%;
+  height: auto;
+  overflow: hidden;
 }
 
 h1 {
