@@ -1010,12 +1010,12 @@
 
   window.addEventListener("message", (event) => {
     if (event.data?.type === "resize-faucet") {
-      const frame = document.getElementById("faucetFrame");
-      if (frame) {
-        frame.style.height = Math.ceil(event.data.height) + "px";
-        frame.style.transition = "height 0.2s ease";
-      }
+    const frame = document.getElementById("faucetFrame");
+    if (frame) {
+      frame.style.height = Math.ceil(event.data.height) + "px";
+      frame.style.transition = "height 0.2s ease";
     }
+  }
 
     if (event.data?.type === "faucet-complete") {
       const frame = document.getElementById("faucetFrame");
