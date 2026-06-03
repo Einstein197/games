@@ -7,18 +7,19 @@
 
 <script>
 function sendHeight() {
-  const height = document.body.scrollHeight;
+  requestAnimationFrame(() => {
+    const height = document.body.scrollHeight;
 
-  parent.postMessage({
-    type: "resize-faucet",
-    height
-  }, "*");
+    parent.postMessage({
+      type: "resize-faucet",
+      height
+    }, "*");
+  });
 }
 
 window.addEventListener("load", sendHeight);
 window.addEventListener("resize", sendHeight);
-
-setTimeout(sendHeight, 300);
+setInterval(sendHeight, 300);
 </script>
 
   <style>
