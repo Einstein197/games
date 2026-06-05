@@ -526,29 +526,55 @@ setInterval(sendHeight, 300);
     }
   }
 
-  function init() {
-    const uid = getUidFromUrl();
+const COUNTDOWN_SECONDS = 10;
 
-    if (!uid) {
-      uidPill.textContent = "uid: missing";
-      setStatus("No Discord ID found. Open this link from the bot.", "error");
-      unlockBtn.disabled = true;
-      unlockBtn.classList.add("disabled");
+function startCountdown(seconds) {
+  let remaining = seconds;
+
+  unlockBtn.disabled = true;
+  unlockBtn.classList.add("disabled");
+  btnLabel.textContent = `Unlock faucet (${remaining}s)`;
+
+  const timer = setInterval(() => {
+    remaining--;
+
+    if (remaining <= 0) {
+      clearInterval(timer);
+
+      unlockBtn.disabled = false;
+      unlockBtn.classList.remove("disabled");
+      btnLabel.textContent = "Unlock faucet";
+
+      setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
       return;
     }
 
-    const shortUid =
-      uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
-    uidPill.textContent = "uid: " + shortUid;
+    btnLabel.textContent = `Unlock faucet (${remaining}s)`;
+  }, 1000);
+}
 
-    setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
-    unlockBtn.disabled = false;
-    unlockBtn.classList.remove("disabled");
+function init() {
+  const uid = getUidFromUrl();
 
-    unlockBtn.addEventListener("click", unlock);
+  if (!uid) {
+    uidPill.textContent = "uid: missing";
+    setStatus("No Discord ID found. Open this link from the bot.", "error");
+    unlockBtn.disabled = true;
+    unlockBtn.classList.add("disabled");
+    return;
   }
 
-  init();
+  const shortUid =
+    uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
+
+  uidPill.textContent = "uid: " + shortUid;
+
+  setStatus("Verification page loaded. Please wait...", "ready");
+
+  startCountdown(COUNTDOWN_SECONDS);
+
+  unlockBtn.addEventListener("click", unlock);
+}
 </script>
 
 </body>
