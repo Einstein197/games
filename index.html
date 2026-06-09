@@ -826,12 +826,13 @@
         state.well.level === 0
           ? "<button id='buyWellBtn' onclick='buyWell()'>Buy Well (Cost: 1000)</button>"
           : "<button id='upgradeWellBtn' onclick='upgradeWell()'>Upgrade Well (Cost: " + ((state.well.level + 1) * 2000) + ")</button><br>" +
-            "Production: " + WELL_PRODUCTION[state.well.level] + "/hr"
+            "Production: " + getWellProduction(state.well.level) + "/hr"
       ) +
       "<br><br>" +
       "<b>Silo</b><br>" +
       "Used: " + siloUsed() + "/" + state.silo.capacity +
       "<br><button id='siloExpandBtn' onclick='expandSilo()'></button>";
+
 
     // Button text updates
     const siloExpandBtn =
