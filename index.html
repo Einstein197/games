@@ -202,6 +202,16 @@
     }
   };
 
+  function getWellProduction(level) {
+    if (level === 0) return 0;
+
+    const base = 3;       // starting production
+    const growth = 1.57;  // tuned so level 7 ≈ 75/hr
+
+    return Math.round(base * Math.pow(growth, level - 1));
+  }
+
+
   function buyWell() {
     const cost = 1000;
 
