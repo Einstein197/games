@@ -206,7 +206,7 @@
     if (level === 0) return 0;
 
     const base = 3;       // starting production
-    const growth = 1.3;  // tuned so level 7 ≈ 75/hr
+    const growth = 1.15;  // tuned so level 7 ≈ 75/hr
 
     return Math.round(base * Math.pow(growth, level - 1));
   }
