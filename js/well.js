@@ -7,7 +7,7 @@ function getWellProduction(level) {
   if (level === 0) return 0;
 
   const base = 3;        // Level 1 production
-  const growth = 1.45;   // Growth multiplier per level
+  const growth = 1.6;   // Growth multiplier per level
 
   return Math.round(base * Math.pow(growth, level - 1));
 }
