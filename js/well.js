@@ -2,28 +2,17 @@
 // WELL SYSTEM (PRODUCES WATER → TANK)
 // ===============================
 
-// Production per hour for each level
-// Index = level (0 = no well)
-const WELL_PRODUCTION = [
-  0,   // Level 0 (no well)
-  3,   // Level 1
-  5,  // Level 2
-  10,  // Level 3
-  20,  // Level 4
-  45,  // Level 5
-  50,  // Level 6
-  75, // Level 7
-  100, // Level 8
-  120, // Level 9
-  130 // Level 10
+// Dynamic production formula (infinite scaling)
+function getWellProduction(level) {
+  if (level === 0) return 0;
 
+  const base = 3;        // Level 1 production
+  const growth = 1.45;   // Growth multiplier per level
 
+  return Math.round(base * Math.pow(growth, level - 1));
+}
 
-
-
-];
-
-// Cost formula
+// Cost formula (infinite scaling)
 function getWellCost(level) {
   return level * 1000;
 }
@@ -53,15 +42,10 @@ function updateWellWater(state) {
   ensureWaterTank(state);
 
   const now = Date.now();
+  const hoursPassed = (now - state.well.lastUpdate) / 3600000;
 
-  const hoursPassed =
-    (now - state.well.lastUpdate) / 3600000;
-
-  const productionRate =
-    WELL_PRODUCTION[state.well.level] || 0;
-
-  const produced =
-    hoursPassed * productionRate;
+  const productionRate = getWellProduction(state.well.level);
+  const produced = hoursPassed * productionRate;
 
   if (produced > 0) {
     state.water.current = Math.min(
@@ -73,17 +57,9 @@ function updateWellWater(state) {
   }
 }
 
-// Upgrade well
+// Upgrade well (NO MAX LEVEL)
 function upgradeWell(state) {
-
   const nextLevel = state.well.level + 1;
-
-  if (nextLevel >= WELL_PRODUCTION.length) {
-    return {
-      ok: false,
-      msg: "Max well level reached"
-    };
-  }
 
   const cost = getWellCost(nextLevel);
 
@@ -105,7 +81,6 @@ function upgradeWell(state) {
 
 // Use 1 water from tank (for watering crops)
 function useWater(state) {
-
   ensureWaterTank(state);
 
   if (state.water.current < 1) {
