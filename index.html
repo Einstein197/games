@@ -204,26 +204,39 @@
 
   function buyWell() {
     const cost = 1000;
+
     if (state.coins < cost) return setMessage("Not enough coins!");
+
     state.coins -= cost;
+
     state.well.level = 1;
-    state.well.production = WELL_PRODUCTION[1];
+
+    // Dynamic production (no array needed)
+    state.well.production = getWellProduction(1);
+
     setMessage("Well purchased!");
     save();
     render();
   }
 
+
   function upgradeWell() {
     const nextLevel = state.well.level + 1;
     const cost = nextLevel * 2000;
+
     if (state.coins < cost) return setMessage("Not enough coins!");
+
     state.coins -= cost;
     state.well.level = nextLevel;
-    state.well.production = WELL_PRODUCTION[nextLevel];
+
+    // Dynamic production (no array needed)
+    state.well.production = getWellProduction(nextLevel);
+
     setMessage(`Well upgraded to level ${nextLevel}!`);
     save();
     render();
   }
+
 
   function now() {
     return Math.floor(Date.now() / 1000);
