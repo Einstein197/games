@@ -16,21 +16,432 @@
 
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7260296902287217"
      crossorigin="anonymous"></script>
+     
+  <style>
+    .silo-modal, .well-modal, .water-modal, .town-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+    
+    .silo-modal.hidden, .well-modal.hidden, .water-modal.hidden, .town-modal.hidden {
+      display: none;
+    }
+    
+    .silo-content {
+      background: linear-gradient(135deg, #1a1f2e 0%, #0f1219 100%);
+      border: 2px solid #8b5a2b;
+      border-radius: 24px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: slideUp 0.3s ease;
+    }
+    
+    .well-content {
+      background: linear-gradient(135deg, #1a2a3a 0%, #0a1a2a 100%);
+      border: 2px solid #4488aa;
+      border-radius: 24px;
+      width: 90%;
+      max-width: 400px;
+      padding: 30px;
+      text-align: center;
+      animation: slideUp 0.3s ease;
+    }
+    
+    .water-content {
+      background: linear-gradient(135deg, #1a3a3a 0%, #0a2a2a 100%);
+      border: 2px solid #66ffcc;
+      border-radius: 24px;
+      width: 90%;
+      max-width: 400px;
+      padding: 30px;
+      text-align: center;
+      animation: slideUp 0.3s ease;
+    }
+    
+    .town-content {
+      background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
+      border: 2px solid #ffaa66;
+      border-radius: 24px;
+      width: 90%;
+      max-width: 400px;
+      padding: 30px;
+      text-align: center;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .silo-header {
+      background: #2a2418;
+      padding: 20px;
+      border-bottom: 2px solid #8b5a2b;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .silo-header h2 {
+      margin: 0;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .silo-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #ffd966;
+    }
+    
+    .silo-crops {
+      padding: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    
+    .silo-crop-item {
+      background: #1e2438;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      transition: transform 0.1s;
+    }
+    
+    .silo-crop-item:hover {
+      background: #2a3248;
+      transform: translateX(5px);
+    }
+    
+    .crop-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 2;
+      min-width: 150px;
+    }
+    
+    .crop-emoji { font-size: 32px; }
+    .crop-details { flex: 1; }
+    .crop-name { font-weight: bold; font-size: 16px; }
+    .crop-qty { font-size: 20px; font-weight: bold; color: #ffd966; }
+    .crop-price { font-size: 12px; color: #aaa; }
+    
+    .crop-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .crop-actions button {
+      padding: 6px 12px;
+      font-size: 12px;
+      background: #2a3a5a;
+      border: none;
+    }
+    
+    .crop-actions button:hover { background: #3a4a6a; }
+    
+    .silo-expand {
+      background: #2a2418;
+      padding: 15px 20px;
+      border-top: 1px solid #8b5a2b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+      position: sticky;
+      bottom: 0;
+    }
+    
+    .silo-expand button {
+      background: #4a7c2a;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    
+    .silo-expand button:hover { background: #5a9c3a; }
+    
+    .close-silo, .close-well, .close-water, .close-town {
+      background: #8b3a2a;
+      padding: 8px 16px;
+    }
+    
+    .close-silo:hover, .close-well:hover, .close-water:hover, .close-town:hover {
+      background: #a84a3a;
+    }
+    
+    .empty-silo {
+      text-align: center;
+      padding: 40px;
+      color: #888;
+      font-size: 18px;
+    }
+    
+    .buildings-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 20px auto;
+      flex-wrap: wrap;
+      padding: 15px;
+      background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
+      border-radius: 30px;
+      border: 1px solid #4a6a3a;
+      max-width: 900px;
+    }
+    
+    .silo-building, .well-building, .water-building, .town-building {
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.2s, filter 0.2s;
+      background: linear-gradient(135deg, #2a2a1a 0%, #1a1a0a 100%);
+      padding: 15px 12px 10px 12px;
+      border-radius: 20px;
+      border: 2px solid;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      min-width: 100px;
+    }
+    
+    .silo-building { border-color: #8b5a2b; }
+    .well-building { border-color: #4488aa; }
+    .water-building { border-color: #66ffcc; }
+    .town-building { border-color: #ffaa66; }
+    
+    .silo-building:hover, .well-building:hover, .water-building:hover, .town-building:hover {
+      transform: translateY(-5px);
+      filter: brightness(1.05);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+    
+    .silo-building:active, .well-building:active, .water-building:active, .town-building:active {
+      transform: translateY(0);
+    }
+    
+    .silo-svg, .well-svg, .water-svg, .town-svg {
+      width: 80px;
+      height: 90px;
+      display: block;
+      margin: 0 auto;
+      filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+    }
+    
+    .well-svg, .water-svg { width: 70px; }
+    .town-svg { width: 85px; }
+    
+    .usage-text, .well-text, .water-text, .town-text {
+      font-size: 11px;
+      margin-top: 8px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.6);
+      padding: 4px 8px;
+      border-radius: 20px;
+      text-align: center;
+    }
+    
+    .silo-building .usage-text { color: #ffd966; }
+    .well-building .well-text { color: #88ccff; }
+    .water-building .water-text { color: #66ffcc; }
+    .town-building .town-text { color: #ffaa66; }
+    
+    .building-label {
+      font-size: 10px;
+      color: #aaa;
+      margin-top: 6px;
+    }
+    
+    #farm {
+      margin: 0 auto;
+      width: 94vmin;
+      height: 94vmin;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+      gap: .5vmin;
+      background: #06070c;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: .5vmin;
+      box-sizing: border-box;
+    }
+    
+    .tile {
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4vmin;
+      cursor: pointer;
+      transition: transform .05s;
+      user-select: none;
+    }
+    
+    .tile:hover { transform: translateY(-1px); }
+    .locked { background: #111; border: 1px solid #222; }
+    .empty { background: #2b2415; border: 1px solid #3a3120; }
+    .planted { background: #3d331a; border: 1px solid #57421d; }
+    .growing { background: #56421d; border: 1px solid #866225; }
+    .ready { background: #567d2a; border: 1px solid #9bd740; box-shadow: 0 0 10px rgba(150,255,80,.25); }
+    .dead { background: #444; border: 1px solid #666; }
+    .good { filter: brightness(1.1); }
+    .excellent { filter: brightness(1.2) saturate(1.2); }
+    .golden { animation: glow 1s infinite alternate; }
+    
+    @keyframes glow {
+      from { box-shadow: 0 0 5px gold; }
+      to { box-shadow: 0 0 18px gold; }
+    }
+    
+    #topBar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 4px;
+      font-size: 11px;
+    }
+    
+    .panel {
+      background: #10131a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+    
+    .modal-message {
+      background: #0a1a2a;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px;
+      font-size: 12px;
+      color: #ffcc66;
+      text-align: center;
+    }
+    
+    .well-stats, .water-stats, .town-stats {
+      background: rgba(0,0,0,0.3);
+      padding: 15px;
+      border-radius: 12px;
+      margin: 15px 0;
+    }
+    
+    .well-content h2 { color: #88ccff; margin-top: 0; }
+    .water-content h2 { color: #66ffcc; margin-top: 0; }
+    .town-content h2 { color: #ffaa66; margin-top: 0; }
+    
+    button {
+      background: #1a1d26;
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 5px;
+    }
+    
+    button:hover:not(:disabled) {
+      background: #222735;
+      transform: scale(1.02);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    #msg {
+      text-align: center;
+      margin: 10px;
+      font-size: 14px;
+    }
+    
+    .popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    
+    .hidden { display: none; }
+    
+    .popupBox {
+      width: 320px;
+      background: #141824;
+      border: 2px solid #4d7cff;
+      border-radius: 14px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(80,120,255,.4);
+      animation: popupAnim .25s ease;
+    }
+    
+    .popupBox h2 { margin-top: 0; color: #8cb4ff; }
+    
+    @keyframes popupAnim {
+      from { transform: scale(.7); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    #frame {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+      position: relative;
+      z-index: 99998;
+    }
+    
+    #frame iframe {
+      border: 0;
+      padding: 0;
+      width: 70%;
+      height: 60px;
+      border-radius: 12px;
+      overflow: hidden;
+      display: block;
+      margin: auto;
+    }
+  </style>
 </head>
 
 <body>
 
 <h1>Krypton SimFarm Ultimate</h1>
 
-<!-- AADS banner -->
 <div id="frame">
   <iframe data-aa="2436395" src="//acceptable.a-ads.com/2436395/?size=Adaptive"></iframe>
 </div>
 
-
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7260296902287217"
      crossorigin="anonymous"></script>
-<!-- kryptonlegend -->
 <ins class="adsbygoogle"
      style="display:block"
      data-ad-client="ca-pub-7260296902287217"
@@ -47,8 +458,6 @@
   style="display:none; width:100%; height:400px;">
 </iframe>
 
-
-<!-- FAUCET -->
 <iframe
   src="about:blank"
   id="faucetFrame"
@@ -56,47 +465,55 @@
   style="display:none;">
 </iframe>
 
-
 <div id="ad-container"></div>
 
 <div id="topBar">
   <div class="panel">
-    Coins: <span id="coins"></span>
+    <div>⭐ Lv <span id="level"></span></div>
+    <div>XP <span id="xp"></span>/<span id="xpNext"></span></div>
+    <div>💰 <span id="coins"></span></div>
   </div>
-
-  <div class="panel">
-    Lv <span id="level"></span>
-    —
-    XP <span id="xp"></span>/<span id="xpNext"></span>
-  </div>
-
-  <div class="panel">
-    <span id="season"></span>
-    Day <span id="day"></span>
-  </div>
-
-  <div class="panel">
-    Weather:
-    <span id="weather"></span>
-  </div>
-
-  <div class="panel">
-    <select id="seedSelect"></select>
-  </div>
-
-  <button id="expandBtn">expand farm</button>
-  <button id="resetBtn">Reset</button>
-  <button id="reviveBtn" onclick="reviveAllWithAd()">Revive Dead Crops</button>
+  <div class="panel"><span id="seasonDisplay"></span></div>
+  <div class="panel"><select id="seedSelect"></select></div>
+  <button id="expandBtn">🚜 Expand</button>
+  <button id="resetBtn">🔄 Reset</button>
+  <button id="reviveBtn" onclick="reviveAllWithAd()" style="display: flex; align-items: center; gap: 5px;">
+    <img src="revive.png" alt="Revive" style="width: 16px; height: 16px;"> Revive
+  </button>
 </div>
 
 <div id="farm"></div>
 
 <div id="msg"></div>
 
-<div id="bottomBar">
-  <div class="small-panel" id="marketInfo"></div>
-  <div class="small-panel" id="townInfo"></div>
-  <div class="small-panel" id="machineInfo"></div>
+<div class="buildings-container">
+  <!-- SILO PNG -->
+  <div class="silo-building" onclick="openSiloModal()">
+    <img src="silo.png" alt="Silo" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 120%22%3E%3Crect width=%22100%22 height=%22120%22 fill=%22%238b5a2b%22/%3E%3Crect x=%2220%22 y=%2210%22 width=%2260%22 height=%2280%22 fill=%22%23a07030%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%236b3a1a%22/%3E%3Crect x=%2235%22 y=%2260%22 width=%2230%22 height=%2240%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
+    <div class="usage-text" id="siloUsageText">📦 0/100</div>
+    <div class="building-label">SILO</div>
+  </div>
+  
+  <!-- WELL PNG -->
+  <div class="well-building" onclick="openWellModal()">
+    <img src="well.png" alt="Well" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 100%22%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2220%22 fill=%22%23446688%22/%3E%3Crect x=%2235%22 y=%2230%22 width=%2210%22 height=%2240%22 fill=%22%23886644%22/%3E%3C/svg%3E'">
+    <div class="well-text" id="wellLevelText">🚰 Lv0</div>
+    <div class="building-label">WELL</div>
+  </div>
+  
+  <!-- WATER TOWER PNG -->
+  <div class="water-building" onclick="openWaterModal()">
+    <img src="water.png" alt="Water Tank" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 70 100%22%3E%3Crect x=%2215%22 y=%2220%22 width=%2240%22 height=%2250%22 fill=%22%234488aa%22/%3E%3Crect x=%2210%22 y=%2215%22 width=%2250%22 height=%2210%22 fill=%22%2366aacc%22/%3E%3C/svg%3E'">
+    <div class="water-text" id="waterTankText">💧 20/20</div>
+    <div class="building-label">WATER</div>
+  </div>
+  
+  <!-- TOWN PNG -->
+  <div class="town-building" onclick="openTownModal()">
+    <img src="town.png" alt="Town" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect x=%220%22 y=%2230%22 width=%22100%22 height=%2250%22 fill=%22%238B7355%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%238B4513%22/%3E%3Crect x=%2235%22 y=%2255%22 width=%2230%22 height=%4025%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
+    <div class="town-text" id="townStatsText">🏘️ 10</div>
+    <div class="building-label">TOWN</div>
+  </div>
 </div>
 
 <div id="levelPopup" class="popup hidden">
@@ -107,638 +524,454 @@
   </div>
 </div>
 
+<div id="siloModal" class="silo-modal hidden">
+  <div class="silo-content">
+    <div class="silo-header">
+      <h2>🏚️🌾 SILO</h2>
+      <div class="silo-stats">
+        <span>📦 <span id="modalSiloUsed">0</span>/<span id="modalSiloCapacity">100</span></span>
+        <span>🏗️ <span id="modalSiloCapacity2">100</span></span>
+      </div>
+    </div>
+    <div id="siloModalMessage" class="modal-message" style="display:none;"></div>
+    <div class="silo-crops" id="siloCropsList"></div>
+    <div class="silo-expand">
+      <button id="expandSiloModalBtn" onclick="expandSiloFromModal()">⬆️ Expand (<span id="modalExpandCost">2000</span>)</button>
+      <button class="close-silo" onclick="closeSiloModal()">❌</button>
+    </div>
+  </div>
+</div>
+
+<div id="wellModal" class="well-modal hidden">
+  <div class="well-content">
+    <h2>🚰 WELL</h2>
+    <div class="well-stats">
+      <div>📊 Lv <span id="wellLevel">0</span></div>
+      <div>⚡ <span id="wellProduction">0</span>💧/hr</div>
+    </div>
+    <div id="wellModalMessage" class="modal-message" style="display:none;"></div>
+    <button id="buyWellBtn" onclick="buyWell()">🛒 Buy (1000)</button>
+    <button id="upgradeWellBtn" onclick="upgradeWell()" style="display:none;">⬆️ Upgrade</button>
+    <button class="close-well" onclick="closeWellModal()">❌</button>
+  </div>
+</div>
+
+<div id="waterModal" class="water-modal hidden">
+  <div class="water-content">
+    <h2>💧 WATER</h2>
+    <div class="water-stats">
+      <div>💦 <span id="waterCurrent">0</span>/<span id="waterMax">0</span></div>
+      <div>🏗️ <span id="waterCapacity">0</span></div>
+    </div>
+    <div id="waterModalMessage" class="modal-message" style="display:none;"></div>
+    <button id="expandWaterTankBtn" onclick="expandWaterTank()">⬆️ Expand</button>
+    <button class="close-water" onclick="closeWaterModal()">❌</button>
+  </div>
+</div>
+
+<div id="townModal" class="town-modal hidden">
+  <div class="town-content">
+    <h2>🏘️🌆 TOWN</h2>
+    <div class="town-stats">
+      <div>👥 <span id="townPopulation">10</span></div>
+      <div>📈 <span id="townProsperity">1.0</span></div>
+      <div>⏰ <span id="taxCooldown">Ready!</span></div>
+    </div>
+    <div id="townModalMessage" class="modal-message" style="display:none;"></div>
+    <button id="collectTaxesBtn" onclick="collectTaxes()">💰 Collect</button>
+    <button onclick="investInTown()">📈 Invest (<span id="investCost">500</span>)</button>
+    <button class="close-town" onclick="closeTownModal()">❌</button>
+  </div>
+</div>
+
+<div id="levelPopup" class="popup hidden">
+  <div class="popupBox">
+    <h2>LEVEL UP!</h2>
+    <div id="popupText"></div>
+    <button id="popupBtn">OK</button>
+  </div>
+</div>
+
+<div id="siloModal" class="silo-modal hidden">
+  <div class="silo-content">
+    <div class="silo-header">
+      <h2>🏚️🌾 SILO</h2>
+      <div class="silo-stats">
+        <span>📦 <span id="modalSiloUsed">0</span>/<span id="modalSiloCapacity">100</span></span>
+        <span>🏗️ <span id="modalSiloCapacity2">100</span></span>
+      </div>
+    </div>
+    <div id="siloModalMessage" class="modal-message" style="display:none;"></div>
+    <div class="silo-crops" id="siloCropsList"></div>
+    <div class="silo-expand">
+      <button id="expandSiloModalBtn" onclick="expandSiloFromModal()">⬆️ Expand (<span id="modalExpandCost">2000</span>)</button>
+      <button class="close-silo" onclick="closeSiloModal()">❌</button>
+    </div>
+  </div>
+</div>
+
+<div id="wellModal" class="well-modal hidden">
+  <div class="well-content">
+    <h2>🚰 WELL</h2>
+    <div class="well-stats">
+      <div>📊 Lv <span id="wellLevel">0</span></div>
+      <div>⚡ <span id="wellProduction">0</span>💧/hr</div>
+    </div>
+    <div id="wellModalMessage" class="modal-message" style="display:none;"></div>
+    <button id="buyWellBtn" onclick="buyWell()">🛒 Buy (1000)</button>
+    <button id="upgradeWellBtn" onclick="upgradeWell()" style="display:none;">⬆️ Upgrade</button>
+    <button class="close-well" onclick="closeWellModal()">❌</button>
+  </div>
+</div>
+
+<div id="waterModal" class="water-modal hidden">
+  <div class="water-content">
+    <h2>💧 WATER</h2>
+    <div class="water-stats">
+      <div>💦 <span id="waterCurrent">0</span>/<span id="waterMax">0</span></div>
+      <div>🏗️ <span id="waterCapacity">0</span></div>
+    </div>
+    <div id="waterModalMessage" class="modal-message" style="display:none;"></div>
+    <button id="expandWaterTankBtn" onclick="expandWaterTank()">⬆️ Expand</button>
+    <button class="close-water" onclick="closeWaterModal()">❌</button>
+  </div>
+</div>
+
+<div id="townModal" class="town-modal hidden">
+  <div class="town-content">
+    <h2>🏘️🌆 TOWN</h2>
+    <div class="town-stats">
+      <div>👥 <span id="townPopulation">10</span></div>
+      <div>📈 <span id="townProsperity">1.0</span></div>
+      <div>⏰ <span id="taxCooldown">Ready!</span></div>
+    </div>
+    <div id="townModalMessage" class="modal-message" style="display:none;"></div>
+    <button id="collectTaxesBtn" onclick="collectTaxes()">💰 Collect</button>
+    <button onclick="investInTown()">📈 Invest (<span id="investCost">500</span>)</button>
+    <button class="close-town" onclick="closeTownModal()">❌</button>
+  </div>
+</div>
+
 <script>
-  // ===============================
-  // AdInPlay test rewarded zone
-  // ===============================
   window.adinplay = window.adinplay || {};
   adinplay.unit = adinplay.unit || {};
-  adinplay.unit['test'] = {}; // test zone so rewarded ads work without login
+  adinplay.unit['test'] = {};
 
   const SAVE_KEY = "krypton_simfarm_ultimate";
-
-  const SEASONS = [
-    "Spring",
-    "Summer",
-    "Fall",
-    "Winter"
-  ];
-
-  const WEATHER_TYPES = [
-    "Sunny",
-    "Rain",
-    "Cloudy",
-    "Storm",
-    "Drought",
-    "Snow"
-  ];
-
+  const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
+  const WEATHER_TYPES = ["Sunny", "Rain", "Cloudy", "Storm", "Drought", "Snow"];
   const GRID_SIZE = 10;
+  
+  const seasonEmojis = { "Spring": "🌸", "Summer": "☀️", "Fall": "🍂", "Winter": "⛄" };
+  const weatherEmojis = { "Sunny": "☀️", "Rain": "🌧️", "Cloudy": "☁️", "Storm": "⛈️", "Drought": "🏜️", "Snow": "❄️" };
+  
+  // 6 hour game days
+  const DAY_LENGTH_SECONDS = 21600;
 
   const farmEl = document.getElementById("farm");
-
   const coinsEl = document.getElementById("coins");
   const levelEl = document.getElementById("level");
   const xpEl = document.getElementById("xp");
   const xpNextEl = document.getElementById("xpNext");
-
-  const seasonEl = document.getElementById("season");
-  const dayEl = document.getElementById("day");
-  const weatherEl = document.getElementById("weather");
-
-  const marketInfoEl = document.getElementById("marketInfo");
-  const townInfoEl = document.getElementById("townInfo");
-  const machineInfoEl = document.getElementById("machineInfo");
-
+  const seasonDisplay = document.getElementById("seasonDisplay");
   const expandBtn = document.getElementById("expandBtn");
   const resetBtn = document.getElementById("resetBtn");
-
   const seedSelectEl = document.getElementById("seedSelect");
   const msgEl = document.getElementById("msg");
-
   const levelPopup = document.getElementById("levelPopup");
   const popupText = document.getElementById("popupText");
   const popupBtn = document.getElementById("popupBtn");
+  const siloUsageText = document.getElementById("siloUsageText");
+  const wellLevelText = document.getElementById("wellLevelText");
+  const waterTankText = document.getElementById("waterTankText");
+  const townStatsText = document.getElementById("townStatsText");
 
   let tileElements = [];
 
   let state = {
-    coins: 50,
+    coins: 100,
     xp: 0,
     level: 1,
-
     unlockedSize: 3,
-
     day: 1,
     seasonIndex: 0,
     weatherIndex: 0,
-
     lastDayTick: now(),
-
     tiles: [],
     soil: [],
-
-    machinery: {
-      tractor: 0,
-      harvester: 0
-    },
-
-    market: {
-      prices: {},
-      demand: {}
-    },
-
-    town: {
-      population: 10,
-      prosperity: 1
-    },
-    water: {
-      current: 20,
-      max: 20
-    },
-    silo: {
-      capacity: 100,
-      stored: {}
-    }
+    machinery: { tractor: 0, harvester: 0 },
+    market: { prices: {}, demand: {} },
+    town: { population: 10, prosperity: 1, lastTaxCollect: now() },
+    water: { current: 20, max: 20 },
+    silo: { capacity: 100, stored: {} }
   };
 
-  function getWellProduction(level) {
-    if (level === 0) return 0;
+  function now() { return Math.floor(Date.now() / 1000); }
+  function xpForLevel(level) { return level * 10000; }
+  function currentSeason() { return SEASONS[state.seasonIndex]; }
+  function currentWeather() { return WEATHER_TYPES[state.weatherIndex]; }
+  function cropById(id) { return CROPS.find(c => c.id === id); }
 
-    const base = 3;       // starting production
-    const growth = 1.15;  
-
-    return Math.round(base * Math.pow(growth, level - 1));
-  }
-
-
-  function buyWell() {
-    const cost = 1000;
-
-    if (state.coins < cost) return setMessage("Not enough coins!");
-
-    state.coins -= cost;
-
-    state.well.level = 1;
-
-    // Dynamic production (no array needed)
-    state.well.production = getWellProduction(1);
-
-    setMessage("Well purchased!");
-    save();
-    render();
-  }
-
-
-  function upgradeWell() {
-    const nextLevel = state.well.level + 1;
-    const cost = nextLevel * 2000;
-
-    if (state.coins < cost) return setMessage("Not enough coins!");
-
-    state.coins -= cost;
-    state.well.level = nextLevel;
-
-    // Dynamic production (no array needed)
-    state.well.production = getWellProduction(nextLevel);
-
-    setMessage(`Well upgraded to level ${nextLevel}!`);
-    save();
-    render();
-  }
-
-
-  function now() {
-    return Math.floor(Date.now() / 1000);
-  }
-
-  function xpForLevel(level) {
-    if (level <= 0) return 0;
-    return level * 10000;
-  }
-
-  function currentSeason() {
-    return SEASONS[state.seasonIndex];
-  }
-
-  function currentWeather() {
-    return WEATHER_TYPES[state.weatherIndex];
-  }
-
-  function cropById(id) {
-    return CROPS.find(c => c.id === id);
+  function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (minutes > 0) return `${minutes}m ${secs}s`;
+    return `${secs}s`;
   }
 
   function setMessage(text) {
     msgEl.textContent = text;
+    setTimeout(() => { if (msgEl.textContent === text) msgEl.textContent = ""; }, 4000);
+  }
+
+  function showModalMessage(modalId, message, isError = false) {
+    const msgDiv = document.getElementById(modalId);
+    if (msgDiv) {
+      msgDiv.textContent = message;
+      msgDiv.style.display = "block";
+      msgDiv.style.backgroundColor = isError ? '#8b3a2a' : '#2a4a3a';
+      setTimeout(() => { msgDiv.style.display = "none"; }, 3000);
+    }
   }
 
   function showLevelPopup(level) {
-    popupText.innerHTML =
-      `
-    You reached Level ${level}!<br><br>
-    New crops unlocked.
-    `;
+    popupText.innerHTML = `🎉 Level ${level}!<br><br>🌾 New crops unlocked!`;
     levelPopup.classList.remove("hidden");
   }
 
-  popupBtn.addEventListener("click", () => {
-    levelPopup.classList.add("hidden");
-  });
+  popupBtn.addEventListener("click", () => levelPopup.classList.add("hidden"));
 
-  function save() {
-    localStorage.setItem(
-      SAVE_KEY,
-      JSON.stringify(state)
-    );
-  }
+  function save() { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
 
   function load() {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return;
-
     try {
       const data = JSON.parse(raw);
       state = Object.assign(state, data);
-
-      // Fix old saves
       for (let i = 0; i < state.tiles.length; i++) {
         const tile = state.tiles[i];
-
         if (tile.watered === undefined) tile.watered = false;
         if (tile.dead === undefined) tile.dead = false;
         if (tile.quality === undefined) tile.quality = "normal";
         if (tile.lastCropId === undefined) tile.lastCropId = null;
       }
-    } catch {}
+      if (!state.well) state.well = { level: 0, lastUpdate: Date.now() };
+      if (!state.well.lastUpdate) state.well.lastUpdate = Date.now();
+      if (!state.water) state.water = { current: 20, max: 20 };
+      if (!state.town.lastTaxCollect) state.town.lastTaxCollect = now();
+    } catch (e) { console.error("Load error:", e); }
   }
 
   function initTiles() {
     if (!state.tiles.length) {
-      state.tiles = Array.from(
-        { length: GRID_SIZE * GRID_SIZE },
-        () => ({
-          cropId: null,
-          plantedAt: 0,
-          dead: false,
-          quality: "normal",
-          lastCropId: null,
-          watered: false
-        })
-      );
+      state.tiles = Array.from({ length: GRID_SIZE * GRID_SIZE }, () => ({
+        cropId: null, plantedAt: 0, dead: false, quality: "normal", lastCropId: null, watered: false
+      }));
     }
-
-    if (!state.soil.length) {
-      state.soil = Array.from(
-        { length: GRID_SIZE * GRID_SIZE },
-        () => .7
-      );
-    }
+    if (!state.soil.length) state.soil = Array.from({ length: GRID_SIZE * GRID_SIZE }, () => 0.7);
   }
 
-  function randomChoice(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
+  function randomChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
   function updateWeather() {
     const season = currentSeason();
     let pool;
-
-    if (season === "Spring") {
-      pool = ["Sunny", "Rain", "Rain", "Cloudy"];
-    } else if (season === "Summer") {
-      pool = ["Sunny", "Sunny", "Drought", "Storm"];
-    } else if (season === "Fall") {
-      pool = ["Sunny", "Rain", "Cloudy", "Storm"];
-    } else {
-      pool = ["Snow", "Cloudy", "Sunny"];
-    }
-
-    const chosen = randomChoice(pool);
-    state.weatherIndex = WEATHER_TYPES.indexOf(chosen);
+    if (season === "Spring") pool = ["Sunny", "Rain", "Rain", "Cloudy"];
+    else if (season === "Summer") pool = ["Sunny", "Sunny", "Drought", "Storm"];
+    else if (season === "Fall") pool = ["Sunny", "Rain", "Cloudy", "Storm"];
+    else pool = ["Snow", "Cloudy", "Sunny"];
+    state.weatherIndex = WEATHER_TYPES.indexOf(randomChoice(pool));
   }
 
   function updateMarket() {
     CROPS.forEach(crop => {
       let price = crop.baseSell;
-
-      if (crop.bestSeasons.includes(currentSeason())) {
-        price *= 1.2;
-      }
-
-      if (currentWeather() === "Drought") {
-        price *= 1.15;
-      }
-
-      if (currentWeather() === "Rain") {
-        price *= .95;
-      }
-
+      if (crop.bestSeasons.includes(currentSeason())) price *= 1.2;
+      if (currentWeather() === "Drought") price *= 1.15;
+      if (currentWeather() === "Rain") price *= 0.95;
       const demand = state.market.demand[crop.id] || 0;
-      price *= Math.max(.7, 1.2 - demand * .03);
-      price *= .9 + Math.random() * .25;
-
+      price *= Math.max(0.7, 1.2 - demand * 0.03);
+      price *= 0.9 + Math.random() * 0.25;
       state.market.prices[crop.id] = Math.round(price);
     });
   }
 
   function advanceDay() {
     state.day++;
-
     if (state.day > 30) {
       state.day = 1;
-      state.seasonIndex =
-        (state.seasonIndex + 1) %
-        SEASONS.length;
+      state.seasonIndex = (state.seasonIndex + 1) % SEASONS.length;
     }
-
     updateWeather();
-
+    for (const tile of state.tiles) {
+      if (tile.cropId && !tile.dead) tile.watered = false;
+    }
     if (currentWeather() === "Rain") {
       state.water.current += 5;
-      if (state.water.current > state.water.max) {
-        state.water.current = state.water.max;
-      }
+      if (state.water.current > state.water.max) state.water.current = state.water.max;
     }
-
     updateMarket();
+    
+    const townModal = document.getElementById("townModal");
+    if (!townModal.classList.contains("hidden")) openTownModal();
   }
 
   function getTileState(tile) {
-    if (!tile.cropId) {
-      return {
-        stage: "empty"
-      };
-    }
-
+    if (!tile.cropId) return { stage: "empty" };
     const crop = cropById(tile.cropId);
-    let elapsed = 0;
-
-    if (tile.watered) {
-      elapsed = now() - tile.plantedAt;
-    }
-
-    const growTime = crop.growSeconds;
-    const remaining = growTime - elapsed;
-
-    if (elapsed > growTime * 4) {
-      tile.dead = true;
-    }
-
-    if (tile.dead) {
-      return {
-        stage: "dead",
-        crop
-      };
-    }
-
-    if (remaining <= 0) {
-      return {
-        stage: "ready",
-        crop
-      };
-    }
-
-    if (elapsed > growTime * .5) {
-      return {
-        stage: "growing",
-        crop,
-        remaining
-      };
-    }
-
-    return {
-      stage: "planted",
-      crop,
-      remaining
-    };
+    let elapsed = tile.watered ? now() - tile.plantedAt : 0;
+    const remaining = crop.growSeconds - elapsed;
+    if (elapsed > crop.growSeconds * 4) tile.dead = true;
+    if (tile.dead) return { stage: "dead", crop };
+    if (remaining <= 0) return { stage: "ready", crop };
+    if (elapsed > crop.growSeconds * 0.5) return { stage: "growing", crop, remaining };
+    return { stage: "planted", crop, remaining };
   }
 
   function qualityRoll() {
     const r = Math.random();
-    if (r > .995) return "golden";
-    if (r > .95) return "excellent";
-    if (r > .75) return "good";
+    if (r > 0.995) return "golden";
+    if (r > 0.95) return "excellent";
+    if (r > 0.75) return "good";
     return "normal";
-  }
-
-  function qualityMultiplier(q) {
-    if (q === "good") return 1.2;
-    if (q === "excellent") return 1.6;
-    if (q === "golden") return 3;
-    return 1;
   }
 
   function isLocked(index) {
     const row = Math.floor(index / GRID_SIZE);
     const col = index % GRID_SIZE;
-    return (
-      row >= state.unlockedSize ||
-      col >= state.unlockedSize
-    );
+    return row >= state.unlockedSize || col >= state.unlockedSize;
   }
 
   function plant(index) {
     const tile = state.tiles[index];
     if (tile.cropId) return;
-
     const crop = cropById(seedSelectEl.value);
-    const cost = crop.baseCost;
-
-    if (state.coins < cost) {
-      return setMessage("Not enough coins");
-    }
-
-    state.coins -= cost;
+    if (state.coins < crop.baseCost) return setMessage(`❌ Need ${crop.baseCost} for ${crop.name}`);
+    state.coins -= crop.baseCost;
     tile.cropId = crop.id;
     tile.plantedAt = now();
     tile.dead = false;
     tile.quality = qualityRoll();
-
-    setMessage("Planted " + crop.name);
+    tile.watered = false;
+    setMessage(`🌱 ${crop.name} (${tile.quality})`);
     save();
     render();
   }
 
-  function siloUsed() {
-    return Object.values(state.silo.stored).reduce((a, b) => a + b, 0);
-  }
-
-  function siloFree() {
-    return state.silo.capacity - siloUsed();
-  }
+  function siloUsed() { return Object.values(state.silo.stored).reduce((a, b) => a + b, 0); }
+  function siloFree() { return state.silo.capacity - siloUsed(); }
 
   function addToSilo(cropId, amount = 1) {
-    if (!state.silo.stored[cropId]) {
-      state.silo.stored[cropId] = 0;
-    }
+    if (!state.silo.stored[cropId]) state.silo.stored[cropId] = 0;
     state.silo.stored[cropId] += amount;
   }
 
   function sellOne(cropId) {
     if (!state.silo.stored[cropId]) return;
-
     const price = state.market.prices[cropId] || cropById(cropId).baseSell;
-
     state.silo.stored[cropId]--;
     state.coins += price;
-
-    setMessage("Sold 1 " + cropById(cropId).name + " for " + price + " coins");
+    setMessage(`💰 +${price} (${cropById(cropId).name})`);
     save();
     render();
+    updateSiloModal();
   }
 
   function sellMax(cropId) {
     const qty = state.silo.stored[cropId] || 0;
     if (qty <= 0) return;
-
     const price = state.market.prices[cropId] || cropById(cropId).baseSell;
     const total = qty * price;
-
     state.silo.stored[cropId] = 0;
     state.coins += total;
-
-    setMessage("Sold all " + cropById(cropId).name + " for " + total + " coins");
+    setMessage(`💰 +${total} (${qty} ${cropById(cropId).name})`);
     save();
     render();
+    updateSiloModal();
   }
 
   function sellPrompt(cropId) {
     const qty = state.silo.stored[cropId] || 0;
     if (qty <= 0) return;
-
-    const amount = parseInt(prompt("Sell how many? (Max " + qty + ")"));
+    const amount = parseInt(prompt(`Sell? (Max ${qty})`));
     if (!amount || amount <= 0) return;
-    if (amount > qty) return setMessage("You don't have that many.");
-
+    if (amount > qty) return setMessage(`❌ Only ${qty}`);
     const price = state.market.prices[cropId] || cropById(cropId).baseSell;
     const total = amount * price;
-
     state.silo.stored[cropId] -= amount;
     state.coins += total;
-
-    setMessage("Sold " + amount + " " + cropById(cropId).name + " for " + total + " coins");
+    setMessage(`💰 +${total} (${amount} ${cropById(cropId).name})`);
     save();
     render();
-  }
-
-  function sellAllSilo() {
-    let total = 0;
-
-    for (const crop of CROPS) {
-      const id = crop.id;
-      const qty = state.silo.stored[id] || 0;
-      if (qty <= 0) continue;
-
-      const price = state.market.prices[id] || crop.baseSell;
-      total += qty * price;
-    }
-
-    state.coins += total;
-    state.silo.stored = {};
-
-    setMessage("Sold everything for " + total + " coins");
-    save();
-    render();
+    updateSiloModal();
   }
 
   function harvest(index) {
     const tile = state.tiles[index];
     const info = getTileState(tile);
-
     if (info.stage !== "ready") return;
-
-    if (siloFree() <= 0) {
-      return setMessage("Silo full! Expand it.");
-    }
-
+    if (siloFree() <= 0) return setMessage(`❌ Silo full! Expand!`);
     const crop = info.crop;
-
     addToSilo(crop.id, 1);
-    state.xp += crop.xp;
-
-    const previousCrop = state.selectedCrop;
-
-    while (
-      state.level < 99 &&
-      state.xp >= xpForLevel(state.level)
-    ) {
+    let xpGain = crop.xp;
+    if (tile.quality === "good") xpGain = Math.round(xpGain * 1.2);
+    if (tile.quality === "excellent") xpGain = Math.round(xpGain * 1.5);
+    if (tile.quality === "golden") xpGain = Math.round(xpGain * 2.5);
+    state.xp += xpGain;
+    while (state.level < 99 && state.xp >= xpForLevel(state.level)) {
+      state.xp -= xpForLevel(state.level);
       state.level++;
       showLevelPopup(state.level);
       initSeedSelect();
-      state.selectedCrop = previousCrop;
-      state.xp = 0;
-      render();
     }
-
     tile.cropId = null;
     tile.plantedAt = 0;
     tile.watered = false;
-
-    setMessage("Stored " + crop.name + " in silo");
+    setMessage(`🌾 +${crop.name} (${tile.quality}) +${xpGain}✨`);
     save();
     render();
-  }
-
-  function reviveAllCrops() {
-    let revived = 0;
-
-    for (const tile of state.tiles) {
-      // Only revive actual dead crops
-      if (tile.cropId && tile.dead === true) {
-        const crop = cropById(tile.cropId);
-        if (!crop) continue;
-
-        // Fully reset tile state
-        tile.dead = false;
-        tile.watered = true;
-
-        // Make crop instantly ready
-        tile.plantedAt =
-          now() - crop.growSeconds - 1;
-
-        revived++;
-      }
-    }
-
-    save();
-    render();
-
-    setMessage(
-      revived + " crops revived!"
-    );
-  }
-
-  function clearDead(index) {
-    const tile = state.tiles[index];
-    tile.cropId = null;
-    tile.dead = false;
-    render();
-    save();
-  }
-
-  function expandWaterTank() {
-    const cost = state.water.max * 100;
-
-    if (state.coins < cost) {
-      return setMessage("Not enough coins.");
-    }
-
-    state.coins -= cost;
-    state.water.max += 20;
-    state.water.current += 20;
-
-    setMessage("Water tank expanded!");
-    save();
-    render();
+    updateSiloModal();
   }
 
   function waterTile(index) {
     const tile = state.tiles[index];
-
-    if (!tile.cropId) {
-      return setMessage("Nothing planted here.");
-    }
-
-    if (tile.watered) {
-      return setMessage("Already watered.");
-    }
-
+    if (!tile.cropId) return setMessage("❌ Nothing here");
+    if (tile.watered) return setMessage("💧 Already watered");
     if (state.water.current <= 0) {
-      return setMessage("Out of water!");
+      return setMessage("💧 Out of water! Buy/upgrade well, upgrade water tank, or wait for rain.");
     }
-
     state.water.current--;
     tile.watered = true;
-
-    setMessage(
-      "Crop watered 💧 (" +
-      state.water.current +
-      "/" +
-      state.water.max +
-      ")"
-    );
-
+    setMessage(`💧 Watered! ${Math.floor(state.water.current)}/${state.water.max} left`);
     save();
     render();
   }
 
-  function tileClick(index) {
-    if (isLocked(index)) {
-      return setMessage("Expand farm first.");
-    }
+  function clearDead(index) {
+    state.tiles[index].cropId = null;
+    state.tiles[index].dead = false;
+    setMessage(`🗑️ Cleared`);
+    render();
+    save();
+  }
 
+  function tileClick(index) {
+    if (isLocked(index)) return setMessage(`🔒 Expand! (${state.unlockedSize * 1000})`);
     const tile = state.tiles[index];
     const info = getTileState(tile);
-
-    if (info.stage === "empty") {
-      return plant(index);
-    }
-
-    if (tile.cropId && !tile.watered) {
-      return waterTile(index);
-    }
-
-    if (info.stage === "ready") {
-      return harvest(index);
-    }
-
-    if (info.stage === "dead") {
-      return clearDead(index);
-    }
-
-    setMessage(
-      info.crop.name +
-      " — " +
-      Math.ceil(info.remaining) +
-      "s"
-    );
+    if (info.stage === "empty") return plant(index);
+    if (tile.cropId && !tile.watered && !tile.dead) return waterTile(index);
+    if (info.stage === "ready") return harvest(index);
+    if (info.stage === "dead") return clearDead(index);
+    setMessage(`${info.crop.name} — ${Math.ceil(info.remaining)}s`);
   }
 
   function createFarm() {
     farmEl.innerHTML = "";
     tileElements = [];
-
     for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
       const div = document.createElement("div");
       div.className = "tile";
@@ -751,306 +984,385 @@
   function renderTiles() {
     for (let i = 0; i < tileElements.length; i++) {
       const div = tileElements[i];
-
       if (isLocked(i)) {
         div.className = "tile locked";
         div.textContent = "🔒";
         continue;
       }
-
       const tile = state.tiles[i];
       const info = getTileState(tile);
-
-      div.className =
-        "tile " +
-        info.stage +
-        " " +
-        (tile.quality || "");
-
+      let className = "tile " + info.stage;
+      if (tile.quality && tile.cropId && info.stage !== "empty") className += " " + tile.quality;
+      div.className = className;
+      
       if (info.stage === "empty") {
         div.textContent = "";
       } else if (info.stage === "planted") {
-        if (!tile.watered) {
-          div.textContent = "🌱💧";
-        } else {
-          div.textContent = "🌱";
-        }
+        div.textContent = tile.watered ? "🌱" : "🌱💧";
       } else if (info.stage === "growing") {
         div.textContent = info.crop.emoji;
       } else if (info.stage === "ready") {
         div.textContent = info.crop.emoji;
       } else if (info.stage === "dead") {
-        div.textContent = "💀";
+        div.textContent = "";
+        div.innerHTML = `<img src="deadweed.png" style="width: 100%; height: 100%; object-fit: contain;" alt="dead">`;
       }
     }
+  }
+
+  function openSiloModal() {
+    document.getElementById("siloModal").classList.remove("hidden");
+    updateSiloModal();
+  }
+  function closeSiloModal() { document.getElementById("siloModal").classList.add("hidden"); }
+  
+  function updateSiloModal() {
+    document.getElementById("modalSiloUsed").textContent = siloUsed();
+    document.getElementById("modalSiloCapacity").textContent = state.silo.capacity;
+    document.getElementById("modalSiloCapacity2").textContent = state.silo.capacity;
+    document.getElementById("modalExpandCost").textContent = state.silo.capacity * 20;
+    const cropsList = document.getElementById("siloCropsList");
+    cropsList.innerHTML = "";
+    let hasAnyCrops = false;
+    for (const crop of CROPS) {
+      const qty = state.silo.stored[crop.id] || 0;
+      if (qty > 0) {
+        hasAnyCrops = true;
+        const price = state.market.prices[crop.id] || crop.baseSell;
+        cropsList.innerHTML += `
+          <div class="silo-crop-item">
+            <div class="crop-info">
+              <div class="crop-emoji">${crop.emoji}</div>
+              <div class="crop-details">
+                <div class="crop-name">${crop.name}</div>
+                <div class="crop-price">💰 ${price}</div>
+              </div>
+            </div>
+            <div class="crop-qty">📦 ${qty}</div>
+            <div class="crop-actions">
+              <button onclick="sellOne('${crop.id}'); closeSiloModal(); openSiloModal();">1</button>
+              <button onclick="sellPrompt('${crop.id}'); closeSiloModal(); openSiloModal();">✏️</button>
+              <button onclick="sellMax('${crop.id}'); closeSiloModal(); openSiloModal();">📦</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+    if (!hasAnyCrops) cropsList.innerHTML = '<div class="empty-silo">🌾 Empty!</div>';
+  }
+  
+  function expandSiloFromModal() {
+    const cost = state.silo.capacity * 20;
+    if (state.coins < cost) {
+      showModalMessage("siloModalMessage", `❌ Need ${cost} (${Math.floor(state.coins)})`, true);
+      return;
+    }
+    const oldCapacity = state.silo.capacity;
+    state.coins -= cost;
+    state.silo.capacity += 50;
+    showModalMessage("siloModalMessage", `✅ ${oldCapacity} → ${state.silo.capacity}`, false);
+    save();
+    render();
+    updateSiloModal();
+  }
+
+  function openWellModal() {
+    document.getElementById("wellModal").classList.remove("hidden");
+    document.getElementById("wellLevel").textContent = state.well.level;
+    document.getElementById("wellProduction").textContent = getWellProduction(state.well.level);
+    const buyBtn = document.getElementById("buyWellBtn");
+    const upgradeBtn = document.getElementById("upgradeWellBtn");
+    if (state.well.level === 0) {
+      buyBtn.style.display = "inline-block";
+      upgradeBtn.style.display = "none";
+    } else {
+      buyBtn.style.display = "none";
+      upgradeBtn.style.display = "inline-block";
+      upgradeBtn.innerHTML = `⬆️ (${getWellCost(state.well.level + 1)})`;
+    }
+  }
+  function closeWellModal() { document.getElementById("wellModal").classList.add("hidden"); }
+
+  function buyWell() {
+    const cost = getWellCost(1);
+    if (state.coins < cost) {
+      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
+      return;
+    }
+    state.coins -= cost;
+    state.well = { level: 1, lastUpdate: Date.now() };
+    showModalMessage("wellModalMessage", `✅ Well Lv1 (${getWellProduction(1)}💧/hr)`, false);
+    save();
+    render();
+    openWellModal();
+  }
+
+  function upgradeWell() {
+    const nextLevel = state.well.level + 1;
+    const cost = getWellCost(nextLevel);
+    if (state.coins < cost) {
+      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
+      return;
+    }
+    const result = window.upgradeWell(state);
+    if (result && result.ok) {
+      showModalMessage("wellModalMessage", `✅ Lv${state.well.level}`, false);
+      save();
+      render();
+      openWellModal();
+    }
+  }
+
+  function openWaterModal() {
+    document.getElementById("waterModal").classList.remove("hidden");
+    document.getElementById("waterCurrent").textContent = Math.floor(state.water.current);
+    document.getElementById("waterMax").textContent = state.water.max;
+    document.getElementById("waterCapacity").textContent = state.water.max;
+    document.getElementById("expandWaterTankBtn").innerHTML = `⬆️ (${state.water.max * 100})`;
+  }
+  function closeWaterModal() { document.getElementById("waterModal").classList.add("hidden"); }
+
+  function expandWaterTank() {
+    const cost = state.water.max * 100;
+    if (state.coins < cost) {
+      showModalMessage("waterModalMessage", `❌ Need ${cost}`, true);
+      return;
+    }
+    const oldMax = state.water.max;
+    state.coins -= cost;
+    state.water.max += 20;
+    state.water.current += 20;
+    showModalMessage("waterModalMessage", `✅ ${oldMax} → ${state.water.max}`, false);
+    save();
+    render();
+    openWaterModal();
+  }
+
+  function openTownModal() {
+    const modal = document.getElementById("townModal");
+    modal.classList.remove("hidden");
+    
+    document.getElementById("townPopulation").textContent = state.town.population;
+    document.getElementById("townProsperity").textContent = state.town.prosperity.toFixed(1);
+    document.getElementById("investCost").textContent = Math.floor(state.town.prosperity * 500);
+    
+    const timeSinceLastTax = now() - state.town.lastTaxCollect;
+    const secondsUntilNextTax = Math.max(0, DAY_LENGTH_SECONDS - timeSinceLastTax);
+    const taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
+    
+    const collectBtn = document.getElementById("collectTaxesBtn");
+    const cooldownSpan = document.getElementById("taxCooldown");
+    
+    if (secondsUntilNextTax > 0) {
+      collectBtn.disabled = true;
+      collectBtn.textContent = `⏰ ${formatTime(secondsUntilNextTax)}`;
+      collectBtn.style.opacity = "0.5";
+      cooldownSpan.textContent = formatTime(secondsUntilNextTax);
+      cooldownSpan.style.color = "#ff8866";
+      
+      if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+      window.taxCountdownInterval = setInterval(() => {
+        const newTimeSince = now() - state.town.lastTaxCollect;
+        const newSecondsLeft = Math.max(0, DAY_LENGTH_SECONDS - newTimeSince);
+        if (newSecondsLeft <= 0) {
+          if (collectBtn) {
+            collectBtn.disabled = false;
+            collectBtn.textContent = `💰 ${taxAmount}`;
+            collectBtn.style.opacity = "1";
+            cooldownSpan.textContent = "✅";
+            cooldownSpan.style.color = "#66ff66";
+          }
+          if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+        } else {
+          if (collectBtn) collectBtn.textContent = `⏰ ${formatTime(newSecondsLeft)}`;
+          cooldownSpan.textContent = formatTime(newSecondsLeft);
+        }
+      }, 1000);
+    } else {
+      collectBtn.disabled = false;
+      collectBtn.textContent = `💰 ${taxAmount}`;
+      collectBtn.style.opacity = "1";
+      cooldownSpan.textContent = "✅";
+      cooldownSpan.style.color = "#66ff66";
+      if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+    }
+  }
+
+  function closeTownModal() { 
+    document.getElementById("townModal").classList.add("hidden");
+    if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+  }
+
+  function collectTaxes() {
+    const timeSinceLastTax = now() - state.town.lastTaxCollect;
+    if (timeSinceLastTax < DAY_LENGTH_SECONDS) {
+      const remaining = DAY_LENGTH_SECONDS - timeSinceLastTax;
+      showModalMessage("townModalMessage", `⏰ ${formatTime(remaining)}`, true);
+      return;
+    }
+    
+    const taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
+    state.coins += taxAmount;
+    state.town.lastTaxCollect = now();
+    
+    showModalMessage("townModalMessage", `💰 +${taxAmount}`, false);
+    save();
+    render();
+    openTownModal();
+  }
+
+  function investInTown() {
+    const cost = Math.floor(state.town.prosperity * 500);
+    if (state.coins < cost) {
+      showModalMessage("townModalMessage", `❌ Need ${cost}`, true);
+      return;
+    }
+    state.coins -= cost;
+    state.town.prosperity += 0.5;
+    const popGrowth = Math.floor(Math.random() * 5) + 1;
+    state.town.population += popGrowth;
+    showModalMessage("townModalMessage", `✅ ${cost} → 📈${state.town.prosperity.toFixed(1)} 👥+${popGrowth}`, false);
+    save();
+    render();
+    openTownModal();
+  }
+
+  function updateWellWater() {
+    if (!state.well || state.well.level === 0) return;
+    const nowMs = Date.now();
+    const hoursPassed = (nowMs - (state.well.lastUpdate || nowMs)) / 3600000;
+    const produced = hoursPassed * getWellProduction(state.well.level);
+    if (produced > 0.001) {
+      state.water.current = Math.min(state.water.current + produced, state.water.max);
+      state.well.lastUpdate = nowMs;
+    }
+  }
+
+  function reviveAllCrops() {
+    let revived = 0;
+    for (const tile of state.tiles) {
+      if (tile.cropId && tile.dead === true) {
+        const crop = cropById(tile.cropId);
+        if (crop) {
+          tile.dead = false;
+          tile.watered = true;
+          tile.plantedAt = now() - crop.growSeconds - 1;
+          revived++;
+        }
+      }
+    }
+    setMessage(`✨ ${revived} revived!`);
+    save();
+    render();
   }
 
   function renderUI() {
-    coinsEl.textContent = state.coins;
+    coinsEl.textContent = Math.floor(state.coins);
     levelEl.textContent = state.level;
-
-    const nextLevelXP = xpForLevel(state.level);
     xpEl.textContent = state.xp;
-    xpNextEl.textContent = nextLevelXP;
-
-    seasonEl.textContent = currentSeason();
-    dayEl.textContent = state.day;
-    weatherEl.textContent = currentWeather();
-
-    let marketHTML = "<b>Silo Storage</b><br>";
-
-    CROPS.forEach(crop => {
-      const qty = state.silo?.stored?.[crop.id] || 0;
-      const price = state.market.prices[crop.id] || crop.baseSell;
-
-      if (qty > 0) {
-        marketHTML += `
-        ${crop.emoji} ${crop.name}<br>
-        Stored: ${qty}<br>
-        Price: ${price}c each<br>
-        <button onclick="sellOne('${crop.id}')">Sell 1</button>
-        <button onclick="sellMax('${crop.id}')">Sell All</button>
-        <button onclick="sellPrompt('${crop.id}')">Sell Amount</button>
-        <br><br>
-      `;
-      }
-    });
-
-    marketInfoEl.innerHTML = marketHTML;
-
-    townInfoEl.innerHTML =
-      "<b>Town</b><br>" +
-      "Population: " +
-      state.town.population +
-      "<br>" +
-      "Prosperity: " +
-      state.town.prosperity;
-
-    machineInfoEl.innerHTML =
-      "<b>Water Tank</b><br>" +
-      Math.floor(state.water.current) +
-      "/" +
-      state.water.max +
-      "<br><button id='expandWaterTankBtn' onclick='expandWaterTank()'></button>" +
-      "<br><br>" +
-      "<b>Well</b><br>" +
-      "Level: " + state.well.level + "<br>" +
-      (
-        state.well.level === 0
-          ? "<button id='buyWellBtn' onclick='buyWell()'>Buy Well (Cost: 1000)</button>"
-          : "<button id='upgradeWellBtn' onclick='upgradeWell()'>Upgrade Well (Cost: " + ((state.well.level + 1) * 2000) + ")</button><br>" +
-            "Production: " + state.well.production + "/hr"
-      ) +
-      "<br><br>" +
-      "<b>Silo</b><br>" +
-      "Used: " + siloUsed() + "/" + state.silo.capacity +
-      "<br><button id='siloExpandBtn' onclick='expandSilo()'></button>";
-
-
-    // Button text updates
-    const siloExpandBtn =
-      document.getElementById("siloExpandBtn");
-
-    if (siloExpandBtn) {
-      siloExpandBtn.textContent =
-        "Expand Silo (Cost: " +
-        (state.silo.capacity * 20) +
-        ")";
-    }
-
-    const expandWaterTankBtn =
-      document.getElementById("expandWaterTankBtn");
-
-    if (expandWaterTankBtn) {
-      expandWaterTankBtn.textContent =
-        "Expand Tank (Cost: " +
-        (state.water.max * 100) +
-        ")";
-    }
-
-    const buyWellBtn =
-      document.getElementById("buyWellBtn");
-
-    if (buyWellBtn) {
-      buyWellBtn.textContent =
-        "Buy Well (Cost: " +
-        getWellCost(1) +
-        ")";
-    }
+    xpNextEl.textContent = xpForLevel(state.level);
+    
+    seasonDisplay.innerHTML = `${seasonEmojis[currentSeason()]} ${currentSeason()} Day ${state.day}<br>${weatherEmojis[currentWeather()]} Weather: ${currentWeather()}`;
+    
+    siloUsageText.textContent = `📦 ${siloUsed()}/${state.silo.capacity}`;
+    wellLevelText.textContent = `🚰 Lv${state.well.level}`;
+    waterTankText.textContent = `💧 ${Math.floor(state.water.current)}/${state.water.max}`;
+    townStatsText.textContent = `🏘️ ${state.town.population}`;
   }
 
   function render() {
+    updateWellWater();
     renderTiles();
     renderUI();
   }
 
   function tick() {
-    const elapsed =
-      now() - state.lastDayTick;
-
-    if (elapsed >= 30) {
-      const skipped =
-        Math.floor(elapsed / 30);
-
-      for (let i = 0; i < skipped; i++) {
-        advanceDay();
-      }
-
+    updateWellWater();
+    const elapsed = now() - state.lastDayTick;
+    if (elapsed >= DAY_LENGTH_SECONDS) {
+      const skipped = Math.floor(elapsed / DAY_LENGTH_SECONDS);
+      for (let i = 0; i < skipped; i++) advanceDay();
       state.lastDayTick = now();
-      render();
       save();
     }
-
     renderTiles();
   }
 
   function initSeedSelect() {
     seedSelectEl.innerHTML = "";
-
-    const unlockedCrops =
-      CROPS.filter(
-        crop =>
-          state.level >=
-          crop.levelRequired
-      );
-
-    unlockedCrops.forEach(crop => {
-      const opt =
-        document.createElement("option");
-
+    CROPS.filter(crop => state.level >= crop.levelRequired).forEach(crop => {
+      const opt = document.createElement("option");
       opt.value = crop.id;
-      opt.textContent =
-        crop.emoji +
-        " " +
-        crop.name + " (" + crop.baseCost + " coins)";
-
+      opt.textContent = `${crop.emoji} ${crop.name} (${crop.baseCost})`;
       seedSelectEl.appendChild(opt);
     });
   }
 
-  function expandSilo() {
-    const cost = state.silo.capacity * 20;
-
-    if (state.coins < cost) {
-      return setMessage("Not enough coins to expand silo");
-    }
-
-    state.coins -= cost;
-    state.silo.capacity += 50;
-
-    const siloExpandBtn = document.getElementById("siloExpandBtn");
-    if (siloExpandBtn) {
-      siloExpandBtn.textContent =
-        "Expand Silo (Cost: " + (state.silo.capacity * 20) + ")";
-    }
-
-    setMessage("Silo expanded! New capacity: " + state.silo.capacity);
-    save();
-    render();
-  }
-
   expandBtn.addEventListener("click", () => {
     const cost = state.unlockedSize * 1000;
-
     if (state.coins < cost) {
-      return setMessage("Not enough coins to expand.");
+      setMessage(`❌ Need ${cost}`);
+      expandBtn.style.backgroundColor = '#8b3a2a';
+      setTimeout(() => expandBtn.style.backgroundColor = '', 500);
+      return;
     }
-
     if (state.unlockedSize >= GRID_SIZE) {
-      return setMessage("Farm is fully expanded.");
+      setMessage(`❌ Max size!`);
+      return;
     }
-
     state.coins -= cost;
     state.unlockedSize++;
-
-    // Update button text dynamically
-    expandBtn.textContent = "Expand Farm (Cost: " + (state.unlockedSize * 1000) + ")";
-
-    setMessage("Farm expanded to " + state.unlockedSize + "×" + state.unlockedSize);
+    expandBtn.textContent = `🚜 Expand (${state.unlockedSize * 1000})`;
+    setMessage(`✅ ${state.unlockedSize}×${state.unlockedSize}`);
+    expandBtn.style.backgroundColor = '#2a7c4a';
+    setTimeout(() => expandBtn.style.backgroundColor = '', 500);
     save();
     render();
   });
 
   resetBtn.addEventListener("click", () => {
-    if (!confirm("Reset save?")) return;
-    localStorage.removeItem(SAVE_KEY);
-    location.reload();
+    if (confirm("Reset all?")) {
+      localStorage.removeItem(SAVE_KEY);
+      location.reload();
+    }
   });
 
-  // Init
+  function reviveAllWithAd() {
+    const frame = document.getElementById("rewardedFrame");
+    frame.style.display = "block";
+    setMessage("📺 Watch ad...");
+    setTimeout(() => {
+      frame.style.display = "none";
+      reviveAllCrops();
+    }, 8000);
+  }
+
   load();
   initWell(state);
-
-  expandBtn.textContent = "Expand Farm (Cost: " + (state.unlockedSize * 1000) + ")";
-
   initTiles();
   createFarm();
   initSeedSelect();
   updateWeather();
   updateMarket();
   render();
+  expandBtn.textContent = `🚜 Expand (${state.unlockedSize * 1000})`;
+  setMessage("🌾 Welcome! Click buildings below!");
+  setInterval(tick, 1000);
 
-  setMessage(
-    "Manage crops, seasons, weather, and progression."
-  );
-
-  setInterval(() => {
-    tick();
-  }, 1000);
-
-  // ===============================
-  // Revive with rewarded ad
-  // ===============================
-  function reviveAllWithAd() {
-    const frame = document.getElementById("rewardedFrame");
-    frame.style.display = "block";
-    setMessage("Watch the ad to revive crops!");
-
-    // Simulate ad completion after 10 seconds
-    setTimeout(() => {
-      frame.style.display = "none";
-      reviveAllCrops();
-      render();
-      setMessage("All crops revived!");
-    }, 10000);
-  }
-
-
-
-
-  // ===============================
-  // Faucet iframe wiring
-  // ===============================
   const params = new URLSearchParams(window.location.search);
   const userId = params.get("uid");
-
   const faucetFrame = document.getElementById("faucetFrame");
-
   if (userId) {
     faucetFrame.style.display = "block";
-    faucetFrame.src =
-      "faucet.html?uid=" + encodeURIComponent(userId);
-  } else {
-    faucetFrame.style.display = "none";
+    faucetFrame.src = "faucet.html?uid=" + encodeURIComponent(userId);
   }
-
   window.addEventListener("message", (event) => {
-    if (event.data?.type === "resize-faucet") {
-    const frame = document.getElementById("faucetFrame");
-    if (frame) {
-      frame.style.height = Math.ceil(event.data.height) + "px";
-      frame.style.transition = "height 0.2s ease";
-    }
-  }
-
     if (event.data?.type === "faucet-complete") {
-      const frame = document.getElementById("faucetFrame");
-
-      if (frame) {
-        frame.style.display = "none";
-      }
-
-      setMessage("Faucet unlocked!");
+      document.getElementById("faucetFrame").style.display = "none";
+      setMessage("🎁 +100!");
+      state.coins += 100;
+      save();
+      render();
     }
   });
 </script>
