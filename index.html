@@ -597,6 +597,8 @@
     addToSilo(crop.id, 1);
     state.xp += crop.xp;
 
+    const previousCrop = state.selectedCrop;
+
     while (
       state.level < 99 &&
       state.xp >= xpForLevel(state.level)
@@ -604,6 +606,7 @@
       state.level++;
       showLevelPopup(state.level);
       initSeedSelect();
+      state.selectedCrop = previousCrop;
       state.xp = 0;
       render();
     }
