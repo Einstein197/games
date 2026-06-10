@@ -20,7 +20,7 @@ const CROPS = [
     baseSell: 16,
     growSeconds: 45,
     xp: 14,
-    levelRequired: 1,
+    levelRequired: 3,
     bestSeasons: ["Spring","Winter"]
   },
 
@@ -32,7 +32,7 @@ const CROPS = [
     baseSell: 24,
     growSeconds: 70,
     xp: 20,
-    levelRequired: 2,
+    levelRequired: 5,
     bestSeasons: ["Summer"]
   },
 
@@ -44,7 +44,7 @@ const CROPS = [
     baseSell: 32,
     growSeconds: 85,
     xp: 24,
-    levelRequired: 2,
+    levelRequired: 7,
     bestSeasons: ["Summer"]
   },
 
@@ -56,7 +56,7 @@ const CROPS = [
     baseSell: 50,
     growSeconds: 120,
     xp: 35,
-    levelRequired: 3,
+    levelRequired: 9,
     bestSeasons: ["Spring","Fall"]
   },
 
@@ -68,7 +68,7 @@ const CROPS = [
     baseSell: 58,
     growSeconds: 135,
     xp: 40,
-    levelRequired: 3,
+    levelRequired: 11,
     bestSeasons: ["Summer"]
   },
 
@@ -80,7 +80,7 @@ const CROPS = [
     baseSell: 70,
     growSeconds: 160,
     xp: 55,
-    levelRequired: 4,
+    levelRequired: 13,
     bestSeasons: ["Spring"]
   },
 
@@ -92,7 +92,7 @@ const CROPS = [
     baseSell: 90,
     growSeconds: 200,
     xp: 70,
-    levelRequired: 4,
+    levelRequired: 15,
     bestSeasons: ["Summer"]
   },
 
@@ -104,7 +104,7 @@ const CROPS = [
     baseSell: 140,
     growSeconds: 260,
     xp: 90,
-    levelRequired: 5,
+    levelRequired: 17,
     bestSeasons: ["Fall"]
   },
 
@@ -116,7 +116,7 @@ const CROPS = [
     baseSell: 170,
     growSeconds: 320,
     xp: 105,
-    levelRequired: 5,
+    levelRequired: 19,
     bestSeasons: ["Summer"]
   },
 
@@ -128,7 +128,7 @@ const CROPS = [
     baseSell: 220,
     growSeconds: 420,
     xp: 130,
-    levelRequired: 6,
+    levelRequired: 21,
     bestSeasons: ["Fall"]
   },
 
@@ -140,7 +140,7 @@ const CROPS = [
     baseSell: 270,
     growSeconds: 500,
     xp: 150,
-    levelRequired: 6,
+    levelRequired: 23,
     bestSeasons: ["Fall"]
   },
 
@@ -152,7 +152,7 @@ const CROPS = [
     baseSell: 340,
     growSeconds: 620,
     xp: 180,
-    levelRequired: 7,
+    levelRequired: 25,
     bestSeasons: ["Summer"]
   },
 
@@ -164,7 +164,7 @@ const CROPS = [
     baseSell: 450,
     growSeconds: 760,
     xp: 220,
-    levelRequired: 8,
+    levelRequired: 27,
     bestSeasons: ["Summer"]
   },
 
@@ -176,7 +176,7 @@ const CROPS = [
     baseSell: 620,
     growSeconds: 900,
     xp: 260,
-    levelRequired: 9,
+    levelRequired: 29,
     bestSeasons: ["Summer"]
   },
 
@@ -188,7 +188,7 @@ const CROPS = [
     baseSell: 820,
     growSeconds: 1050,
     xp: 320,
-    levelRequired: 10,
+    levelRequired: 31,
     bestSeasons: ["Summer"]
   }
 
