@@ -571,7 +571,7 @@
   function expandSiloFromModal() {
     const cost = state.silo.capacity * 20;
     if (state.coins < cost) {
-      showModalMessage("siloModalMessage", `❌ Need ${cost} (${Math.floor(state.coins)})`, true);
+      showModalMessage("siloModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
       return;
     }
     const oldCapacity = state.silo.capacity;
@@ -603,7 +603,7 @@
   function buyWell() {
     const cost = getWellCost(1);
     if (state.coins < cost) {
-      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
+      showModalMessage("wellModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
       return;
     }
     state.coins -= cost;
@@ -618,7 +618,7 @@
     const nextLevel = state.well.level + 1;
     const cost = getWellCost(nextLevel);
     if (state.coins < cost) {
-      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
+      showModalMessage("wellModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
       return;
     }
     const result = window.upgradeWell(state);
@@ -642,7 +642,7 @@
   function expandWaterTank() {
     const cost = state.water.max * 100;
     if (state.coins < cost) {
-      showModalMessage("waterModalMessage", `❌ Need ${cost}`, true);
+      showModalMessage("waterModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
       return;
     }
     const oldMax = state.water.max;
@@ -731,7 +731,7 @@
   function investInTown() {
     const cost = Math.floor(state.town.prosperity * 500);
     if (state.coins < cost) {
-      showModalMessage("townModalMessage", `❌ Need ${cost}`, true);
+      showModalMessage("townModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
       return;
     }
     state.coins -= cost;
@@ -818,7 +818,7 @@
   expandBtn.addEventListener("click", () => {
     const cost = state.unlockedSize * 1000;
     if (state.coins < cost) {
-      setMessage(`❌ Need ${cost}`);
+      setMessage(`❌ Need ${Math.floor(state.coins)}/${cost}`);
       expandBtn.style.backgroundColor = '#8b3a2a';
       setTimeout(() => expandBtn.style.backgroundColor = '', 500);
       return;
