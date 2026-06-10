@@ -91,7 +91,7 @@
   <div class="water-building" onclick="openWaterModal()">
     <img src="water.png" alt="Water Tank" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 70 100%22%3E%3Crect x=%2215%22 y=%2220%22 width=%2240%22 height=%2250%22 fill=%22%234488aa%22/%3E%3Crect x=%2210%22 y=%2215%22 width=%2250%22 height=%2210%22 fill=%22%2366aacc%22/%3E%3C/svg%3E'">
     <div class="water-text" id="waterTankText">💧 20/20</div>
-    <div class="building-label">WATER</div>
+    <div class="building-label">WATER TANK</div>
   </div>
   
   <!-- TOWN PNG -->
@@ -113,7 +113,7 @@
 <div id="siloModal" class="silo-modal hidden">
   <div class="silo-content">
     <div class="silo-header">
-      <h2>🏚️🌾 SILO</h2>
+      <h2>SILO</h2>
       <div class="silo-stats">
         <span>📦 <span id="modalSiloUsed">0</span>/<span id="modalSiloCapacity">100</span></span>
         <span>🏗️ <span id="modalSiloCapacity2">100</span></span>
@@ -144,10 +144,9 @@
 
 <div id="waterModal" class="water-modal hidden">
   <div class="water-content">
-    <h2>💧 WATER</h2>
+    <h2>💧 WATER TANK</h2>
     <div class="water-stats">
       <div>💦 <span id="waterCurrent">0</span>/<span id="waterMax">0</span></div>
-      <div>🏗️ <span id="waterCapacity">0</span></div>
     </div>
     <div id="waterModalMessage" class="modal-message" style="display:none;"></div>
     <button id="expandWaterTankBtn" onclick="expandWaterTank()">⬆️ Expand</button>
