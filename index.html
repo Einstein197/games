@@ -458,13 +458,14 @@
     if (!tile.cropId) return setMessage("❌ Nothing here");
     if (tile.watered) return setMessage("💧 Already watered");
     
-    // Convert to whole number for check
-    const wholeWater = Math.floor(state.water.current);
+    // Floor the current water to get whole number
+    const currentWater = Math.floor(state.water.current);
     
-    if (wholeWater <= 0) {
-      return setMessage(`❌ Not enough water! Need 1 water, you have ${wholeWater}/${state.water.max}`);
+    if (currentWater <= 0) {
+      return setMessage(`❌ Not enough water! You have ${currentWater}/${state.water.max}`);
     }
     
+    // Subtract 1 and floor to ensure no decimals
     state.water.current = Math.floor(state.water.current) - 1;
     tile.watered = true;
     
