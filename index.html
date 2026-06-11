@@ -458,13 +458,14 @@
     if (!tile.cropId) return setMessage("❌ Nothing here");
     if (tile.watered) return setMessage("💧 Already watered");
     
-    // CHECK - Don't allow watering if water is 0 or less
-    if (state.water.current <= 0) {
-      return setMessage(`❌ Not enough water! You have ${state.water.current}/${state.water.max}. Upgrade well or wait for rain!`);
+    // Convert to whole number for check
+    const wholeWater = Math.floor(state.water.current);
+    
+    if (wholeWater <= 0) {
+      return setMessage(`❌ Not enough water! Need 1 water, you have ${wholeWater}/${state.water.max}`);
     }
     
-    // Only water if we have water
-    state.water.current--;
+    state.water.current = Math.floor(state.water.current) - 1;
     tile.watered = true;
     
     setMessage(`💧 Watered! ${Math.floor(state.water.current)}/${state.water.max} left`);
@@ -753,10 +754,13 @@
     if (!state.well || state.well.level === 0) return;
     const nowMs = Date.now();
     const hoursPassed = (nowMs - (state.well.lastUpdate || nowMs)) / 3600000;
-    const produced = hoursPassed * getWellProduction(state.well.level);
-    if (produced > 0.001) {
-      state.water.current = Math.min(state.water.current + produced, state.water.max);
-      state.well.lastUpdate = nowMs;
+    let produced = hoursPassed * getWellProduction(state.well.level);
+    
+    // Only add whole numbers, keep remainder for later
+    if (produced >= 1) {
+      const wholeWater = Math.floor(produced);
+      state.water.current = Math.min(state.water.current + wholeWater, state.water.max);
+      state.well.lastUpdate = nowMs - ((produced - wholeWater) * 3600000);
     }
   }
 
