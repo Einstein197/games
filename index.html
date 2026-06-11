@@ -457,11 +457,16 @@
     const tile = state.tiles[index];
     if (!tile.cropId) return setMessage("❌ Nothing here");
     if (tile.watered) return setMessage("💧 Already watered");
+    
+    // CHECK - Don't allow watering if water is 0 or less
     if (state.water.current <= 0) {
-      return setMessage("💧 Out of water! Buy/upgrade well, upgrade water tank, or wait for rain.");
+      return setMessage(`❌ Not enough water! You have ${state.water.current}/${state.water.max}. Upgrade well or wait for rain!`);
     }
+    
+    // Only water if we have water
     state.water.current--;
     tile.watered = true;
+    
     setMessage(`💧 Watered! ${Math.floor(state.water.current)}/${state.water.max} left`);
     save();
     render();
