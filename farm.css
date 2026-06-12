@@ -510,23 +510,21 @@ button:hover {
 /* ============================================ */
 /* TUTORIAL STYLES - CENTER POSITION */
 /* ============================================ */
-@media (min-width: 768px) {
-  .tutorial-mini {
-    position: fixed;
-    top: 200px;
-    left: 400px;
-    background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
-    border: 3px solid #ffd700;
-    border-radius: 16px;
-    padding: 15px 20px;
-    width: 260px;
-    pointer-events: auto;
-    z-index: 3001;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    animation: bounceIn 0.3s ease;
-  }
-}
 
+.tutorial-mini {
+  position: fixed;
+  top: 200px;
+  left: 700px;
+  background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
+  border: 3px solid #ffd700;
+  border-radius: 16px;
+  padding: 15px 20px;
+  width: 260px;
+  pointer-events: auto;
+  z-index: 3001;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: bounceIn 0.3s ease;
+}
 
 @keyframes bounceIn {
   0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
