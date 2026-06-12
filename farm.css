@@ -714,17 +714,18 @@ button:hover {
   }
   
   .tutorial-mini {
-    position: fixed !important;
-    top: auto !important;
-    bottom: 20px !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    width: 90% !important;
-    max-width: 300px !important;
-    padding: 12px 15px !important;
-    margin: 0 auto;
+    position: fixed;
+    top: 200px;
+    left: 400px;
+    background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
+    border: 3px solid #ffd700;
+    border-radius: 16px;
+    padding: 15px 20px;
+    width: 260px;
+    pointer-events: auto;
     z-index: 3001;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: bounceIn 0.3s ease;
   }
   
   .tutorial-mini-emoji {
