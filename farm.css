@@ -512,9 +512,9 @@ button:hover {
 /* ============================================ */
 
 .tutorial-mini {
-  position: fixed !important;
-  top: 200px !important;
-  left: 400px !important;
+  position: fixed;
+  top: 200px;
+  left: 400px;
   background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
   border: 3px solid #ffd700;
   border-radius: 16px;
