@@ -714,8 +714,17 @@ button:hover {
   }
   
   .tutorial-mini {
-    width: 260px;
-    padding: 12px 15px;
+    position: fixed !important;
+    top: auto !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 300px !important;
+    padding: 12px 15px !important;
+    margin: 0 auto;
+    z-index: 3001;
   }
   
   .tutorial-mini-emoji {
