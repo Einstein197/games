@@ -459,7 +459,10 @@
     }
   }
 
-  // Rest of game functions
+  // ===============================
+  // GAME FUNCTIONS
+  // ===============================
+
   function now() { return Math.floor(Date.now() / 1000); }
   function xpForLevel(level) { return level * 10000; }
   function currentSeason() { return SEASONS[state.seasonIndex]; }
@@ -858,7 +861,7 @@
   function buyWell() {
     const cost = getWellCost(1);
     if (state.coins < cost) {
-      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
+      showModalMessage("wellModalMessage", `❌ Need ${cost} coins!`, true);
       return;
     }
     state.coins -= cost;
@@ -870,18 +873,14 @@
   }
 
   function upgradeWell() {
-    const nextLevel = state.well.level + 1;
-    const cost = getWellCost(nextLevel);
-    if (state.coins < cost) {
-      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
-      return;
-    }
     const result = window.upgradeWell(state);
     if (result && result.ok) {
-      showModalMessage("wellModalMessage", `✅ Lv${state.well.level}`, false);
+      showModalMessage("wellModalMessage", result.msg, false);
       save();
       render();
       openWellModal();
+    } else if (result) {
+      showModalMessage("wellModalMessage", result.msg, true);
     }
   }
 
@@ -1020,18 +1019,15 @@
     openTownModal();
   }
 
+  // ===============================
+  // WELL WATER UPDATE - CALLS WELL.JS
+  // ===============================
+  
   function updateWellWater() {
-    if (!state.well || state.well.level === 0) return;
-    const nowMs = Date.now();
-    const hoursPassed = (nowMs - (state.well.lastUpdate || nowMs)) / 3600000;
-    let produced = hoursPassed * getWellProduction(state.well.level);
-    
-    if (produced > 0.001) {
-      state.water.current = Math.min(state.water.current + produced, state.water.max);
-      state.well.lastUpdate = nowMs;
+    // Call the well.js version
+    if (typeof window.updateWellWater === 'function') {
+      window.updateWellWater(state);
     }
-    
-    state.water.current = Math.floor(state.water.current);
   }
 
   function reviveAllCrops() {

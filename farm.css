@@ -508,28 +508,62 @@ button:hover {
 .town-content h2 { color: #ffaa66; margin-top: 0; }
 
 /* ============================================ */
-/* TUTORIAL STYLES - CENTER POSITION */
+/* TUTORIAL STYLES - RESPONSIVE */
 /* ============================================ */
 
-.tutorial-mini {
-  position: fixed;
-  top: 200px;
-  left: 400px;
-  background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
-  border: 3px solid #ffd700;
-  border-radius: 16px;
-  padding: 15px 20px;
-  width: 260px;
-  pointer-events: auto;
-  z-index: 3001;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  animation: bounceIn 0.3s ease;
+/* Desktop: top-left corner */
+@media (min-width: 768px) {
+  .tutorial-mini {
+    position: fixed;
+    top: 160px;
+    left: 15px;
+    right: auto;
+    bottom: auto;
+    transform: none;
+    background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
+    border: 3px solid #ffd700;
+    border-radius: 16px;
+    padding: 15px 20px;
+    width: 260px;
+    pointer-events: auto;
+    z-index: 3001;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: bounceInDesktop 0.3s ease;
+  }
 }
 
-@keyframes bounceIn {
-  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-  80% { transform: translate(-50%, -50%) scale(1.02); }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+/* Mobile: centered at bottom */
+@media (max-width: 767px) {
+  .tutorial-mini {
+    position: fixed;
+    top: auto;
+    bottom: 20px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
+    border: 3px solid #ffd700;
+    border-radius: 16px;
+    padding: 12px 15px;
+    width: 85%;
+    max-width: 300px;
+    pointer-events: auto;
+    z-index: 3001;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    animation: bounceInMobile 0.3s ease;
+  }
+}
+
+@keyframes bounceInDesktop {
+  0% { transform: scale(0.8); opacity: 0; }
+  80% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bounceInMobile {
+  0% { transform: translateX(-50%) scale(0.8); opacity: 0; }
+  80% { transform: translateX(-50%) scale(1.02); }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
 }
 
 .tutorial-mini.hidden {
@@ -659,6 +693,23 @@ button:hover {
   display: none;
 }
 
+/* Mobile cursor adjustment */
+@media (max-width: 767px) {
+  .tutorial-cursor {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+  .tutorial-mini-emoji {
+    font-size: 32px;
+  }
+  .tutorial-mini-title {
+    font-size: 14px;
+  }
+  .tutorial-mini-message {
+    font-size: 11px;
+  }
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.7; transform: scale(1.05); }
@@ -711,22 +762,5 @@ button:hover {
   .silo-building, .well-building, .water-building, .town-building {
     min-width: 70px;
     padding: 10px 8px 8px 8px;
-  }
-  
-  .tutorial-mini {
-    width: 260px;
-    padding: 12px 15px;
-  }
-  
-  .tutorial-mini-emoji {
-    font-size: 32px;
-  }
-  
-  .tutorial-mini-title {
-    font-size: 14px;
-  }
-  
-  .tutorial-mini-message {
-    font-size: 11px;
   }
 }
