@@ -329,6 +329,12 @@
     if (currentWeather() === "Rain") {
       state.water.current += 5;
       if (state.water.current > state.water.max) state.water.current = state.water.max;
+      setMessage(`🌧️ Rain! +5 water!`);
+    }
+    if (currentWeather() === "Storm") {
+      state.water.current += 10;
+      if (state.water.current > state.water.max) state.water.current = state.water.max;
+      setMessage(`⛈️ Storm! +10 water!`);
     }
     updateMarket();
     
