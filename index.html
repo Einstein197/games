@@ -459,7 +459,10 @@
     }
   }
 
-  // Rest of game functions
+  // ===============================
+  // GAME FUNCTIONS
+  // ===============================
+
   function now() { return Math.floor(Date.now() / 1000); }
   function xpForLevel(level) { return level * 10000; }
   function currentSeason() { return SEASONS[state.seasonIndex]; }
@@ -694,7 +697,7 @@
     
     checkTutorialAction("harvest", index);
     
-    setMessage(`🌾 +${crop.name} (${tile.quality}) +${xpGain}✨`);
+    setMessage(`🌾 +${crop.name} (${tile.quality}) +${xpGain}`);
     save();
     render();
     updateSiloModal();
@@ -772,7 +775,7 @@
       } else if (info.stage === "growing") {
         div.textContent = info.crop.emoji;
       } else if (info.stage === "ready") {
-        div.textContent = info.crop.emoji + "✨";
+        div.textContent = info.crop.emoji;
       } else if (info.stage === "dead") {
         div.textContent = "";
         div.innerHTML = `<img src="deadweed.png" style="width: 100%; height: 100%; object-fit: contain;" alt="dead">`;
@@ -870,18 +873,14 @@
   }
 
   function upgradeWell() {
-    const nextLevel = state.well.level + 1;
-    const cost = getWellCost(nextLevel);
-    if (state.coins < cost) {
-      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
-      return;
-    }
     const result = window.upgradeWell(state);
     if (result && result.ok) {
-      showModalMessage("wellModalMessage", `✅ Lv${state.well.level}`, false);
+      showModalMessage("wellModalMessage", result.msg, false);
       save();
       render();
       openWellModal();
+    } else if (result) {
+      showModalMessage("wellModalMessage", result.msg, true);
     }
   }
 
@@ -1020,15 +1019,27 @@
     openTownModal();
   }
 
+  // ===============================
+  // WELL WATER UPDATE
+  // ===============================
+
   function updateWellWater() {
     if (!state.well || state.well.level === 0) return;
+    
     const nowMs = Date.now();
     const hoursPassed = (nowMs - (state.well.lastUpdate || nowMs)) / 3600000;
-    let produced = hoursPassed * getWellProduction(state.well.level);
+    const productionRate = getWellProduction(state.well.level);
+    let produced = hoursPassed * productionRate;
     
-    if (produced > 0.001) {
-      state.water.current = Math.min(state.water.current + produced, state.water.max);
-      state.well.lastUpdate = nowMs;
+    if (produced >= 0.01) {
+      const wholeWater = Math.floor(produced);
+      if (wholeWater > 0) {
+        state.water.current = Math.min(state.water.current + wholeWater, state.water.max);
+        const hoursUsed = wholeWater / productionRate;
+        state.well.lastUpdate += hoursUsed * 3600000;
+      } else {
+        state.well.lastUpdate = nowMs;
+      }
     }
     
     state.water.current = Math.floor(state.water.current);
@@ -1049,7 +1060,7 @@
         }
       }
     }
-    setMessage(`✨ ${revived} revived!`);
+    setMessage(`${revived} revived!`);
     save();
     render();
   }
