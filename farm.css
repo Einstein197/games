@@ -86,6 +86,7 @@ button:hover {
 }
 
 #farm {
+  margin: 0 auto;
   width: 94vmin;
   height: 94vmin;
   display: grid;
@@ -506,6 +507,184 @@ button:hover {
 .water-content h2 { color: #66ffcc; margin-top: 0; }
 .town-content h2 { color: #ffaa66; margin-top: 0; }
 
+/* ============================================ */
+/* TUTORIAL STYLES - CENTER POSITION */
+/* ============================================ */
+
+.tutorial-mini {
+  position: fixed !important;
+  top: 200px !important;
+  left: 400px !important;
+  background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
+  border: 3px solid #ffd700;
+  border-radius: 16px;
+  padding: 15px 20px;
+  width: 260px;
+  pointer-events: auto;
+  z-index: 3001;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: bounceIn 0.3s ease;
+}
+
+@keyframes bounceIn {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  80% { transform: translate(-50%, -50%) scale(1.02); }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.tutorial-mini.hidden {
+  display: none;
+}
+
+.tutorial-mini-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ffd700;
+}
+
+.tutorial-mini-step {
+  background: #ffd700;
+  color: #1a1a1a;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.tutorial-mini-exit {
+  background: none;
+  border: none;
+  color: #ff8866;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.tutorial-mini-exit:hover {
+  color: #ffaa88;
+}
+
+.tutorial-mini-body {
+  text-align: center;
+}
+
+.tutorial-mini-emoji {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.tutorial-mini-title {
+  color: #ffd700;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+.tutorial-mini-message {
+  font-size: 12px;
+  color: #ddd;
+  margin: 8px 0;
+  line-height: 1.4;
+}
+
+.tutorial-mini-progress {
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+
+.tutorial-mini-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.tutorial-mini-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tutorial-mini-skip, .tutorial-mini-next {
+  background: #444;
+  border: none;
+  padding: 6px 12px;
+  font-size: 11px;
+  flex: 1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tutorial-mini-skip:hover {
+  background: #555;
+}
+
+.tutorial-mini-next {
+  background: #4a7c2a;
+}
+
+.tutorial-mini-next:hover {
+  background: #5a9c3a;
+}
+
+.tutorial-cursor {
+  position: fixed;
+  background: #ffd700;
+  color: #1a1a1a;
+  padding: 5px 10px;
+  border-radius: 25px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 3002;
+  pointer-events: none;
+  animation: pulse 1s infinite;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.tutorial-cursor::before {
+  content: "👇";
+  margin-right: 5px;
+}
+
+.tutorial-cursor.hidden {
+  display: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+.tile-highlight {
+  animation: tutorialGlow 1s infinite;
+  border: 2px solid #ffd700 !important;
+  box-shadow: 0 0 15px #ffd700 !important;
+}
+
+.building-highlight {
+  animation: tutorialGlow 1s infinite;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 15px #ffd700 !important;
+}
+
+@keyframes tutorialGlow {
+  0%, 100% { box-shadow: 0 0 5px #ffd700; }
+  50% { box-shadow: 0 0 20px #ffd700; }
+}
+
+/* ============================================ */
+/* RESPONSIVE */
+/* ============================================ */
+
 @media (max-width: 500px) {
   #frame iframe {
     width: 90%;
@@ -532,5 +711,22 @@ button:hover {
   .silo-building, .well-building, .water-building, .town-building {
     min-width: 70px;
     padding: 10px 8px 8px 8px;
+  }
+  
+  .tutorial-mini {
+    width: 260px;
+    padding: 12px 15px;
+  }
+  
+  .tutorial-mini-emoji {
+    font-size: 32px;
+  }
+  
+  .tutorial-mini-title {
+    font-size: 14px;
+  }
+  
+  .tutorial-mini-message {
+    font-size: 11px;
   }
 }

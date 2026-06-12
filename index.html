@@ -20,6 +20,29 @@
 
 <body>
 
+<!-- Tutorial Mini Popup -->
+<div id="tutorialMini" class="tutorial-mini">
+  <div class="tutorial-mini-header">
+    <span class="tutorial-mini-step" id="tutorialStepBadge">Step 1/7</span>
+    <button class="tutorial-mini-exit" onclick="exitTutorial()">✖</button>
+  </div>
+  <div class="tutorial-mini-body">
+    <div class="tutorial-mini-emoji" id="tutorialEmoji">🌱</div>
+    <div class="tutorial-mini-title" id="tutorialTitle">Plant Your First Crop</div>
+    <div class="tutorial-mini-message" id="tutorialMessage">Click an empty brown tile to plant Wheat!</div>
+    <div class="tutorial-mini-progress">
+      <div class="tutorial-mini-progress-fill" id="tutorialProgressFill" style="width: 0%"></div>
+    </div>
+  </div>
+  <div class="tutorial-mini-footer">
+    <button class="tutorial-mini-skip" onclick="exitTutorial()">Skip</button>
+    <button class="tutorial-mini-next" id="tutorialNextBtn" onclick="tutorialNext()" style="display:none;">Next →</button>
+  </div>
+</div>
+
+<!-- Tutorial Cursor -->
+<div id="tutorialCursor" class="tutorial-cursor hidden"></div>
+
 <h1>Krypton SimFarm Ultimate</h1>
 
 <div id="frame">
@@ -73,28 +96,24 @@
 <div id="msg"></div>
 
 <div class="buildings-container">
-  <!-- SILO PNG -->
   <div class="silo-building" onclick="openSiloModal()">
     <img src="silo.png" alt="Silo" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 120%22%3E%3Crect width=%22100%22 height=%22120%22 fill=%22%238b5a2b%22/%3E%3Crect x=%2220%22 y=%2210%22 width=%2260%22 height=%2280%22 fill=%22%23a07030%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%236b3a1a%22/%3E%3Crect x=%2235%22 y=%2260%22 width=%2230%22 height=%2240%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
     <div class="usage-text" id="siloUsageText">📦 0/100</div>
     <div class="building-label">SILO</div>
   </div>
   
-  <!-- WELL PNG -->
   <div class="well-building" onclick="openWellModal()">
     <img src="well.png" alt="Well" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 100%22%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2220%22 fill=%22%23446688%22/%3E%3Crect x=%2235%22 y=%2230%22 width=%2210%22 height=%2240%22 fill=%22%23886644%22/%3E%3C/svg%3E'">
     <div class="well-text" id="wellLevelText">🚰 Lv0</div>
     <div class="building-label">WELL</div>
   </div>
   
-  <!-- WATER TOWER PNG -->
   <div class="water-building" onclick="openWaterModal()">
     <img src="water.png" alt="Water Tank" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 70 100%22%3E%3Crect x=%2215%22 y=%2220%22 width=%2240%22 height=%2250%22 fill=%22%234488aa%22/%3E%3Crect x=%2210%22 y=%2215%22 width=%2250%22 height=%2210%22 fill=%22%2366aacc%22/%3E%3C/svg%3E'">
     <div class="water-text" id="waterTankText">💧 20/20</div>
-    <div class="building-label">WATER TANK</div>
+    <div class="building-label">WATER</div>
   </div>
   
-  <!-- TOWN PNG -->
   <div class="town-building" onclick="openTownModal()">
     <img src="town.png" alt="Town" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect x=%220%22 y=%2230%22 width=%22100%22 height=%2250%22 fill=%22%238B7355%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%238B4513%22/%3E%3Crect x=%2235%22 y=%2255%22 width=%2230%22 height=%4025%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
     <div class="town-text" id="townStatsText">🏘️ 10</div>
@@ -113,7 +132,7 @@
 <div id="siloModal" class="silo-modal hidden">
   <div class="silo-content">
     <div class="silo-header">
-      <h2>SILO</h2>
+      <h2>🏚️🌾 SILO</h2>
       <div class="silo-stats">
         <span>📦 <span id="modalSiloUsed">0</span>/<span id="modalSiloCapacity">100</span></span>
         <span>🏗️ <span id="modalSiloCapacity2">100</span></span>
@@ -144,9 +163,10 @@
 
 <div id="waterModal" class="water-modal hidden">
   <div class="water-content">
-    <h2>💧 WATER TANK</h2>
+    <h2>💧 WATER</h2>
     <div class="water-stats">
       <div>💦 <span id="waterCurrent">0</span>/<span id="waterMax">0</span></div>
+      <div>🏗️ <span id="waterCapacity">0</span></div>
     </div>
     <div id="waterModalMessage" class="modal-message" style="display:none;"></div>
     <button id="expandWaterTankBtn" onclick="expandWaterTank()">⬆️ Expand</button>
@@ -182,7 +202,6 @@
   const seasonEmojis = { "Spring": "🌸", "Summer": "☀️", "Fall": "🍂", "Winter": "⛄" };
   const weatherEmojis = { "Sunny": "☀️", "Rain": "🌧️", "Cloudy": "☁️", "Storm": "⛈️", "Drought": "🏜️", "Snow": "❄️" };
   
-  // 6 hour game days
   const DAY_LENGTH_SECONDS = 21600;
 
   const farmEl = document.getElementById("farm");
@@ -223,6 +242,224 @@
     silo: { capacity: 100, stored: {} }
   };
 
+  // ===============================
+  // INTERACTIVE TUTORIAL SYSTEM
+  // ===============================
+
+  let tutorialActive = false;
+  let tutorialStep = 1;
+  let tutorialPlantedTile = null;
+
+  const tutorialSteps = {
+    1: { title: "🌱 Plant First Crop", message: "Click an empty brown tile to plant Wheat!", emoji: "🌱", action: "plant", target: "tile" },
+    2: { title: "💧 Water Your Crop", message: "Click the planted crop to water it!", emoji: "💧", action: "water", target: "tile" },
+    3: { title: "⏰ Wait to Grow", message: "Wheat takes 30 seconds. Click 'Ready' when it sparkles!", emoji: "⏳", action: "wait", target: null },
+    4: { title: "🌾 Harvest!", message: "Click the sparkling crop to harvest!", emoji: "🌾", action: "harvest", target: "tile" },
+    5: { title: "🏚️ Sell in Silo", message: "Click the SILO building to sell your crop!", emoji: "💰", action: "openSilo", target: "silo" },
+    6: { title: "💀 Revive Dead Crops", message: "If a crop dies, click the REVIVE button to bring it back!", emoji: "💀", action: "revive", target: "revive" },
+    7: { title: "🏘️ Collect Taxes", message: "Click the TOWN building to collect taxes!", emoji: "🏘️", action: "openTown", target: "town" }
+  };
+
+  function startTutorial() {
+    tutorialActive = true;
+    tutorialStep = 1;
+    tutorialPlantedTile = null;
+    document.getElementById("tutorialMini").classList.remove("hidden");
+    updateTutorialUI();
+  }
+
+  function exitTutorial() {
+    tutorialActive = false;
+    document.getElementById("tutorialMini").classList.add("hidden");
+    document.getElementById("tutorialCursor").classList.add("hidden");
+    removeTileHighlights();
+    removeBuildingHighlights();
+    localStorage.setItem("tutorial_completed", "true");
+    setMessage("🌾 Tutorial skipped! Click the farm to start planting!");
+  }
+
+  function updateTutorialUI() {
+    const step = tutorialSteps[tutorialStep];
+    if (!step) {
+      completeTutorial();
+      return;
+    }
+    
+    document.getElementById("tutorialStepBadge").textContent = `Step ${tutorialStep}/7`;
+    document.getElementById("tutorialEmoji").textContent = step.emoji;
+    document.getElementById("tutorialTitle").textContent = step.title;
+    document.getElementById("tutorialMessage").textContent = step.message;
+    
+    const progress = (tutorialStep / 7) * 100;
+    document.getElementById("tutorialProgressFill").style.width = `${progress}%`;
+    
+    const nextBtn = document.getElementById("tutorialNextBtn");
+    if (step.action === "wait") {
+      nextBtn.style.display = "block";
+      nextBtn.textContent = "Ready →";
+    } else {
+      nextBtn.style.display = "none";
+    }
+    
+    highlightTutorialTarget(step.target);
+  }
+
+  function highlightTutorialTarget(target) {
+    removeTileHighlights();
+    removeBuildingHighlights();
+    
+    const cursor = document.getElementById("tutorialCursor");
+    
+    if (target === "tile") {
+      const step = tutorialSteps[tutorialStep];
+      let tileIndex = -1;
+      
+      if (step.action === "plant") {
+        tileIndex = state.tiles.findIndex((tile, idx) => !tile.cropId && !isLocked(idx));
+      } else if (step.action === "water" && tutorialPlantedTile !== null) {
+        tileIndex = tutorialPlantedTile;
+      } else if (step.action === "harvest") {
+        tileIndex = state.tiles.findIndex((tile, idx) => {
+          if (isLocked(idx)) return false;
+          const info = getTileState(tile);
+          return info.stage === "ready";
+        });
+      }
+      
+      if (tileIndex !== -1 && tileElements[tileIndex]) {
+        const tileRect = tileElements[tileIndex].getBoundingClientRect();
+        cursor.style.left = (tileRect.left + tileRect.width / 2 - 30) + "px";
+        cursor.style.top = (tileRect.top - 25) + "px";
+        cursor.classList.remove("hidden");
+        tileElements[tileIndex].classList.add("tile-highlight");
+      }
+    } else if (target === "silo") {
+      const siloBuilding = document.querySelector(".silo-building");
+      if (siloBuilding) {
+        const siloRect = siloBuilding.getBoundingClientRect();
+        cursor.style.left = (siloRect.left + siloRect.width / 2 - 30) + "px";
+        cursor.style.top = (siloRect.top - 25) + "px";
+        cursor.classList.remove("hidden");
+        siloBuilding.classList.add("building-highlight");
+      }
+    } else if (target === "revive") {
+      const reviveBtn = document.getElementById("reviveBtn");
+      if (reviveBtn) {
+        const btnRect = reviveBtn.getBoundingClientRect();
+        cursor.style.left = (btnRect.left + btnRect.width / 2 - 30) + "px";
+        cursor.style.top = (btnRect.top - 25) + "px";
+        cursor.classList.remove("hidden");
+        reviveBtn.style.border = "2px solid #ffd700";
+        reviveBtn.style.boxShadow = "0 0 15px #ffd700";
+        reviveBtn.style.animation = "tutorialGlow 1s infinite";
+      }
+    } else if (target === "town") {
+      const townBuilding = document.querySelector(".town-building");
+      if (townBuilding) {
+        const townRect = townBuilding.getBoundingClientRect();
+        cursor.style.left = (townRect.left + townRect.width / 2 - 30) + "px";
+        cursor.style.top = (townRect.top - 25) + "px";
+        cursor.classList.remove("hidden");
+        townBuilding.classList.add("building-highlight");
+      }
+    } else {
+      cursor.classList.add("hidden");
+    }
+  }
+
+  function removeTileHighlights() {
+    tileElements.forEach(tile => tile.classList.remove("tile-highlight"));
+  }
+
+  function removeBuildingHighlights() {
+    document.querySelectorAll(".silo-building, .town-building").forEach(b => b.classList.remove("building-highlight"));
+    const reviveBtn = document.getElementById("reviveBtn");
+    if (reviveBtn) {
+      reviveBtn.style.border = "";
+      reviveBtn.style.boxShadow = "";
+      reviveBtn.style.animation = "";
+    }
+  }
+
+  function tutorialNext() {
+    if (tutorialSteps[tutorialStep].action === "wait") {
+      tutorialStep++;
+      updateTutorialUI();
+    }
+  }
+
+  function checkTutorialAction(action, data) {
+    if (!tutorialActive) return false;
+    
+    const step = tutorialSteps[tutorialStep];
+    if (!step) return false;
+    
+    if (step.action === "plant" && action === "plant") {
+      tutorialPlantedTile = data;
+      tutorialStep++;
+      updateTutorialUI();
+      setMessage("✅ Great! Now water your crop!");
+      return true;
+    }
+    
+    if (step.action === "water" && action === "water") {
+      tutorialStep++;
+      updateTutorialUI();
+      setMessage("✅ Perfect! Your crop is growing!");
+      return true;
+    }
+    
+    if (step.action === "harvest" && action === "harvest") {
+      tutorialStep++;
+      updateTutorialUI();
+      setMessage("✅ Awesome! Now sell it in the silo!");
+      return true;
+    }
+    
+    if (step.action === "openSilo" && action === "openSilo") {
+      tutorialStep++;
+      updateTutorialUI();
+      setMessage("✅ Great! If a crop dies, you can revive it!");
+      return true;
+    }
+    
+    if (step.action === "revive" && action === "revive") {
+      tutorialStep++;
+      updateTutorialUI();
+      setMessage("✅ Perfect! Now collect taxes from the town!");
+      return true;
+    }
+    
+    if (step.action === "openTown" && action === "openTown") {
+      completeTutorial();
+      return true;
+    }
+    
+    return false;
+  }
+
+  function completeTutorial() {
+    tutorialActive = false;
+    document.getElementById("tutorialMini").classList.add("hidden");
+    document.getElementById("tutorialCursor").classList.add("hidden");
+    removeTileHighlights();
+    removeBuildingHighlights();
+    localStorage.setItem("tutorial_completed", "true");
+    
+    state.coins += 100;
+    setMessage("🎉 Tutorial complete! +100 bonus coins! Happy farming! 🌾");
+    save();
+    render();
+  }
+
+  function checkFirstTimeUser() {
+    const tutorialCompleted = localStorage.getItem("tutorial_completed");
+    if (!tutorialCompleted) {
+      setTimeout(() => startTutorial(), 1000);
+    }
+  }
+
+  // Rest of game functions
   function now() { return Math.floor(Date.now() / 1000); }
   function xpForLevel(level) { return level * 10000; }
   function currentSeason() { return SEASONS[state.seasonIndex]; }
@@ -329,12 +566,6 @@
     if (currentWeather() === "Rain") {
       state.water.current += 5;
       if (state.water.current > state.water.max) state.water.current = state.water.max;
-      setMessage(`🌧️ Rain! +5 water!`);
-    }
-    if (currentWeather() === "Storm") {
-      state.water.current += 10;
-      if (state.water.current > state.water.max) state.water.current = state.water.max;
-      setMessage(`⛈️ Storm! +10 water!`);
     }
     updateMarket();
     
@@ -373,12 +604,16 @@
     if (tile.cropId) return;
     const crop = cropById(seedSelectEl.value);
     if (state.coins < crop.baseCost) return setMessage(`❌ Need ${crop.baseCost} for ${crop.name}`);
+    
     state.coins -= crop.baseCost;
     tile.cropId = crop.id;
     tile.plantedAt = now();
     tile.dead = false;
     tile.quality = qualityRoll();
     tile.watered = false;
+    
+    checkTutorialAction("plant", index);
+    
     setMessage(`🌱 ${crop.name} (${tile.quality})`);
     save();
     render();
@@ -437,6 +672,7 @@
     const info = getTileState(tile);
     if (info.stage !== "ready") return;
     if (siloFree() <= 0) return setMessage(`❌ Silo full! Expand!`);
+    
     const crop = info.crop;
     addToSilo(crop.id, 1);
     let xpGain = crop.xp;
@@ -444,15 +680,20 @@
     if (tile.quality === "excellent") xpGain = Math.round(xpGain * 1.5);
     if (tile.quality === "golden") xpGain = Math.round(xpGain * 2.5);
     state.xp += xpGain;
+    
     while (state.level < 99 && state.xp >= xpForLevel(state.level)) {
       state.xp -= xpForLevel(state.level);
       state.level++;
       showLevelPopup(state.level);
       initSeedSelect();
     }
+    
     tile.cropId = null;
     tile.plantedAt = 0;
     tile.watered = false;
+    
+    checkTutorialAction("harvest", index);
+    
     setMessage(`🌾 +${crop.name} (${tile.quality}) +${xpGain}✨`);
     save();
     render();
@@ -464,16 +705,15 @@
     if (!tile.cropId) return setMessage("❌ Nothing here");
     if (tile.watered) return setMessage("💧 Already watered");
     
-    // Floor the current water to get whole number
     const currentWater = Math.floor(state.water.current);
-    
     if (currentWater <= 0) {
       return setMessage(`❌ Not enough water! You have ${currentWater}/${state.water.max}`);
     }
     
-    // Subtract 1 and floor to ensure no decimals
-    state.water.current = Math.floor(state.water.current) - 1;
+    state.water.current--;
     tile.watered = true;
+    
+    checkTutorialAction("water", index);
     
     setMessage(`💧 Watered! ${Math.floor(state.water.current)}/${state.water.max} left`);
     save();
@@ -532,7 +772,7 @@
       } else if (info.stage === "growing") {
         div.textContent = info.crop.emoji;
       } else if (info.stage === "ready") {
-        div.textContent = info.crop.emoji;
+        div.textContent = info.crop.emoji + "✨";
       } else if (info.stage === "dead") {
         div.textContent = "";
         div.innerHTML = `<img src="deadweed.png" style="width: 100%; height: 100%; object-fit: contain;" alt="dead">`;
@@ -541,9 +781,11 @@
   }
 
   function openSiloModal() {
+    checkTutorialAction("openSilo", null);
     document.getElementById("siloModal").classList.remove("hidden");
     updateSiloModal();
   }
+  
   function closeSiloModal() { document.getElementById("siloModal").classList.add("hidden"); }
   
   function updateSiloModal() {
@@ -584,7 +826,7 @@
   function expandSiloFromModal() {
     const cost = state.silo.capacity * 20;
     if (state.coins < cost) {
-      showModalMessage("siloModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
+      showModalMessage("siloModalMessage", `❌ Need ${cost} (${Math.floor(state.coins)})`, true);
       return;
     }
     const oldCapacity = state.silo.capacity;
@@ -616,7 +858,7 @@
   function buyWell() {
     const cost = getWellCost(1);
     if (state.coins < cost) {
-      showModalMessage("wellModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
+      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
       return;
     }
     state.coins -= cost;
@@ -631,7 +873,7 @@
     const nextLevel = state.well.level + 1;
     const cost = getWellCost(nextLevel);
     if (state.coins < cost) {
-      showModalMessage("wellModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
+      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
       return;
     }
     const result = window.upgradeWell(state);
@@ -648,27 +890,48 @@
     document.getElementById("waterCurrent").textContent = Math.floor(state.water.current);
     document.getElementById("waterMax").textContent = state.water.max;
     document.getElementById("waterCapacity").textContent = state.water.max;
-    document.getElementById("expandWaterTankBtn").innerHTML = `⬆️ (${state.water.max * 100})`;
+    const expandCost = state.water.max * 100;
+    const expandBtn = document.getElementById("expandWaterTankBtn");
+    expandBtn.innerHTML = `⬆️ Expand Tank (${expandCost}💰)`;
   }
   function closeWaterModal() { document.getElementById("waterModal").classList.add("hidden"); }
 
   function expandWaterTank() {
     const cost = state.water.max * 100;
+    const currentCoins = Math.floor(state.coins);
+    
     if (state.coins < cost) {
-      showModalMessage("waterModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
+      const shortfall = cost - currentCoins;
+      showModalMessage("waterModalMessage", `❌ Need ${cost} coins! You have ${currentCoins}. Missing ${shortfall} coins. Harvest and sell crops! 💧`, true);
+      const btn = document.getElementById("expandWaterTankBtn");
+      if (btn) {
+        btn.style.backgroundColor = '#8b3a2a';
+        setTimeout(() => btn.style.backgroundColor = '', 500);
+      }
       return;
     }
+    
     const oldMax = state.water.max;
     state.coins -= cost;
     state.water.max += 20;
     state.water.current += 20;
-    showModalMessage("waterModalMessage", `✅ ${oldMax} → ${state.water.max}`, false);
+    
+    showModalMessage("waterModalMessage", `✅ Water Tank: ${oldMax} → ${state.water.max}! Cost: ${cost} coins. +20 water added! 💧`, false);
+    
+    const btn = document.getElementById("expandWaterTankBtn");
+    if (btn) {
+      btn.style.backgroundColor = '#2a7c4a';
+      setTimeout(() => btn.style.backgroundColor = '', 500);
+      btn.innerHTML = `⬆️ Expand Tank (${state.water.max * 100}💰)`;
+    }
+    
     save();
     render();
     openWaterModal();
   }
 
   function openTownModal() {
+    checkTutorialAction("openTown", null);
     const modal = document.getElementById("townModal");
     modal.classList.remove("hidden");
     
@@ -744,7 +1007,7 @@
   function investInTown() {
     const cost = Math.floor(state.town.prosperity * 500);
     if (state.coins < cost) {
-      showModalMessage("townModalMessage", `❌ Need ${Math.floor(state.coins)}/${cost}`, true);
+      showModalMessage("townModalMessage", `❌ Need ${cost}`, true);
       return;
     }
     state.coins -= cost;
@@ -761,24 +1024,19 @@
     if (!state.well || state.well.level === 0) return;
     const nowMs = Date.now();
     const hoursPassed = (nowMs - (state.well.lastUpdate || nowMs)) / 3600000;
-    const productionRate = getWellProduction(state.well.level);
-    const rawProduced = hoursPassed * productionRate;
+    let produced = hoursPassed * getWellProduction(state.well.level);
     
-    // Only add whole numbers
-    const produced = Math.floor(rawProduced);
-    
-    if (produced > 0) {
+    if (produced > 0.001) {
       state.water.current = Math.min(state.water.current + produced, state.water.max);
-      // Update lastUpdate based on actual added water
-      const usedHours = produced / productionRate;
-      state.well.lastUpdate += usedHours * 3600000;
+      state.well.lastUpdate = nowMs;
     }
     
-    // Floor the current water to remove any decimals
     state.water.current = Math.floor(state.water.current);
   }
 
   function reviveAllCrops() {
+    checkTutorialAction("revive", null);
+    
     let revived = 0;
     for (const tile of state.tiles) {
       if (tile.cropId && tile.dead === true) {
@@ -794,6 +1052,16 @@
     setMessage(`✨ ${revived} revived!`);
     save();
     render();
+  }
+
+  function reviveAllWithAd() {
+    const frame = document.getElementById("rewardedFrame");
+    frame.style.display = "block";
+    setMessage("📺 Watch ad...");
+    setTimeout(() => {
+      frame.style.display = "none";
+      reviveAllCrops();
+    }, 8000);
   }
 
   function renderUI() {
@@ -841,7 +1109,7 @@
   expandBtn.addEventListener("click", () => {
     const cost = state.unlockedSize * 1000;
     if (state.coins < cost) {
-      setMessage(`❌ Need ${Math.floor(state.coins)}/${cost}`);
+      setMessage(`❌ Need ${cost}`);
       expandBtn.style.backgroundColor = '#8b3a2a';
       setTimeout(() => expandBtn.style.backgroundColor = '', 500);
       return;
@@ -867,16 +1135,7 @@
     }
   });
 
-  function reviveAllWithAd() {
-    const frame = document.getElementById("rewardedFrame");
-    frame.style.display = "block";
-    setMessage("📺 Watch ad...");
-    setTimeout(() => {
-      frame.style.display = "none";
-      reviveAllCrops();
-    }, 8000);
-  }
-
+  // Initialize
   load();
   initWell(state);
   initTiles();
@@ -888,6 +1147,8 @@
   expandBtn.textContent = `🚜 Expand (${state.unlockedSize * 1000})`;
   setMessage("🌾 Welcome! Click buildings below!");
   setInterval(tick, 1000);
+  
+  checkFirstTimeUser();
 
   const params = new URLSearchParams(window.location.search);
   const userId = params.get("uid");
