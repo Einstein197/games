@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Krypton SimFarm Ultimate</title>
   <link rel="icon" type="image/png" href="barn.jpg">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
 
   <!-- AdInPlay SDK -->
   <script src="https://api.adinplay.com/sdk.js"></script>
@@ -19,29 +19,6 @@
 </head>
 
 <body>
-
-<!-- Tutorial Mini Popup -->
-<div id="tutorialMini" class="tutorial-mini">
-  <div class="tutorial-mini-header">
-    <span class="tutorial-mini-step" id="tutorialStepBadge">Step 1/7</span>
-    <button class="tutorial-mini-exit" onclick="exitTutorial()">✖</button>
-  </div>
-  <div class="tutorial-mini-body">
-    <div class="tutorial-mini-emoji" id="tutorialEmoji">🌱</div>
-    <div class="tutorial-mini-title" id="tutorialTitle">Plant Your First Crop</div>
-    <div class="tutorial-mini-message" id="tutorialMessage">Click an empty brown tile to plant Wheat!</div>
-    <div class="tutorial-mini-progress">
-      <div class="tutorial-mini-progress-fill" id="tutorialProgressFill" style="width: 0%"></div>
-    </div>
-  </div>
-  <div class="tutorial-mini-footer">
-    <button class="tutorial-mini-skip" onclick="exitTutorial()">Skip</button>
-    <button class="tutorial-mini-next" id="tutorialNextBtn" onclick="tutorialNext()" style="display:none;">Next →</button>
-  </div>
-</div>
-
-<!-- Tutorial Cursor -->
-<div id="tutorialCursor" class="tutorial-cursor hidden"></div>
 
 <h1>Krypton SimFarm Ultimate</h1>
 
@@ -91,7 +68,33 @@
   </button>
 </div>
 
-<div id="farm"></div>
+<!-- Farm Container with tutorial inside but on the right -->
+<div class="farm-container">
+  <div id="farm"></div>
+  
+  <!-- Tutorial - inside farm container, positioned to the RIGHT of the grid -->
+  <div id="tutorialMini" class="tutorial-mini">
+    <div class="tutorial-mini-header">
+      <span class="tutorial-mini-step" id="tutorialStepBadge">Step 1/7</span>
+      <button class="tutorial-mini-exit" onclick="exitTutorial()">✖</button>
+    </div>
+    <div class="tutorial-mini-body">
+      <div class="tutorial-mini-emoji" id="tutorialEmoji">🌱</div>
+      <div class="tutorial-mini-title" id="tutorialTitle">Plant Your First Crop</div>
+      <div class="tutorial-mini-message" id="tutorialMessage">Click an empty brown tile to plant Wheat!</div>
+      <div class="tutorial-mini-progress">
+        <div class="tutorial-mini-progress-fill" id="tutorialProgressFill" style="width: 0%"></div>
+      </div>
+    </div>
+    <div class="tutorial-mini-footer">
+      <button class="tutorial-mini-skip" onclick="exitTutorial()">Skip</button>
+      <button class="tutorial-mini-next" id="tutorialNextBtn" onclick="tutorialNext()" style="display:none;">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tutorial Cursor -->
+<div id="tutorialCursor" class="tutorial-cursor hidden"></div>
 
 <div id="msg"></div>
 
@@ -697,7 +700,7 @@
     
     checkTutorialAction("harvest", index);
     
-    setMessage(`🌾 +${crop.name} (${tile.quality}) +${xpGain}`);
+    setMessage(`🌾 +${crop.name} (${tile.quality}) +${xpGain}✨`);
     save();
     render();
     updateSiloModal();
@@ -775,7 +778,7 @@
       } else if (info.stage === "growing") {
         div.textContent = info.crop.emoji;
       } else if (info.stage === "ready") {
-        div.textContent = info.crop.emoji;
+        div.textContent = info.crop.emoji + "✨";
       } else if (info.stage === "dead") {
         div.textContent = "";
         div.innerHTML = `<img src="deadweed.png" style="width: 100%; height: 100%; object-fit: contain;" alt="dead">`;
@@ -1060,7 +1063,7 @@
         }
       }
     }
-    setMessage(`${revived} revived!`);
+    setMessage(`✨ ${revived} revived!`);
     save();
     render();
   }
