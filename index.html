@@ -607,7 +607,24 @@
     else if (season === "Summer") pool = ["Sunny", "Sunny", "Drought", "Storm"];
     else if (season === "Fall") pool = ["Sunny", "Rain", "Cloudy", "Storm"];
     else pool = ["Snow", "Cloudy", "Sunny"];
-    state.weatherIndex = WEATHER_TYPES.indexOf(randomChoice(pool));
+    
+    const newWeather = randomChoice(pool);
+    const oldWeather = currentWeather();
+    state.weatherIndex = WEATHER_TYPES.indexOf(newWeather);
+    
+    // ADD WATER IMMEDIATELY WHEN WEATHER CHANGES TO RAIN
+    if (newWeather === "Rain" && oldWeather !== "Rain") {
+      const oldWater = state.water.current;
+      state.water.current = Math.min(state.water.current + 5, state.water.max);
+      setMessage(`🌧️ Rain started! +5 water! (${Math.floor(oldWater)} → ${Math.floor(state.water.current)}/${state.water.max})`);
+    }
+    
+    // Also add water if STORM gives water
+    if (newWeather === "Storm" && oldWeather !== "Storm") {
+      const oldWater = state.water.current;
+      state.water.current = Math.min(state.water.current + 10, state.water.max);
+      setMessage(`⛈️ Storm! +10 water! (${Math.floor(oldWater)} → ${Math.floor(state.water.current)}/${state.water.max})`);
+    }
   }
 
   function updateMarket() {
