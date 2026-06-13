@@ -244,6 +244,10 @@ button:hover {
   animation: bounceIn 0.3s ease;
 }
 
+.tutorial-mini.hidden {
+  display: none !important;
+}
+
 /* Mobile - adjust position within farm */
 @media (max-width: 767px) {
   .tutorial-mini {
