@@ -9,7 +9,6 @@
 function sendHeight() {
   requestAnimationFrame(() => {
     const height = document.body.scrollHeight;
-
     parent.postMessage({
       type: "resize-faucet",
       height
@@ -42,31 +41,16 @@ setInterval(sendHeight, 300);
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: none; /* solid background */
+      background: none;
       color: var(--text);
-
       margin: 0;
       min-height: 100vh;
-
       display: flex;
       justify-content: center;
       align-items: flex-start;
-
       padding-top: 0;
       margin-bottom: 0;
       padding-bottom: 0;
-    }
-
-
-
-    .glow-orbit {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: none;
-      opacity: 0;
-      z-index: -1;
-      box-shadow: none;
     }
 
     .card {
@@ -75,11 +59,10 @@ setInterval(sendHeight, 300);
       background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
       border-radius: 18px;
       padding: 24px 22px 20px;
-      box-shadow: none; /* removes all glow and shadow */
+      box-shadow: none;
       position: relative;
       overflow: hidden;
     }
-
 
     .header {
       display: flex;
@@ -246,37 +229,25 @@ setInterval(sendHeight, 300);
       gap: 8px;
       background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
       color: #020617;
-      box-shadow:
-        0 12px 30px rgba(56, 189, 248, 0.45),
-        0 0 0 1px rgba(15, 23, 42, 0.9);
-      transition:
-        transform 0.12s ease,
-        box-shadow 0.12s ease,
-        filter 0.12s ease,
-        opacity 0.12s ease;
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.45), 0 0 0 1px rgba(15, 23, 42, 0.9);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
     }
 
     .btn-main:hover {
       transform: translateY(-1px);
       filter: brightness(1.05);
-      box-shadow:
-        0 16px 40px rgba(56, 189, 248, 0.6),
-        0 0 0 1px rgba(15, 23, 42, 0.9);
+      box-shadow: 0 16px 40px rgba(56, 189, 248, 0.6), 0 0 0 1px rgba(15, 23, 42, 0.9);
     }
 
     .btn-main:active {
       transform: translateY(0);
-      box-shadow:
-        0 8px 18px rgba(56, 189, 248, 0.4),
-        0 0 0 1px rgba(15, 23, 42, 0.9);
+      box-shadow: 0 8px 18px rgba(56, 189, 248, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.9);
     }
 
     .btn-main.disabled {
       opacity: 0.55;
       cursor: not-allowed;
-      box-shadow:
-        0 4px 10px rgba(15, 23, 42, 0.9),
-        0 0 0 1px rgba(15, 23, 42, 0.9);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.9), 0 0 0 1px rgba(15, 23, 42, 0.9);
       filter: grayscale(0.2);
     }
 
@@ -369,7 +340,6 @@ setInterval(sendHeight, 300);
 </head>
 <body>
 
-
   <div class="card">
     <div class="header">
       <div class="logo">K</div>
@@ -439,10 +409,9 @@ setInterval(sendHeight, 300);
 
   <script>
   const uidParamName = "uid";
-
-  // ALWAYS hit the Worker directly
   const unlockEndpoint = "https://kryptonlegend.fun/api/unlock";
   const checkEndpoint  = "https://kryptonlegend.fun/api/check";
+  const GAME_URL = "https://kryptonlegend.fun/";
 
   const statusIndicator = document.getElementById("status-indicator");
   const statusText = document.getElementById("status-text");
@@ -451,6 +420,8 @@ setInterval(sendHeight, 300);
   const btnLabel = document.getElementById("btn-label");
   const toast = document.getElementById("toast");
   const toastText = document.getElementById("toast-text");
+
+  let redirectTimeout = null;
 
   function showToast(message, isError = false) {
     toastText.textContent = message;
@@ -467,14 +438,18 @@ setInterval(sendHeight, 300);
       error:  "var(--danger)"
     };
     statusIndicator.style.background = colors[type] || colors.error;
-    statusIndicator.style.boxShadow =
-      `0 0 10px ${colors[type] || colors.error}AA`;
+    statusIndicator.style.boxShadow = `0 0 10px ${colors[type] || colors.error}AA`;
   }
 
   function getUidFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const uid = params.get(uidParamName);
     return uid && uid.trim().length > 0 ? uid.trim() : null;
+  }
+
+  function redirectToGame() {
+    if (redirectTimeout) clearTimeout(redirectTimeout);
+    window.location.href = GAME_URL;
   }
 
   async function unlock() {
@@ -485,6 +460,7 @@ setInterval(sendHeight, 300);
       return;
     }
 
+    // Disable button immediately to prevent double-clicks
     unlockBtn.disabled = true;
     unlockBtn.classList.add("disabled");
     btnLabel.textContent = "Unlocking…";
@@ -497,23 +473,29 @@ setInterval(sendHeight, 300);
         body: JSON.stringify({ uid })
       });
 
-      if (!res.ok) throw new Error("Non‑OK response");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Non‑OK response");
+      }
 
       // Confirm KV write
       const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
       const checkData = await checkRes.json();
 
       if (checkData.verified) {
-        setStatus("Verified. You can now use faucet in Discord.", "ok");
-        btnLabel.textContent = "Faucet unlocked";
-        showToast("Faucet unlocked. Go back to Discord.");
+        setStatus("Verified! Redirecting to farm...", "ok");
+        btnLabel.textContent = "Unlocked!";
+        showToast("Faucet unlocked! Redirecting to farm...", false);
 
-        // Tell parent page to hide faucet iframe
+        // Tell parent page (if in iframe) to give coins
         if (window.parent !== window) {
           window.parent.postMessage({
             type: "faucet-complete"
           }, "*");
         }
+
+        // Redirect to game after 1.5 seconds
+        redirectTimeout = setTimeout(redirectToGame, 1500);
       }
 
     } catch (err) {
@@ -522,11 +504,11 @@ setInterval(sendHeight, 300);
       btnLabel.textContent = "Unlock faucet";
       unlockBtn.disabled = false;
       unlockBtn.classList.remove("disabled");
-      showToast("Error unlocking faucet. Try again.", true);
+      showToast(err.message || "Error unlocking faucet. Try again.", true);
     }
   }
 
-  function init() {
+  async function init() {
     const uid = getUidFromUrl();
 
     if (!uid) {
@@ -537,16 +519,41 @@ setInterval(sendHeight, 300);
       return;
     }
 
-    const shortUid =
-      uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
+    const shortUid = uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
     uidPill.textContent = "uid: " + shortUid;
+
+    // Check if already verified BEFORE showing the button
+    try {
+      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
+      const checkData = await checkRes.json();
+      
+      if (checkData.verified) {
+        setStatus("Already verified! Redirecting to farm...", "ok");
+        showToast("You already unlocked the faucet today! Redirecting...", false);
+        unlockBtn.disabled = true;
+        unlockBtn.classList.add("disabled");
+        btnLabel.textContent = "Already unlocked";
+        redirectTimeout = setTimeout(redirectToGame, 1500);
+        return;
+      }
+    } catch (err) {
+      console.error("Initial check failed:", err);
+      // Continue anyway - let them try to unlock
+    }
 
     setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
     unlockBtn.disabled = false;
     unlockBtn.classList.remove("disabled");
 
+    // Remove any existing listener and add new one
+    unlockBtn.removeEventListener("click", unlock);
     unlockBtn.addEventListener("click", unlock);
   }
+
+  // Clean up timeout if page unloads before redirect
+  window.addEventListener("beforeunload", () => {
+    if (redirectTimeout) clearTimeout(redirectTimeout);
+  });
 
   init();
 </script>
