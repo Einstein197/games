@@ -247,7 +247,7 @@ button:hover {
 /* Mobile - adjust position within farm */
 @media (max-width: 767px) {
   .tutorial-mini {
-    top: 200px;
+    top: 160px;
     left: 5px;
     width: calc(100% - 20px);
     max-width: 250px;
