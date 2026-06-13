@@ -159,7 +159,7 @@
     </div>
     <div id="wellModalMessage" class="modal-message" style="display:none;"></div>
     <button id="buyWellBtn" onclick="buyWell()">🛒 Buy (1000)</button>
-    <button id="upgradeWellBtn" onclick="upgradeWell()" style="display:none;">⬆️ Upgrade</button>
+    <button id="upgradeWellBtn" onclick="upgradeWellAction()" style="display:none;">⬆️ Upgrade</button>
     <button class="close-well" onclick="closeWellModal()">❌</button>
   </div>
 </div>
@@ -875,7 +875,7 @@
     openWellModal();
   }
 
-  function upgradeWell() {
+  function upgradeWellAction() {
     const result = window.upgradeWell(state);
     if (result && result.ok) {
       showModalMessage("wellModalMessage", result.msg, false);
