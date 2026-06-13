@@ -94,8 +94,8 @@ button:hover {
 
 #farm {
   margin: 0 auto;
-  width: 94vmin;
-  height: 94vmin;
+  width: 70vmin;
+  height: 70vmin;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
@@ -232,7 +232,7 @@ button:hover {
 .tutorial-mini {
   position: absolute;
   top: 10px;
-  left: 400px;
+  left: 220px;
   background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
   border: 3px solid #ffd700;
   border-radius: 16px;
@@ -460,6 +460,86 @@ button:hover {
 .well-building { border-color: #4488aa; }
 .water-building { border-color: #66ffcc; }
 .town-building { border-color: #ffaa66; }
+
+/* Workers Section Styles */
+.workers-section {
+  margin: 15px 0;
+  padding: 10px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 12px;
+}
+
+.workers-section h3 {
+  margin: 0 0 10px 0;
+  color: #ffaa66;
+  font-size: 14px;
+  text-align: center;
+}
+
+.worker-cards {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.worker-card {
+  background: #1a2a2a;
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center;
+  flex: 1;
+  min-width: 80px;
+  border: 1px solid #ffaa66;
+}
+
+.worker-emoji {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.worker-name {
+  font-weight: bold;
+  font-size: 11px;
+  color: #ffaa66;
+}
+
+.worker-desc {
+  font-size: 9px;
+  color: #aaa;
+  margin: 4px 0;
+}
+
+.worker-cost {
+  font-size: 8px;
+  color: #88ccff;
+  margin: 4px 0;
+}
+
+.worker-card button {
+  background: #4a7c2a;
+  border: none;
+  padding: 4px 8px;
+  font-size: 10px;
+  margin-top: 5px;
+  width: 100%;
+}
+
+.worker-card button:hover {
+  background: #5a9c3a;
+}
+
+.worker-status {
+  margin-top: 10px;
+  padding: 8px;
+  background: #0a1a1a;
+  border-radius: 8px;
+  font-size: 10px;
+  color: #88ffcc;
+  text-align: center;
+  max-height: 60px;
+  overflow-y: auto;
+}
 
 .silo-building:hover, .well-building:hover, .water-building:hover, .town-building:hover {
   transform: translateY(-5px);

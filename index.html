@@ -179,16 +179,30 @@
 
 <div id="townModal" class="town-modal hidden">
   <div class="town-content">
-    <h2>🏘️🌆 TOWN</h2>
+    <h2>🏘️🌆 TOWN HALL</h2>
     <div class="town-stats">
-      <div>👥 <span id="townPopulation">10</span></div>
-      <div>📈 <span id="townProsperity">1.0</span></div>
-      <div>⏰ <span id="taxCooldown">Ready!</span></div>
+      <div>👥 Population: <span id="townPopulation">10</span></div>
+      <div>📈 Prosperity: <span id="townProsperity">1.0</span></div>
+      <div>💰 Tax Rate: 10%</div>
+      <div>⏰ Next Tax: <span id="taxCooldown">Ready!</span></div>
     </div>
-    <div id="townModalMessage" class="modal-message" style="display:none;"></div>
+    
+    <!-- Worker Section -->
+    <div class="workers-section">
+      <h3>👨‍🌾 HIRE FARM HAND</h3>
+      <div class="worker-card-single">
+        <div class="worker-emoji">👨‍🌾</div>
+        <div class="worker-name">Master Farmer</div>
+        <div class="worker-desc">Works for 1 full day (6 hours). Harvests, Waters, Revives, and Plants!</div>
+        <div class="worker-cost">💰 100 coins per day</div>
+        <button id="hireWorkerBtn" onclick="hireMasterFarmer()">Hire Master Farmer (100💰)</button>
+      </div>
+      <div id="workerStatus" class="worker-status"></div>
+    </div>
+    
     <button id="collectTaxesBtn" onclick="collectTaxes()">💰 Collect</button>
     <button onclick="investInTown()">📈 Invest (<span id="investCost">500</span>)</button>
-    <button class="close-town" onclick="closeTownModal()">❌</button>
+    <button class="close-town" onclick="closeTownModal()">❌ Close</button>
   </div>
 </div>
 
@@ -200,7 +214,7 @@
   const SAVE_KEY = "krypton_simfarm_ultimate";
   const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
   const WEATHER_TYPES = ["Sunny", "Rain", "Cloudy", "Storm", "Drought", "Snow"];
-  const GRID_SIZE = 10;
+  const GRID_SIZE = 12;
   
   const seasonEmojis = { "Spring": "🌸", "Summer": "☀️", "Fall": "🍂", "Winter": "⛄" };
   const weatherEmojis = { "Sunny": "☀️", "Rain": "🌧️", "Cloudy": "☁️", "Storm": "⛈️", "Drought": "🏜️", "Snow": "❄️" };
@@ -246,7 +260,13 @@
   };
 
   // ===============================
-  // INTERACTIVE TUTORIAL SYSTEM
+  // TUTORIAL FLAG - Check IMMEDIATELY
+  // ===============================
+  const TUTORIAL_SEEN_KEY = "krypton_tutorial_seen";
+  let tutorialSeen = localStorage.getItem(TUTORIAL_SEEN_KEY);
+
+  // ===============================
+  // INTERACTIVE TUTORIAL SYSTEM (ONLY ONCE)
   // ===============================
 
   let tutorialActive = false;
@@ -264,11 +284,16 @@
   };
 
   function startTutorial() {
+    if (tutorialSeen === "true") return;
+    
     tutorialActive = true;
     tutorialStep = 1;
     tutorialPlantedTile = null;
     document.getElementById("tutorialMini").classList.remove("hidden");
-    updateTutorialUI();
+    
+    setTimeout(() => {
+      updateTutorialUI();
+    }, 100);
   }
 
   function exitTutorial() {
@@ -277,7 +302,10 @@
     document.getElementById("tutorialCursor").classList.add("hidden");
     removeTileHighlights();
     removeBuildingHighlights();
-    localStorage.setItem("tutorial_completed", "true");
+    
+    tutorialSeen = "true";
+    localStorage.setItem(TUTORIAL_SEEN_KEY, "true");
+    
     setMessage("🌾 Tutorial skipped! Click the farm to start planting!");
   }
 
@@ -312,30 +340,45 @@
     removeBuildingHighlights();
     
     const cursor = document.getElementById("tutorialCursor");
+    if (!cursor) return;
     
     if (target === "tile") {
       const step = tutorialSteps[tutorialStep];
       let tileIndex = -1;
       
       if (step.action === "plant") {
-        tileIndex = state.tiles.findIndex((tile, idx) => !tile.cropId && !isLocked(idx));
+        for (let i = 0; i < state.tiles.length; i++) {
+          if (state.tiles[i] && !state.tiles[i].cropId && !isLocked(i)) {
+            tileIndex = i;
+            break;
+          }
+        }
       } else if (step.action === "water" && tutorialPlantedTile !== null) {
         tileIndex = tutorialPlantedTile;
       } else if (step.action === "harvest") {
-        tileIndex = state.tiles.findIndex((tile, idx) => {
-          if (isLocked(idx)) return false;
-          const info = getTileState(tile);
-          return info.stage === "ready";
-        });
+        for (let i = 0; i < state.tiles.length; i++) {
+          if (!isLocked(i) && state.tiles[i]) {
+            const info = getTileState(state.tiles[i]);
+            if (info && info.stage === "ready") {
+              tileIndex = i;
+              break;
+            }
+          }
+        }
       }
       
-      if (tileIndex !== -1 && tileElements[tileIndex]) {
+      if (tileIndex !== -1 && tileElements && tileElements[tileIndex]) {
         const tileRect = tileElements[tileIndex].getBoundingClientRect();
-        cursor.style.left = (tileRect.left + tileRect.width / 2 - 30) + "px";
-        cursor.style.top = (tileRect.top - 25) + "px";
-        cursor.classList.remove("hidden");
-        tileElements[tileIndex].classList.add("tile-highlight");
+        if (tileRect) {
+          cursor.style.left = (tileRect.left + tileRect.width / 2 - 30) + "px";
+          cursor.style.top = (tileRect.top - 25) + "px";
+          cursor.classList.remove("hidden");
+          tileElements[tileIndex].classList.add("tile-highlight");
+          return;
+        }
       }
+      cursor.classList.add("hidden");
+      
     } else if (target === "silo") {
       const siloBuilding = document.querySelector(".silo-building");
       if (siloBuilding) {
@@ -344,7 +387,10 @@
         cursor.style.top = (siloRect.top - 25) + "px";
         cursor.classList.remove("hidden");
         siloBuilding.classList.add("building-highlight");
+        return;
       }
+      cursor.classList.add("hidden");
+      
     } else if (target === "revive") {
       const reviveBtn = document.getElementById("reviveBtn");
       if (reviveBtn) {
@@ -355,7 +401,10 @@
         reviveBtn.style.border = "2px solid #ffd700";
         reviveBtn.style.boxShadow = "0 0 15px #ffd700";
         reviveBtn.style.animation = "tutorialGlow 1s infinite";
+        return;
       }
+      cursor.classList.add("hidden");
+      
     } else if (target === "town") {
       const townBuilding = document.querySelector(".town-building");
       if (townBuilding) {
@@ -364,18 +413,26 @@
         cursor.style.top = (townRect.top - 25) + "px";
         cursor.classList.remove("hidden");
         townBuilding.classList.add("building-highlight");
+        return;
       }
+      cursor.classList.add("hidden");
+      
     } else {
       cursor.classList.add("hidden");
     }
   }
 
   function removeTileHighlights() {
-    tileElements.forEach(tile => tile.classList.remove("tile-highlight"));
+    if (tileElements) {
+      tileElements.forEach(tile => {
+        if (tile) tile.classList.remove("tile-highlight");
+      });
+    }
   }
 
   function removeBuildingHighlights() {
-    document.querySelectorAll(".silo-building, .town-building").forEach(b => b.classList.remove("building-highlight"));
+    const buildings = document.querySelectorAll(".silo-building, .town-building");
+    buildings.forEach(b => b.classList.remove("building-highlight"));
     const reviveBtn = document.getElementById("reviveBtn");
     if (reviveBtn) {
       reviveBtn.style.border = "";
@@ -385,7 +442,7 @@
   }
 
   function tutorialNext() {
-    if (tutorialSteps[tutorialStep].action === "wait") {
+    if (tutorialSteps[tutorialStep] && tutorialSteps[tutorialStep].action === "wait") {
       tutorialStep++;
       updateTutorialUI();
     }
@@ -447,7 +504,9 @@
     document.getElementById("tutorialCursor").classList.add("hidden");
     removeTileHighlights();
     removeBuildingHighlights();
-    localStorage.setItem("tutorial_completed", "true");
+    
+    tutorialSeen = "true";
+    localStorage.setItem(TUTORIAL_SEEN_KEY, "true");
     
     state.coins += 100;
     setMessage("🎉 Tutorial complete! +100 bonus coins! Happy farming! 🌾");
@@ -456,9 +515,14 @@
   }
 
   function checkFirstTimeUser() {
-    const tutorialCompleted = localStorage.getItem("tutorial_completed");
-    if (!tutorialCompleted) {
-      setTimeout(() => startTutorial(), 1000);
+    if (tutorialSeen !== "true") {
+      setTimeout(() => {
+        if (tileElements && tileElements.length > 0) {
+          startTutorial();
+        } else {
+          setTimeout(startTutorial, 500);
+        }
+      }, 1000);
     }
   }
 
@@ -747,6 +811,9 @@
 
   function createFarm() {
     farmEl.innerHTML = "";
+    farmEl.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+    farmEl.style.gridTemplateRows = `repeat(${GRID_SIZE}, 1fr)`;
+    
     tileElements = [];
     for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
       const div = document.createElement("div");
@@ -774,11 +841,11 @@
       if (info.stage === "empty") {
         div.textContent = "";
       } else if (info.stage === "planted") {
-        div.textContent = tile.watered ? "🌱" : "🌱💧";
+        div.textContent = tile.watered ? "🌱" : "💧";
       } else if (info.stage === "growing") {
         div.textContent = info.crop.emoji;
       } else if (info.stage === "ready") {
-        div.textContent = info.crop.emoji + "✨";
+        div.textContent = info.crop.emoji;
       } else if (info.stage === "dead") {
         div.textContent = "";
         div.innerHTML = `<img src="deadweed.png" style="width: 100%; height: 100%; object-fit: contain;" alt="dead">`;
@@ -940,6 +1007,29 @@
     document.getElementById("townPopulation").textContent = state.town.population;
     document.getElementById("townProsperity").textContent = state.town.prosperity.toFixed(1);
     document.getElementById("investCost").textContent = Math.floor(state.town.prosperity * 500);
+
+    const hireBtn = document.getElementById("hireWorkerBtn");
+    if (hireBtn) {
+      if (masterFarmerActive && farmerEndTime) {
+        const now = Date.now();
+        if (now < farmerEndTime) {
+          const hoursLeft = ((farmerEndTime - now) / 3600000).toFixed(1);
+          hireBtn.disabled = true;
+          hireBtn.textContent = `👨‍🌾 Working... (${hoursLeft}h left)`;
+        } else {
+          hireBtn.disabled = false;
+          hireBtn.textContent = "Hire Master Farmer (100💰)";
+        }
+      } else {
+        hireBtn.disabled = false;
+        hireBtn.textContent = "Hire Master Farmer (100💰)";
+      }
+    }
+    
+    const statusDiv = document.getElementById("workerStatus");
+    if (statusDiv && !masterFarmerActive) {
+      statusDiv.innerHTML = "<span style='color:#88ffcc'>✨ Hire the Master Farmer to work for a full day (6 hours)!</span>";
+    }
     
     const timeSinceLastTax = now() - state.town.lastTaxCollect;
     const secondsUntilNextTax = Math.max(0, DAY_LENGTH_SECONDS - timeSinceLastTax);
@@ -1180,6 +1270,296 @@
       render();
     }
   });
+
+  // ===============================
+  // MASTER FARMER WORKER SYSTEM (PAUSES & RESUMES WHEN RESOURCES AVAILABLE)
+  // ===============================
+
+  let masterFarmerActive = false;
+  let masterFarmerInterval = null;
+  let farmerStartTime = null;
+  let farmerEndTime = null;
+  let farmerPaused = false;
+  let farmerPauseReason = "";
+
+  function hireMasterFarmer() {
+    const cost = 100;
+    
+    if (state.coins < cost) {
+      showModalMessage("townModalMessage", `❌ Need ${cost} coins to hire the Master Farmer!`, true);
+      return;
+    }
+    
+    if (masterFarmerActive) {
+      showModalMessage("townModalMessage", `⚠️ Master Farmer is already working! Let him finish his day.`, true);
+      return;
+    }
+    
+    state.coins -= cost;
+    startMasterFarmer();
+    
+    const dayLengthHours = DAY_LENGTH_SECONDS / 3600;
+    showModalMessage("townModalMessage", `✅ Master Farmer hired for ${dayLengthHours} hours! He will continuously tend to your crops!`, false);
+    save();
+    render();
+    openTownModal();
+  }
+
+  function startMasterFarmer() {
+    masterFarmerActive = true;
+    farmerPaused = false;
+    farmerPauseReason = "";
+    farmerStartTime = Date.now();
+    farmerEndTime = farmerStartTime + (DAY_LENGTH_SECONDS * 1000);
+    
+    updateFarmerStatus(`👨‍🌾 Master Farmer started! He will work for ${DAY_LENGTH_SECONDS / 3600} hours!`);
+    if (masterFarmerInterval) clearInterval(masterFarmerInterval);
+    masterFarmerInterval = setInterval(doMasterFarmerWork, 200);
+  }
+
+  function doMasterFarmerWork() {
+    if (!masterFarmerActive) {
+      if (masterFarmerInterval) clearInterval(masterFarmerInterval);
+      return;
+    }
+    
+    const currentTime = Date.now();
+    if (currentTime >= farmerEndTime) {
+      updateFarmerStatus(`✅ Master Farmer's shift is over! He worked a full day! Hire him again tomorrow!`);
+      stopMasterFarmer();
+      return;
+    }
+    
+    // If paused, check if resources are available to resume
+    if (farmerPaused) {
+      checkAndResumeFarmer();
+      return;
+    }
+    
+    const timeRemaining = farmerEndTime - currentTime;
+    const hoursRemaining = (timeRemaining / 3600000).toFixed(1);
+    
+    let workDone = false;
+    
+    // First: Harvest ready crops (FREE - doesn't cost anything)
+    for (let i = 0; i < state.tiles.length && !workDone; i++) {
+      if (!isLocked(i)) {
+        const tile = state.tiles[i];
+        const info = getTileState(tile);
+        
+        if (info.stage === "ready" && siloFree() > 0) {
+          const crop = info.crop;
+          addToSilo(crop.id, 1);
+          let xpGain = crop.xp;
+          if (tile.quality === "good") xpGain = Math.round(xpGain * 1.2);
+          if (tile.quality === "excellent") xpGain = Math.round(xpGain * 1.5);
+          if (tile.quality === "golden") xpGain = Math.round(xpGain * 2.5);
+          state.xp += xpGain;
+          
+          while (state.level < 99 && state.xp >= xpForLevel(state.level)) {
+            state.xp -= xpForLevel(state.level);
+            state.level++;
+            showLevelPopup(state.level);
+            initSeedSelect();
+          }
+          
+          tile.cropId = null;
+          tile.plantedAt = 0;
+          tile.watered = false;
+          updateFarmerStatus(`🌾 Harvested ${crop.name} (${tile.quality})! ${hoursRemaining}h left`);
+          workDone = true;
+          save();
+          render();
+          updateSiloModal();
+          break;
+        }
+      }
+    }
+    
+    // Second: Water unwatered crops (COSTS WATER - pause if out)
+    if (!workDone) {
+      const currentWater = Math.floor(state.water.current);
+      if (currentWater <= 0) {
+        farmerPaused = true;
+        farmerPauseReason = "out of water";
+        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Get water from well or rain to resume. 💧 (${hoursRemaining}h left)`);
+        updateWorkerButtonPaused();
+        return;
+      }
+      
+      for (let i = 0; i < state.tiles.length && !workDone; i++) {
+        if (!isLocked(i)) {
+          const tile = state.tiles[i];
+          if (tile.cropId && !tile.watered && !tile.dead) {
+            if (state.water.current > 0) {
+              state.water.current--;
+              tile.watered = true;
+              updateFarmerStatus(`💧 Watered tile ${i + 1}! ${hoursRemaining}h left`);
+              workDone = true;
+              save();
+              render();
+              break;
+            } else {
+              farmerPaused = true;
+              farmerPauseReason = "out of water";
+              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Get water from well or rain to resume. 💧`);
+              updateWorkerButtonPaused();
+              return;
+            }
+          }
+        }
+      }
+    }
+    
+    // Third: Revive dead crops (FREE - doesn't cost anything)
+    if (!workDone) {
+      for (let i = 0; i < state.tiles.length && !workDone; i++) {
+        if (!isLocked(i)) {
+          const tile = state.tiles[i];
+          if (tile.dead === true && tile.cropId) {
+            const crop = cropById(tile.cropId);
+            if (crop) {
+              tile.dead = false;
+              tile.watered = true;
+              tile.plantedAt = currentTime / 1000 - crop.growSeconds + 5;
+              updateFarmerStatus(`💀✨ Revived ${crop.name} on tile ${i + 1}! ${hoursRemaining}h left`);
+              workDone = true;
+              save();
+              render();
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    // Fourth: Plant new crops (COSTS COINS - pause if out)
+    if (!workDone) {
+      const crop = cropById(seedSelectEl.value);
+      if (state.coins < crop.baseCost) {
+        farmerPaused = true;
+        farmerPauseReason = "out of coins";
+        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Need ${crop.baseCost} coins to plant ${crop.name}. Sell crops to resume. 💰 (${hoursRemaining}h left)`);
+        updateWorkerButtonPaused();
+        return;
+      }
+      
+      for (let i = 0; i < state.tiles.length && !workDone; i++) {
+        if (!isLocked(i)) {
+          const tile = state.tiles[i];
+          const info = getTileState(tile);
+          if (info.stage === "empty") {
+            if (state.coins >= crop.baseCost) {
+              state.coins -= crop.baseCost;
+              tile.cropId = crop.id;
+              tile.plantedAt = currentTime / 1000;
+              tile.dead = false;
+              tile.quality = qualityRoll();
+              tile.watered = false;
+              updateFarmerStatus(`🌱 Planted ${crop.name} on tile ${i + 1}! ${hoursRemaining}h left`);
+              workDone = true;
+              save();
+              render();
+              break;
+            } else {
+              farmerPaused = true;
+              farmerPauseReason = "out of coins";
+              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Need ${crop.baseCost} coins to plant. Sell crops to resume. 💰`);
+              updateWorkerButtonPaused();
+              return;
+            }
+          }
+        }
+      }
+    }
+    
+    // Update button text if town modal is open
+    updateWorkerButtonStatus();
+  }
+
+  function checkAndResumeFarmer() {
+    if (!farmerPaused) return;
+    
+    const currentTime = Date.now();
+    if (currentTime >= farmerEndTime) {
+      stopMasterFarmer();
+      return;
+    }
+    
+    const timeRemaining = farmerEndTime - currentTime;
+    const hoursRemaining = (timeRemaining / 3600000).toFixed(1);
+    let canResume = false;
+    
+    if (farmerPauseReason === "out of water") {
+      const currentWater = Math.floor(state.water.current);
+      if (currentWater > 0) {
+        canResume = true;
+      }
+    } else if (farmerPauseReason === "out of coins") {
+      const crop = cropById(seedSelectEl.value);
+      if (state.coins >= crop.baseCost) {
+        canResume = true;
+      }
+    }
+    
+    if (canResume) {
+      farmerPaused = false;
+      farmerPauseReason = "";
+      updateFarmerStatus(`▶️ Master Farmer resumed work! ${hoursRemaining}h left in his shift.`);
+      updateWorkerButtonStatus();
+    }
+  }
+
+  function updateWorkerButtonStatus() {
+    const hireBtn = document.getElementById("hireWorkerBtn");
+    if (hireBtn && masterFarmerActive) {
+      if (farmerPaused) {
+        hireBtn.disabled = false;
+        hireBtn.textContent = `⏸️ Paused - ${farmerPauseReason}`;
+        hireBtn.style.opacity = "0.7";
+      } else {
+        const hoursLeft = ((farmerEndTime - Date.now()) / 3600000).toFixed(1);
+        hireBtn.disabled = true;
+        hireBtn.textContent = `👨‍🌾 Working... (${hoursLeft}h left)`;
+        hireBtn.style.opacity = "0.6";
+      }
+    }
+  }
+
+  function updateWorkerButtonPaused() {
+    const hireBtn = document.getElementById("hireWorkerBtn");
+    if (hireBtn && masterFarmerActive) {
+      hireBtn.disabled = false;
+      hireBtn.textContent = `⏸️ Paused - ${farmerPauseReason}`;
+      hireBtn.style.opacity = "0.7";
+    }
+  }
+
+  function stopMasterFarmer() {
+    masterFarmerActive = false;
+    farmerPaused = false;
+    if (masterFarmerInterval) {
+      clearInterval(masterFarmerInterval);
+      masterFarmerInterval = null;
+    }
+    farmerStartTime = null;
+    farmerEndTime = null;
+    
+    const hireBtn = document.getElementById("hireWorkerBtn");
+    if (hireBtn) {
+      hireBtn.disabled = false;
+      hireBtn.textContent = "Hire Master Farmer (100💰)";
+      hireBtn.style.opacity = "1";
+    }
+  }
+
+  function updateFarmerStatus(message) {
+    const statusDiv = document.getElementById("workerStatus");
+    if (statusDiv) {
+      statusDiv.innerHTML = message;
+    }
+    setMessage(message);
+  }
 </script>
 
 </body>
