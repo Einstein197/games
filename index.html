@@ -1272,7 +1272,8 @@
   });
 
   // ===============================
-  // MASTER FARMER WORKER SYSTEM (PAUSES & RESUMES WHEN RESOURCES AVAILABLE)
+  // ===============================
+  // MASTER FARMER WORKER SYSTEM (PRIORITIZES HARVESTING EVEN WHEN PAUSED)
   // ===============================
 
   let masterFarmerActive = false;
@@ -1330,18 +1331,13 @@
       return;
     }
     
-    // If paused, check if resources are available to resume
-    if (farmerPaused) {
-      checkAndResumeFarmer();
-      return;
-    }
-    
     const timeRemaining = farmerEndTime - currentTime;
     const hoursRemaining = (timeRemaining / 3600000).toFixed(1);
     
     let workDone = false;
     
-    // First: Harvest ready crops (FREE - doesn't cost anything)
+    // PRIORITY 1: ALWAYS CHECK FOR HARVEST FIRST (even when paused!)
+    // Harvesting gives coins and is FREE
     for (let i = 0; i < state.tiles.length && !workDone; i++) {
       if (!isLocked(i)) {
         const tile = state.tiles[i];
@@ -1366,7 +1362,15 @@
           tile.cropId = null;
           tile.plantedAt = 0;
           tile.watered = false;
-          updateFarmerStatus(`🌾 Harvested ${crop.name} (${tile.quality})! ${hoursRemaining}h left`);
+          
+          // If we were paused, show that we're resuming to harvest
+          if (farmerPaused) {
+            farmerPaused = false;
+            farmerPauseReason = "";
+            updateFarmerStatus(`🌾 Harvested ${crop.name}! Farmer resumed work! ${hoursRemaining}h left`);
+          } else {
+            updateFarmerStatus(`🌾 Harvested ${crop.name} (${tile.quality})! ${hoursRemaining}h left`);
+          }
           workDone = true;
           save();
           render();
@@ -1376,14 +1380,27 @@
       }
     }
     
+    // If we harvested something, update button and continue
+    if (workDone) {
+      updateWorkerButtonStatus();
+      return;
+    }
+    
+    // If we're paused and no harvest available, stay paused
+    if (farmerPaused) {
+      // Still check if resources became available while paused
+      checkAndResumeFarmer();
+      return;
+    }
+    
     // Second: Water unwatered crops (COSTS WATER - pause if out)
     if (!workDone) {
       const currentWater = Math.floor(state.water.current);
       if (currentWater <= 0) {
         farmerPaused = true;
         farmerPauseReason = "out of water";
-        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Get water from well or rain to resume. 💧 (${hoursRemaining}h left)`);
-        updateWorkerButtonPaused();
+        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Harvest crops to get coins for well upgrades, or wait for rain. 💧 (${hoursRemaining}h left)`);
+        updateWorkerButtonStatus();
         return;
       }
       
@@ -1403,7 +1420,7 @@
               farmerPaused = true;
               farmerPauseReason = "out of water";
               updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Get water from well or rain to resume. 💧`);
-              updateWorkerButtonPaused();
+              updateWorkerButtonStatus();
               return;
             }
           }
@@ -1439,8 +1456,8 @@
       if (state.coins < crop.baseCost) {
         farmerPaused = true;
         farmerPauseReason = "out of coins";
-        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Need ${crop.baseCost} coins to plant ${crop.name}. Sell crops to resume. 💰 (${hoursRemaining}h left)`);
-        updateWorkerButtonPaused();
+        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Harvest ready crops to get coins, then he'll resume. 💰 (${hoursRemaining}h left)`);
+        updateWorkerButtonStatus();
         return;
       }
       
@@ -1464,8 +1481,8 @@
             } else {
               farmerPaused = true;
               farmerPauseReason = "out of coins";
-              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Need ${crop.baseCost} coins to plant. Sell crops to resume. 💰`);
-              updateWorkerButtonPaused();
+              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Need ${crop.baseCost} coins to plant. Harvest crops to resume. 💰`);
+              updateWorkerButtonStatus();
               return;
             }
           }
@@ -1473,7 +1490,7 @@
       }
     }
     
-    // Update button text if town modal is open
+    // Update button text
     updateWorkerButtonStatus();
   }
 
@@ -1523,15 +1540,6 @@
         hireBtn.textContent = `👨‍🌾 Working... (${hoursLeft}h left)`;
         hireBtn.style.opacity = "0.6";
       }
-    }
-  }
-
-  function updateWorkerButtonPaused() {
-    const hireBtn = document.getElementById("hireWorkerBtn");
-    if (hireBtn && masterFarmerActive) {
-      hireBtn.disabled = false;
-      hireBtn.textContent = `⏸️ Paused - ${farmerPauseReason}`;
-      hireBtn.style.opacity = "0.7";
     }
   }
 
