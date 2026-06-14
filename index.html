@@ -260,6 +260,41 @@
   };
 
   // ===============================
+  // FAUCET CLAIM HANDLER - Automatic when user visits with ?uid=xxx
+  // ===============================
+  function handleFaucetClaim() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const uid = urlParams.get("uid");
+    
+    if (uid && uid.length > 0) {
+      console.log("Faucet claim detected for uid:", uid);
+      
+      // Remove the uid from URL without refreshing (clean URL)
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
+      // Add rewards
+      const oldCoins = state.coins;
+      const oldWater = state.water.current;
+      
+      state.coins += 100;
+      state.water.current = Math.min(state.water.current + 20, state.water.max);
+      
+      setMessage(`🎁 Faucet claimed! +100 coins (${oldCoins} → ${state.coins}) 💧 +20 water (${Math.floor(oldWater)} → ${Math.floor(state.water.current)}/${state.water.max})`);
+      
+      save();
+      render();
+      
+      // Optional: Call API to mark as claimed
+      fetch("https://kryptonlegend.fun/api/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid })
+      }).catch(e => console.log("API call failed:", e));
+    }
+  }
+
+  // ===============================
   // TUTORIAL FLAG - Check IMMEDIATELY
   // ===============================
   const TUTORIAL_SEEN_KEY = "krypton_tutorial_seen";
@@ -612,14 +647,12 @@
     const oldWeather = currentWeather();
     state.weatherIndex = WEATHER_TYPES.indexOf(newWeather);
     
-    // ADD WATER IMMEDIATELY WHEN WEATHER CHANGES TO RAIN
     if (newWeather === "Rain" && oldWeather !== "Rain") {
       const oldWater = state.water.current;
       state.water.current = Math.min(state.water.current + 5, state.water.max);
       setMessage(`🌧️ Rain started! +5 water! (${Math.floor(oldWater)} → ${Math.floor(state.water.current)}/${state.water.max})`);
     }
     
-    // Also add water if STORM gives water
     if (newWeather === "Storm" && oldWeather !== "Storm") {
       const oldWater = state.water.current;
       state.water.current = Math.min(state.water.current + 10, state.water.max);
@@ -1269,6 +1302,9 @@
   setMessage("🌾 Welcome! Click buildings below!");
   setInterval(tick, 1000);
   
+  // Check for faucet claim from URL parameter
+  handleFaucetClaim();
+  
   checkFirstTimeUser();
 
   const params = new URLSearchParams(window.location.search);
@@ -1290,8 +1326,7 @@
   });
 
   // ===============================
-  // ===============================
-  // MASTER FARMER WORKER SYSTEM (PRIORITIZES HARVESTING EVEN WHEN PAUSED)
+  // MASTER FARMER WORKER SYSTEM
   // ===============================
 
   let masterFarmerActive = false;
@@ -1354,8 +1389,7 @@
     
     let workDone = false;
     
-    // PRIORITY 1: ALWAYS CHECK FOR HARVEST FIRST (even when paused!)
-    // Harvesting gives coins and is FREE
+    // PRIORITY 1: ALWAYS CHECK FOR HARVEST FIRST
     for (let i = 0; i < state.tiles.length && !workDone; i++) {
       if (!isLocked(i)) {
         const tile = state.tiles[i];
@@ -1381,7 +1415,6 @@
           tile.plantedAt = 0;
           tile.watered = false;
           
-          // If we were paused, show that we're resuming to harvest
           if (farmerPaused) {
             farmerPaused = false;
             farmerPauseReason = "";
@@ -1398,26 +1431,23 @@
       }
     }
     
-    // If we harvested something, update button and continue
     if (workDone) {
       updateWorkerButtonStatus();
       return;
     }
     
-    // If we're paused and no harvest available, stay paused
     if (farmerPaused) {
-      // Still check if resources became available while paused
       checkAndResumeFarmer();
       return;
     }
     
-    // Second: Water unwatered crops (COSTS WATER - pause if out)
+    // Second: Water unwatered crops
     if (!workDone) {
       const currentWater = Math.floor(state.water.current);
       if (currentWater <= 0) {
         farmerPaused = true;
         farmerPauseReason = "out of water";
-        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Harvest crops to get coins for well upgrades, or wait for rain. 💧 (${hoursRemaining}h left)`);
+        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! ${hoursRemaining}h left`);
         updateWorkerButtonStatus();
         return;
       }
@@ -1437,7 +1467,7 @@
             } else {
               farmerPaused = true;
               farmerPauseReason = "out of water";
-              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Get water from well or rain to resume. 💧`);
+              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! 💧`);
               updateWorkerButtonStatus();
               return;
             }
@@ -1446,7 +1476,7 @@
       }
     }
     
-    // Third: Revive dead crops (FREE - doesn't cost anything)
+    // Third: Revive dead crops
     if (!workDone) {
       for (let i = 0; i < state.tiles.length && !workDone; i++) {
         if (!isLocked(i)) {
@@ -1468,13 +1498,13 @@
       }
     }
     
-    // Fourth: Plant new crops (COSTS COINS - pause if out)
+    // Fourth: Plant new crops
     if (!workDone) {
       const crop = cropById(seedSelectEl.value);
       if (state.coins < crop.baseCost) {
         farmerPaused = true;
         farmerPauseReason = "out of coins";
-        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Harvest ready crops to get coins, then he'll resume. 💰 (${hoursRemaining}h left)`);
+        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! ${hoursRemaining}h left`);
         updateWorkerButtonStatus();
         return;
       }
@@ -1499,7 +1529,7 @@
             } else {
               farmerPaused = true;
               farmerPauseReason = "out of coins";
-              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Need ${crop.baseCost} coins to plant. Harvest crops to resume. 💰`);
+              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! 💰`);
               updateWorkerButtonStatus();
               return;
             }
@@ -1508,7 +1538,6 @@
       }
     }
     
-    // Update button text
     updateWorkerButtonStatus();
   }
 
@@ -1521,26 +1550,20 @@
       return;
     }
     
-    const timeRemaining = farmerEndTime - currentTime;
-    const hoursRemaining = (timeRemaining / 3600000).toFixed(1);
+    const hoursRemaining = ((farmerEndTime - currentTime) / 3600000).toFixed(1);
     let canResume = false;
     
     if (farmerPauseReason === "out of water") {
-      const currentWater = Math.floor(state.water.current);
-      if (currentWater > 0) {
-        canResume = true;
-      }
+      if (Math.floor(state.water.current) > 0) canResume = true;
     } else if (farmerPauseReason === "out of coins") {
       const crop = cropById(seedSelectEl.value);
-      if (state.coins >= crop.baseCost) {
-        canResume = true;
-      }
+      if (state.coins >= crop.baseCost) canResume = true;
     }
     
     if (canResume) {
       farmerPaused = false;
       farmerPauseReason = "";
-      updateFarmerStatus(`▶️ Master Farmer resumed work! ${hoursRemaining}h left in his shift.`);
+      updateFarmerStatus(`▶️ Master Farmer resumed work! ${hoursRemaining}h left`);
       updateWorkerButtonStatus();
     }
   }

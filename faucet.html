@@ -5,6 +5,22 @@
   <title>KryptonLegend Faucet Unlock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+<script>
+function sendHeight() {
+  requestAnimationFrame(() => {
+    const height = document.body.scrollHeight;
+    parent.postMessage({
+      type: "resize-faucet",
+      height
+    }, "*");
+  });
+}
+
+window.addEventListener("load", sendHeight);
+window.addEventListener("resize", sendHeight);
+setInterval(sendHeight, 300);
+</script>
+
   <style>
     :root {
       --bg: #050816;
@@ -25,42 +41,46 @@
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #0a0a1a 0%, #0a0f1a 100%);
+      background: none;
       color: var(--text);
       margin: 0;
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
+      padding-top: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
     }
 
     .card {
       width: 100%;
       max-width: 480px;
       background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
-      border-radius: 24px;
-      padding: 32px 24px 28px;
-      box-shadow: 0 25px 45px rgba(0,0,0,0.3);
-      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 18px;
+      padding: 24px 22px 20px;
+      box-shadow: none;
+      position: relative;
+      overflow: hidden;
     }
 
     .header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
     .logo {
-      width: 48px;
-      height: 48px;
+      width: 32px;
+      height: 32px;
       border-radius: 999px;
       background: radial-gradient(circle at 30% 20%, #e5e7eb, #38bdf8);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 24px;
+      font-size: 18px;
       color: #020617;
       box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9);
     }
@@ -68,16 +88,16 @@
     .title-block {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
     .title {
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 700;
       letter-spacing: 0.03em;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .title span.accent {
@@ -85,7 +105,7 @@
     }
 
     .subtitle {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
     }
 
@@ -93,46 +113,53 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 12px;
+      padding: 4px 9px;
       border-radius: 999px;
       background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(56, 189, 248, 0.4);
+      border: 1px solid rgba(148, 163, 184, 0.4);
       font-size: 11px;
-      color: var(--accent);
-      margin-bottom: 20px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
     }
 
     .content {
-      background: rgba(15, 23, 42, 0.6);
-      border-radius: 16px;
-      padding: 20px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      margin-bottom: 16px;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
     }
 
     .step-list {
       list-style: none;
-      margin-bottom: 20px;
+      margin-bottom: 14px;
       font-size: 13px;
       color: var(--muted);
     }
 
     .step-list li {
       display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 8px;
+      margin-bottom: 6px;
       align-items: flex-start;
     }
 
     .step-badge {
-      min-width: 22px;
-      height: 22px;
+      min-width: 18px;
+      height: 18px;
       border-radius: 999px;
-      border: 1px solid var(--accent);
+      border: 1px solid rgba(148, 163, 184, 0.7);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 11px;
       color: var(--accent);
       background: rgba(15, 23, 42, 0.9);
     }
@@ -141,22 +168,20 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 20px;
-      padding: 10px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 12px;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 12px;
     }
 
     .status-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .status-indicator {
-      width: 10px;
-      height: 10px;
+      width: 9px;
+      height: 9px;
       border-radius: 999px;
       background: var(--danger);
       box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
@@ -164,60 +189,66 @@
 
     .status-text {
       color: var(--muted);
-      font-size: 12px;
     }
 
     .uid-pill {
-      font-family: monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
       font-size: 11px;
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 999px;
-      background: rgba(0,0,0,0.5);
-      border: 1px dashed rgba(148, 163, 184, 0.5);
-      color: var(--accent);
-      max-width: 50%;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px dashed rgba(148, 163, 184, 0.6);
+      color: var(--muted);
+      max-width: 60%;
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
     }
 
     .button-wrap {
-      margin-top: 8px;
+      margin-top: 4px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
     }
 
     .btn-main {
       width: 100%;
       border: none;
       border-radius: 999px;
-      padding: 14px 20px;
-      font-size: 15px;
-      font-weight: 700;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
       letter-spacing: 0.03em;
       text-transform: uppercase;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
       color: #020617;
-      box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3);
-      transition: all 0.2s ease;
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.45), 0 0 0 1px rgba(15, 23, 42, 0.9);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
     }
 
     .btn-main:hover {
-      transform: translateY(-2px);
+      transform: translateY(-1px);
       filter: brightness(1.05);
-      box-shadow: 0 12px 28px rgba(56, 189, 248, 0.5);
+      box-shadow: 0 16px 40px rgba(56, 189, 248, 0.6), 0 0 0 1px rgba(15, 23, 42, 0.9);
     }
 
     .btn-main:active {
       transform: translateY(0);
+      box-shadow: 0 8px 18px rgba(56, 189, 248, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.9);
     }
 
     .btn-main.disabled {
-      opacity: 0.5;
+      opacity: 0.55;
       cursor: not-allowed;
-      transform: none;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.9), 0 0 0 1px rgba(15, 23, 42, 0.9);
+      filter: grayscale(0.2);
     }
 
     .btn-sub {
@@ -235,9 +266,9 @@
     }
 
     .footer {
-      margin-top: 16px;
+      margin-top: 10px;
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
       font-size: 11px;
       color: var(--muted);
@@ -248,25 +279,29 @@
       font-weight: 600;
     }
 
+    .footer span.dot {
+      margin: 0 4px;
+      opacity: 0.6;
+    }
+
     .toast {
       position: fixed;
-      bottom: 30px;
+      bottom: 18px;
       left: 50%;
       transform: translateX(-50%);
-      padding: 12px 20px;
+      padding: 9px 14px;
       border-radius: 999px;
-      font-size: 13px;
-      background: rgba(15, 23, 42, 0.98);
-      border: 1px solid var(--accent);
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.6);
       color: var(--text);
       display: flex;
       align-items: center;
-      gap: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      gap: 8px;
+      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.9);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s ease;
-      z-index: 1000;
+      transition: opacity 0.18s ease;
     }
 
     .toast.show {
@@ -275,8 +310,8 @@
     }
 
     .toast-dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 999px;
       background: var(--success);
       box-shadow: 0 0 10px rgba(74, 222, 128, 0.9);
@@ -287,25 +322,18 @@
       box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
     }
 
-    .countdown {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 12px;
-      color: var(--accent);
-    }
-
-    @media (max-width: 500px) {
+    @media (max-width: 480px) {
       .card {
-        margin: 16px;
-        padding: 24px 20px 20px;
+        padding: 20px 16px 16px;
+      }
+      .content {
+        padding: 12px 11px 10px;
       }
       .title {
-        font-size: 18px;
+        font-size: 17px;
       }
-      .logo {
-        width: 40px;
-        height: 40px;
-        font-size: 20px;
+      .subtitle {
+        font-size: 11px;
       }
     }
   </style>
@@ -317,32 +345,32 @@
       <div class="logo">K</div>
       <div class="title-block">
         <div class="title">
-          KryptonLegend <span class="accent">Faucet</span>
+          KryptonLegend <span class="accent">Faucet Unlock</span>
         </div>
         <div class="subtitle">
-          Unlock free coins and water for your farm!
+          One click here → faucet unlocked on Discord.
         </div>
       </div>
     </div>
 
     <div class="pill">
       <span class="pill-dot"></span>
-      <span>🎁 +100 Coins &nbsp;|&nbsp; 💧 +20 Water</span>
+      <span>Step 2 of 2 · Web verification</span>
     </div>
 
     <div class="content">
       <ul class="step-list">
         <li>
           <span class="step-badge">1</span>
-          <span>Run <strong>/faucet</strong> in the KryptonLegend Discord.</span>
+          <span>Run <strong>faucet</strong> in the KryptonLegend Discord.</span>
         </li>
         <li>
           <span class="step-badge">2</span>
-          <span>Click the link the bot sends you.</span>
+          <span>Open this page from the link the bot sent you.</span>
         </li>
         <li>
           <span class="step-badge">3</span>
-          <span>Click the button below to claim your reward!</span>
+          <span>Click the button below to unlock the faucet for your Discord account.</span>
         </li>
       </ul>
 
@@ -350,7 +378,7 @@
         <div class="status-left">
           <div class="status-indicator" id="status-indicator"></div>
           <div class="status-text" id="status-text">
-            Waiting for verification...
+            Waiting for Discord ID from URL…
           </div>
         </div>
         <div class="uid-pill" id="uid-pill">
@@ -359,32 +387,33 @@
       </div>
 
       <div class="button-wrap">
-        <button class="btn-main" id="unlock-btn">
-          <span id="btn-label">🎁 Claim Reward</span>
+        <button class="btn-main disabled" id="unlock-btn" disabled>
+          <span id="btn-label">Unlock faucet</span>
         </button>
-        <div class="btn-sub">
-          Must use the same Discord account that ran <strong>/faucet</strong>
-        </div>
+        <button class="btn-sub">
+          Use the same Discord account you ran <strong>faucet</strong> with.
+        </button>
       </div>
     </div>
 
     <div class="footer">
-      <span><span class="brand">KryptonLegend.fun</span> · Faucet Rewards</span>
+      <span><span class="brand">KryptonLegend.fun</span> faucet access</span>
+      <span><span class="dot">•</span> Discord‑linked verification</span>
     </div>
   </div>
 
   <div class="toast" id="toast">
     <div class="toast-dot"></div>
-    <span id="toast-text">Reward claimed! Redirecting...</span>
+    <span id="toast-text">Faucet unlocked. Redirecting...</span>
   </div>
 
   <script>
   const uidParamName = "uid";
+  const GAME_URL = "https://kryptonlegend.fun/";
 
-  // API endpoints
+  // ALWAYS hit the Worker directly
   const unlockEndpoint = "https://kryptonlegend.fun/api/unlock";
   const checkEndpoint  = "https://kryptonlegend.fun/api/check";
-  const FARM_URL = "https://kryptonlegend.fun/";
 
   const statusIndicator = document.getElementById("status-indicator");
   const statusText = document.getElementById("status-text");
@@ -400,7 +429,7 @@
     toastText.textContent = message;
     toast.classList.toggle("error", isError);
     toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3000);
+    setTimeout(() => toast.classList.remove("show"), 2600);
   }
 
   function setStatus(text, type) {
@@ -420,109 +449,90 @@
     return uid && uid.trim().length > 0 ? uid.trim() : null;
   }
 
-  function redirectToFarm() {
+  function redirectToGame() {
     if (redirectTimeout) clearTimeout(redirectTimeout);
-    // FULL PAGE REDIRECT to the farm game
-    window.location.href = FARM_URL;
+    window.location.replace(GAME_URL);
   }
 
-  async function claimFaucet() {
+  async function unlock() {
     const uid = getUidFromUrl();
     if (!uid) {
-      showToast("Missing Discord ID. Open this link from the Discord bot.", true);
-      setStatus("No Discord ID found.", "error");
+      showToast("Missing Discord ID in URL.", true);
+      setStatus("No Discord ID found. Open this link from the bot.", "error");
       return;
     }
 
     unlockBtn.disabled = true;
     unlockBtn.classList.add("disabled");
-    btnLabel.textContent = "Claiming...";
+    btnLabel.textContent = "Unlocking…";
 
     try {
-      // Call API to verify and claim
+      // Write to KV
       const res = await fetch(unlockEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uid })
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Claim failed");
-      }
+      if (!res.ok) throw new Error("Non‑OK response");
 
-      setStatus("Reward claimed! Redirecting to farm...", "ok");
-      btnLabel.textContent = "Claimed! 🎉";
-      showToast("+100 Coins and +20 Water added! Redirecting...");
+      // Confirm KV write
+      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
+      const checkData = await checkRes.json();
 
-      // Try to send message to parent if in iframe
-      try {
-        if (window.parent && window.parent !== window) {
+      if (checkData.verified) {
+        setStatus("Verified! Redirecting to KryptonLegend...", "ok");
+        btnLabel.textContent = "Unlocked! Redirecting...";
+        showToast("Faucet unlocked! Redirecting to KryptonLegend...");
+
+        // Tell parent page (if in iframe) to give coins
+        if (window.parent !== window) {
           window.parent.postMessage({
             type: "faucet-complete"
           }, "*");
         }
-      } catch(e) {}
 
-      // Store in localStorage for the farm to detect
-      try {
-        localStorage.setItem("faucet_complete", Date.now().toString());
-      } catch(e) {}
+        // Also try localStorage for cross-tab communication
+        try {
+          localStorage.setItem("faucet_complete", Date.now().toString());
+        } catch(e) {}
 
-      // FULL PAGE REDIRECT to the farm game after 2 seconds
-      setTimeout(redirectToFarm, 2000);
+        // Redirect to kryptonlegend.fun after 2 seconds
+        redirectTimeout = setTimeout(redirectToGame, 2000);
+      }
 
     } catch (err) {
       console.error(err);
-      setStatus("Failed to claim. Try again.", "error");
-      btnLabel.textContent = "Try Again";
+      setStatus("Something went wrong. Try again.", "error");
+      btnLabel.textContent = "Unlock faucet";
       unlockBtn.disabled = false;
       unlockBtn.classList.remove("disabled");
-      showToast(err.message || "Failed to claim reward. Try again.", true);
+      showToast("Error unlocking faucet. Try again.", true);
     }
   }
 
-  async function init() {
+  function init() {
     const uid = getUidFromUrl();
 
     if (!uid) {
       uidPill.textContent = "uid: missing";
-      setStatus("No Discord ID found.", "error");
+      setStatus("No Discord ID found. Open this link from the bot.", "error");
       unlockBtn.disabled = true;
       unlockBtn.classList.add("disabled");
-      btnLabel.textContent = "Invalid Link";
       return;
     }
 
     const shortUid = uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
     uidPill.textContent = "uid: " + shortUid;
 
-    // Check if already claimed today
-    try {
-      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
-      const checkData = await checkRes.json();
-      
-      if (checkData.verified) {
-        setStatus("Already claimed today! Redirecting...", "ok");
-        btnLabel.textContent = "Already Claimed";
-        unlockBtn.disabled = true;
-        unlockBtn.classList.add("disabled");
-        // Auto-redirect after 2 seconds
-        setTimeout(redirectToFarm, 2000);
-        return;
-      }
-    } catch (err) {
-      console.error("Check failed:", err);
-    }
-
-    setStatus("Ready to claim your reward!", "ready");
+    setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
     unlockBtn.disabled = false;
     unlockBtn.classList.remove("disabled");
-    btnLabel.textContent = "🎁 Claim Reward";
 
-    unlockBtn.onclick = claimFaucet;
+    unlockBtn.addEventListener("click", unlock);
   }
 
+  // Clean up timeout before unload
   window.addEventListener("beforeunload", () => {
     if (redirectTimeout) clearTimeout(redirectTimeout);
   });
