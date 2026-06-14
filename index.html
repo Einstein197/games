@@ -1279,17 +1279,23 @@
     faucetFrame.src = "faucet.html?uid=" + encodeURIComponent(userId);
   }
   window.addEventListener("message", (event) => {
-    if (event.data?.type === "faucet-complete") {
-      document.getElementById("faucetFrame").style.display = "none";
-      
-      state.coins += 100;
-      state.water.current = Math.min(state.water.current + 20, state.water.max);
-
-      save();
-      render();
-      window.location.href = "https://kryptonlegend.fun";
-      setMessage("🎁 +100! and 💧 +20 water!");
-    }
+      if (event.data?.type === "faucet-complete") {
+        document.getElementById("faucetFrame").style.display = "none";
+        
+        state.coins += 100;
+        state.water.current = Math.min(state.water.current + 20, state.water.max);
+        
+        save();
+        render();
+        
+        // Show message first
+        setMessage("🎁 +100 coins! 💧 +20 water!");
+        
+        // Redirect after 3 seconds so user can see the message
+        setTimeout(() => {
+          window.location.href = "https://kryptonlegend.fun";
+        }, 3000);
+      }
   });
 
   // ===============================
