@@ -5,338 +5,322 @@
   <title>KryptonLegend Faucet Unlock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<script>
-function sendHeight() {
-  requestAnimationFrame(() => {
-    const height = document.body.scrollHeight;
-    parent.postMessage({
-      type: "resize-faucet",
-      height
-    }, "*");
-  });
-}
+<style>
+  :root {
+    --bg: #050816;
+    --card: #0f172a;
+    --accent: #38bdf8;
+    --accent-soft: rgba(56, 189, 248, 0.15);
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --danger: #f97373;
+    --success: #4ade80;
+  }
 
-window.addEventListener("load", sendHeight);
-window.addEventListener("resize", sendHeight);
-setInterval(sendHeight, 300);
-</script>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-  <style>
-    :root {
-      --bg: #050816;
-      --card: #0f172a;
-      --accent: #38bdf8;
-      --accent-soft: rgba(56, 189, 248, 0.15);
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --danger: #f97373;
-      --success: #4ade80;
-    }
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: none;
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  .card {
+    width: 100%;
+    max-width: 480px;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+    border-radius: 18px;
+    padding: 24px 22px 20px;
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+  }
 
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: none;
-      color: var(--text);
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding-top: 0;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
 
+  .logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 20%, #e5e7eb, #38bdf8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    color: #020617;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9);
+  }
+
+  .title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .title span.accent {
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
+  }
+
+  .content {
+    background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+  }
+
+  .step-list {
+    list-style: none;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .step-list li {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    align-items: flex-start;
+  }
+
+  .step-badge {
+    min-width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(15, 23, 42, 0.9);
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-indicator {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: var(--danger);
+    box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
+  }
+
+  .status-text {
+    color: var(--muted);
+  }
+
+  .uid-pill {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px dashed rgba(148, 163, 184, 0.6);
+    color: var(--muted);
+    max-width: 60%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .button-wrap {
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .btn-main {
+    width: 100%;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
+    color: #020617;
+    box-shadow: 0 12px 30px rgba(56, 189, 248, 0.45), 0 0 0 1px rgba(15, 23, 42, 0.9);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
+  }
+
+  .btn-main:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 16px 40px rgba(56, 189, 248, 0.6), 0 0 0 1px rgba(15, 23, 42, 0.9);
+  }
+
+  .btn-main:active {
+    transform: translateY(0);
+    box-shadow: 0 8px 18px rgba(56, 189, 248, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.9);
+  }
+
+  .btn-main.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.9), 0 0 0 1px rgba(15, 23, 42, 0.9);
+    filter: grayscale(0.2);
+  }
+
+  .btn-sub {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: default;
+    text-align: center;
+  }
+
+  .btn-sub strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .footer {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .footer span.brand {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .footer span.dot {
+    margin: 0 4px;
+    opacity: 0.6;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 9px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.9);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+
+  .toast.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .toast-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--success);
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.9);
+  }
+
+  .toast.error .toast-dot {
+    background: var(--danger);
+    box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
+  }
+
+  @media (max-width: 480px) {
     .card {
-      width: 100%;
-      max-width: 480px;
-      background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
-      border-radius: 18px;
-      padding: 24px 22px 20px;
-      box-shadow: none;
-      position: relative;
-      overflow: hidden;
+      padding: 20px 16px 16px;
     }
-
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 20%, #e5e7eb, #38bdf8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 18px;
-      color: #020617;
-      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9);
-    }
-
-    .title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .title span.accent {
-      color: var(--accent);
-    }
-
-    .subtitle {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 9px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 14px;
-    }
-
-    .pill-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
-    }
-
     .content {
-      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
-      border-radius: 14px;
-      padding: 14px 14px 12px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 12px 11px 10px;
     }
-
-    .step-list {
-      list-style: none;
-      margin-bottom: 14px;
-      font-size: 13px;
-      color: var(--muted);
+    .title {
+      font-size: 17px;
     }
-
-    .step-list li {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 6px;
-      align-items: flex-start;
-    }
-
-    .step-badge {
-      min-width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .subtitle {
       font-size: 11px;
-      color: var(--accent);
-      background: rgba(15, 23, 42, 0.9);
     }
-
-    .status {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 12px;
-      font-size: 12px;
-    }
-
-    .status-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .status-indicator {
-      width: 9px;
-      height: 9px;
-      border-radius: 999px;
-      background: var(--danger);
-      box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
-    }
-
-    .status-text {
-      color: var(--muted);
-    }
-
-    .uid-pill {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Courier New", monospace;
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px dashed rgba(148, 163, 184, 0.6);
-      color: var(--muted);
-      max-width: 60%;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-
-    .button-wrap {
-      margin-top: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .btn-main {
-      width: 100%;
-      border: none;
-      border-radius: 999px;
-      padding: 10px 14px;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
-      color: #020617;
-      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.45), 0 0 0 1px rgba(15, 23, 42, 0.9);
-      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
-    }
-
-    .btn-main:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.05);
-      box-shadow: 0 16px 40px rgba(56, 189, 248, 0.6), 0 0 0 1px rgba(15, 23, 42, 0.9);
-    }
-
-    .btn-main:active {
-      transform: translateY(0);
-      box-shadow: 0 8px 18px rgba(56, 189, 248, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.9);
-    }
-
-    .btn-main.disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.9), 0 0 0 1px rgba(15, 23, 42, 0.9);
-      filter: grayscale(0.2);
-    }
-
-    .btn-sub {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 11px;
-      cursor: default;
-      text-align: center;
-    }
-
-    .btn-sub strong {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    .footer {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .footer span.brand {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    .footer span.dot {
-      margin: 0 4px;
-      opacity: 0.6;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 9px 14px;
-      border-radius: 999px;
-      font-size: 12px;
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.9);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.18s ease;
-    }
-
-    .toast.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .toast-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--success);
-      box-shadow: 0 0 10px rgba(74, 222, 128, 0.9);
-    }
-
-    .toast.error .toast-dot {
-      background: var(--danger);
-      box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
-    }
-
-    @media (max-width: 480px) {
-      .card {
-        padding: 20px 16px 16px;
-      }
-      .content {
-        padding: 12px 11px 10px;
-      }
-      .title {
-        font-size: 17px;
-      }
-      .subtitle {
-        font-size: 11px;
-      }
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
 
@@ -404,7 +388,7 @@ setInterval(sendHeight, 300);
 
   <div class="toast" id="toast">
     <div class="toast-dot"></div>
-    <span id="toast-text">Faucet unlocked. Redirecting...</span>
+    <span id="toast-text">Faucet unlocked! Redirecting...</span>
   </div>
 
   <script>
@@ -447,8 +431,31 @@ setInterval(sendHeight, 300);
 
   function redirectToGame() {
     if (redirectTimeout) clearTimeout(redirectTimeout);
-    // Redirect to kryptonlegend.fun
-    window.location.href = GAME_URL;
+    // Force redirect to kryptonlegend.fun
+    window.location.replace(GAME_URL);
+  }
+
+  function sendRewardToGame() {
+    // Try to send message to parent game (if in iframe)
+    if (window.parent && window.parent !== window) {
+      try {
+        window.parent.postMessage({
+          type: "faucet-complete"
+        }, "*");
+        console.log("Sent faucet-complete to parent");
+        return true;
+      } catch(e) {
+        console.log("Could not send to parent:", e);
+      }
+    }
+    
+    // Also try localStorage (for cross-tab communication)
+    try {
+      localStorage.setItem("faucet_complete", Date.now().toString());
+      console.log("Set localStorage faucet_complete");
+    } catch(e) {}
+    
+    return false;
   }
 
   async function unlock() {
@@ -464,19 +471,15 @@ setInterval(sendHeight, 300);
     btnLabel.textContent = "Unlocking…";
 
     try {
-      // Tell parent page (if in iframe) to give coins
-      if (window.parent !== window) {
-        window.parent.postMessage({
-          type: "faucet-complete"
-        }, "*");
-      }
-
+      // Send reward to game
+      sendRewardToGame();
+      
       setStatus("Verified! Redirecting to farm...", "ok");
       btnLabel.textContent = "Unlocked!";
       showToast("Faucet unlocked! Redirecting to KryptonLegend...", false);
 
-      // Redirect to game after 1.5 seconds
-      redirectTimeout = setTimeout(redirectToGame, 1500);
+      // Redirect to game after 2 seconds
+      redirectTimeout = setTimeout(redirectToGame, 2000);
 
     } catch (err) {
       console.error(err);
@@ -506,12 +509,10 @@ setInterval(sendHeight, 300);
     unlockBtn.disabled = false;
     unlockBtn.classList.remove("disabled");
 
-    // Remove any existing listener and add new one
     unlockBtn.removeEventListener("click", unlock);
     unlockBtn.addEventListener("click", unlock);
   }
 
-  // Clean up timeout if page unloads before redirect
   window.addEventListener("beforeunload", () => {
     if (redirectTimeout) clearTimeout(redirectTimeout);
   });
