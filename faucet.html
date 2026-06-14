@@ -9,6 +9,7 @@
 function sendHeight() {
   requestAnimationFrame(() => {
     const height = document.body.scrollHeight;
+
     parent.postMessage({
       type: "resize-faucet",
       height
@@ -41,16 +42,31 @@ setInterval(sendHeight, 300);
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: none;
+      background: none; /* solid background */
       color: var(--text);
+
       margin: 0;
       min-height: 100vh;
+
       display: flex;
       justify-content: center;
       align-items: flex-start;
+
       padding-top: 0;
       margin-bottom: 0;
       padding-bottom: 0;
+    }
+
+
+
+    .glow-orbit {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: none;
+      opacity: 0;
+      z-index: -1;
+      box-shadow: none;
     }
 
     .card {
@@ -59,10 +75,11 @@ setInterval(sendHeight, 300);
       background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
       border-radius: 18px;
       padding: 24px 22px 20px;
-      box-shadow: none;
+      box-shadow: none; /* removes all glow and shadow */
       position: relative;
       overflow: hidden;
     }
+
 
     .header {
       display: flex;
@@ -229,25 +246,37 @@ setInterval(sendHeight, 300);
       gap: 8px;
       background: radial-gradient(circle at top left, #38bdf8, #0ea5e9);
       color: #020617;
-      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.45), 0 0 0 1px rgba(15, 23, 42, 0.9);
-      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
+      box-shadow:
+        0 12px 30px rgba(56, 189, 248, 0.45),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        filter 0.12s ease,
+        opacity 0.12s ease;
     }
 
     .btn-main:hover {
       transform: translateY(-1px);
       filter: brightness(1.05);
-      box-shadow: 0 16px 40px rgba(56, 189, 248, 0.6), 0 0 0 1px rgba(15, 23, 42, 0.9);
+      box-shadow:
+        0 16px 40px rgba(56, 189, 248, 0.6),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
     }
 
     .btn-main:active {
       transform: translateY(0);
-      box-shadow: 0 8px 18px rgba(56, 189, 248, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.9);
+      box-shadow:
+        0 8px 18px rgba(56, 189, 248, 0.4),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
     }
 
     .btn-main.disabled {
       opacity: 0.55;
       cursor: not-allowed;
-      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.9), 0 0 0 1px rgba(15, 23, 42, 0.9);
+      box-shadow:
+        0 4px 10px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
       filter: grayscale(0.2);
     }
 
@@ -322,28 +351,6 @@ setInterval(sendHeight, 300);
       box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
     }
 
-    .auto-reload-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 12px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      font-size: 11px;
-      color: var(--accent);
-    }
-
-    .countdown {
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--accent);
-      background: rgba(56, 189, 248, 0.2);
-      padding: 2px 8px;
-      border-radius: 999px;
-    }
-
     @media (max-width: 480px) {
       .card {
         padding: 20px 16px 16px;
@@ -362,6 +369,7 @@ setInterval(sendHeight, 300);
 </head>
 <body>
 
+
   <div class="card">
     <div class="header">
       <div class="logo">K</div>
@@ -370,7 +378,7 @@ setInterval(sendHeight, 300);
           KryptonLegend <span class="accent">Faucet Unlock</span>
         </div>
         <div class="subtitle">
-          Complete verification to claim your reward
+          One click here → faucet unlocked on Discord.
         </div>
       </div>
     </div>
@@ -384,15 +392,15 @@ setInterval(sendHeight, 300);
       <ul class="step-list">
         <li>
           <span class="step-badge">1</span>
-          <span>Run <strong>/faucet</strong> in the KryptonLegend Discord.</span>
+          <span>Run <strong>faucet</strong> in the KryptonLegend Discord.</span>
         </li>
         <li>
           <span class="step-badge">2</span>
-          <span>Click the button below to complete Cloudflare verification.</span>
+          <span>Open this page from the link the bot sent you.</span>
         </li>
         <li>
           <span class="step-badge">3</span>
-          <span>You will be redirected back to KryptonLegend.</span>
+          <span>Click the button below to unlock the faucet for your Discord account.</span>
         </li>
       </ul>
 
@@ -410,17 +418,11 @@ setInterval(sendHeight, 300);
 
       <div class="button-wrap">
         <button class="btn-main disabled" id="unlock-btn" disabled>
-          <span id="btn-label">Complete Verification</span>
+          <span id="btn-label">Unlock faucet</span>
         </button>
         <button class="btn-sub">
-          Use the same Discord account you ran <strong>/faucet</strong> with.
+          Use the same Discord account you ran <strong>faucet</strong> with.
         </button>
-      </div>
-
-      <div class="auto-reload-badge" id="reload-badge" style="display: none;">
-        <span>🔄 Redirecting to KryptonLegend in</span>
-        <span class="countdown" id="countdown">5</span>
-        <span>seconds...</span>
       </div>
     </div>
 
@@ -432,13 +434,13 @@ setInterval(sendHeight, 300);
 
   <div class="toast" id="toast">
     <div class="toast-dot"></div>
-    <span id="toast-text">Faucet unlocked! Redirecting to KryptonLegend...</span>
+    <span id="toast-text">Faucet unlocked. Go back to Discord.</span>
   </div>
 
   <script>
   const uidParamName = "uid";
-  const INDEX_URL = "https://kryptonlegend.fun/";
 
+  // ALWAYS hit the Worker directly
   const unlockEndpoint = "https://kryptonlegend.fun/api/unlock";
   const checkEndpoint  = "https://kryptonlegend.fun/api/check";
 
@@ -449,11 +451,6 @@ setInterval(sendHeight, 300);
   const btnLabel = document.getElementById("btn-label");
   const toast = document.getElementById("toast");
   const toastText = document.getElementById("toast-text");
-  const reloadBadge = document.getElementById("reload-badge");
-  const countdownEl = document.getElementById("countdown");
-
-  let redirectTimeout = null;
-  let verificationCheckInterval = null;
 
   function showToast(message, isError = false) {
     toastText.textContent = message;
@@ -470,70 +467,14 @@ setInterval(sendHeight, 300);
       error:  "var(--danger)"
     };
     statusIndicator.style.background = colors[type] || colors.error;
-    statusIndicator.style.boxShadow = `0 0 10px ${colors[type] || colors.error}AA`;
+    statusIndicator.style.boxShadow =
+      `0 0 10px ${colors[type] || colors.error}AA`;
   }
 
   function getUidFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const uid = params.get(uidParamName);
     return uid && uid.trim().length > 0 ? uid.trim() : null;
-  }
-
-  function redirectToIndex(seconds = 5) {
-    let timeLeft = seconds;
-    reloadBadge.style.display = "inline-flex";
-    countdownEl.textContent = timeLeft;
-    
-    const interval = setInterval(() => {
-      timeLeft--;
-      countdownEl.textContent = timeLeft;
-      
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        window.location.href = INDEX_URL;
-      }
-    }, 1000);
-  }
-
-  async function checkVerification(uid) {
-    try {
-      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
-      const checkData = await checkRes.json();
-      
-      if (checkData.verified) {
-        // Clear the interval if it exists
-        if (verificationCheckInterval) {
-          clearInterval(verificationCheckInterval);
-        }
-        
-        setStatus("Verified! Redirecting to KryptonLegend...", "ok");
-        btnLabel.textContent = "Verified!";
-        unlockBtn.disabled = true;
-        unlockBtn.classList.add("disabled");
-        showToast("Verification complete! Redirecting to KryptonLegend...");
-        
-        // Tell parent page (if in iframe) that faucet is complete
-        if (window.parent !== window) {
-          window.parent.postMessage({
-            type: "faucet-complete"
-          }, "*");
-        }
-        
-        // Also try localStorage for cross-tab communication
-        try {
-          localStorage.setItem("faucet_complete", Date.now().toString());
-        } catch(e) {}
-        
-        // Redirect to index page after 3 seconds
-        redirectToIndex(3);
-        
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error("Check error:", err);
-      return false;
-    }
   }
 
   async function unlock() {
@@ -546,10 +487,10 @@ setInterval(sendHeight, 300);
 
     unlockBtn.disabled = true;
     unlockBtn.classList.add("disabled");
-    btnLabel.textContent = "Verifying...";
+    btnLabel.textContent = "Unlocking…";
 
     try {
-      // Call the unlock endpoint to start verification
+      // Write to KV
       const res = await fetch(unlockEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -558,33 +499,27 @@ setInterval(sendHeight, 300);
 
       if (!res.ok) throw new Error("Non‑OK response");
 
-      setStatus("Cloudflare challenge completed! Waiting for verification...", "ready");
-      btnLabel.textContent = "Verification in progress...";
-      showToast("Verification submitted! Checking status...");
+      // Confirm KV write
+      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
+      const checkData = await checkRes.json();
 
-      // Start checking verification status every 2 seconds
-      verificationCheckInterval = setInterval(async () => {
-        const verified = await checkVerification(uid);
-        if (verified) {
-          clearInterval(verificationCheckInterval);
-        }
-      }, 2000);
+      if (checkData.verified) {
+        setStatus("Verified. You can now use faucet in Discord.", "ok");
+        btnLabel.textContent = "Faucet unlocked";
+        showToast("Faucet unlocked. Go back to Discord.");
 
-      // Also set a timeout to stop checking after 30 seconds
-      setTimeout(() => {
-        if (verificationCheckInterval) {
-          clearInterval(verificationCheckInterval);
-          setStatus("Verification timeout. Please try again.", "error");
-          btnLabel.textContent = "Try Again";
-          unlockBtn.disabled = false;
-          unlockBtn.classList.remove("disabled");
+        // Tell parent page to hide faucet iframe
+        if (window.parent !== window) {
+          window.parent.postMessage({
+            type: "faucet-complete"
+          }, "*");
         }
-      }, 30000);
+      }
 
     } catch (err) {
       console.error(err);
       setStatus("Something went wrong. Try again.", "error");
-      btnLabel.textContent = "Complete Verification";
+      btnLabel.textContent = "Unlock faucet";
       unlockBtn.disabled = false;
       unlockBtn.classList.remove("disabled");
       showToast("Error unlocking faucet. Try again.", true);
@@ -602,24 +537,16 @@ setInterval(sendHeight, 300);
       return;
     }
 
-    const shortUid = uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
+    const shortUid =
+      uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
     uidPill.textContent = "uid: " + shortUid;
 
-    setStatus("Discord ID detected. Click button to complete verification.", "ready");
+    setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
     unlockBtn.disabled = false;
     unlockBtn.classList.remove("disabled");
 
     unlockBtn.addEventListener("click", unlock);
-    
-    // Check if already verified on page load
-    checkVerification(uid);
   }
-
-  // Clean up timeout before unload
-  window.addEventListener("beforeunload", () => {
-    if (redirectTimeout) clearTimeout(redirectTimeout);
-    if (verificationCheckInterval) clearInterval(verificationCheckInterval);
-  });
 
   init();
 </script>
