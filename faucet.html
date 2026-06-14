@@ -5,22 +5,6 @@
   <title>KryptonLegend Faucet Unlock</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<script>
-function sendHeight() {
-  requestAnimationFrame(() => {
-    const height = document.body.scrollHeight;
-    parent.postMessage({
-      type: "resize-faucet",
-      height
-    }, "*");
-  });
-}
-
-window.addEventListener("load", sendHeight);
-window.addEventListener("resize", sendHeight);
-setInterval(sendHeight, 300);
-</script>
-
   <style>
     :root {
       --bg: #050816;
@@ -303,6 +287,13 @@ setInterval(sendHeight, 300);
       box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
     }
 
+    .countdown {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 12px;
+      color: var(--accent);
+    }
+
     @media (max-width: 500px) {
       .card {
         margin: 16px;
@@ -393,6 +384,7 @@ setInterval(sendHeight, 300);
   // API endpoints
   const unlockEndpoint = "https://kryptonlegend.fun/api/unlock";
   const checkEndpoint  = "https://kryptonlegend.fun/api/check";
+  const FARM_URL = "https://kryptonlegend.fun/";
 
   const statusIndicator = document.getElementById("status-indicator");
   const statusText = document.getElementById("status-text");
@@ -428,10 +420,10 @@ setInterval(sendHeight, 300);
     return uid && uid.trim().length > 0 ? uid.trim() : null;
   }
 
-  function redirectToGame() {
+  function redirectToFarm() {
     if (redirectTimeout) clearTimeout(redirectTimeout);
-    // Redirect to root (/)
-    window.location.replace("/");
+    // FULL PAGE REDIRECT to the farm game
+    window.location.href = FARM_URL;
   }
 
   async function claimFaucet() {
@@ -463,18 +455,22 @@ setInterval(sendHeight, 300);
       btnLabel.textContent = "Claimed! 🎉";
       showToast("+100 Coins and +20 Water added! Redirecting...");
 
-      // Send message to parent if in iframe
-      if (window.parent !== window) {
-        window.parent.postMessage({
-          type: "faucet-complete"
-        }, "*");
-      }
+      // Try to send message to parent if in iframe
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: "faucet-complete"
+          }, "*");
+        }
+      } catch(e) {}
 
-      // Store in localStorage for cross-tab
-      localStorage.setItem("faucet_complete", Date.now().toString());
+      // Store in localStorage for the farm to detect
+      try {
+        localStorage.setItem("faucet_complete", Date.now().toString());
+      } catch(e) {}
 
-      // Redirect to farm game after 2 seconds
-      redirectTimeout = setTimeout(redirectToGame, 2000);
+      // FULL PAGE REDIRECT to the farm game after 2 seconds
+      setTimeout(redirectToFarm, 2000);
 
     } catch (err) {
       console.error(err);
@@ -492,6 +488,9 @@ setInterval(sendHeight, 300);
     if (!uid) {
       uidPill.textContent = "uid: missing";
       setStatus("No Discord ID found.", "error");
+      unlockBtn.disabled = true;
+      unlockBtn.classList.add("disabled");
+      btnLabel.textContent = "Invalid Link";
       return;
     }
 
@@ -505,11 +504,11 @@ setInterval(sendHeight, 300);
       
       if (checkData.verified) {
         setStatus("Already claimed today! Redirecting...", "ok");
-        showToast("You already claimed your reward today! Redirecting...");
         btnLabel.textContent = "Already Claimed";
         unlockBtn.disabled = true;
         unlockBtn.classList.add("disabled");
-        redirectTimeout = setTimeout(redirectToGame, 2000);
+        // Auto-redirect after 2 seconds
+        setTimeout(redirectToFarm, 2000);
         return;
       }
     } catch (err) {
