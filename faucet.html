@@ -404,13 +404,11 @@ setInterval(sendHeight, 300);
 
   <div class="toast" id="toast">
     <div class="toast-dot"></div>
-    <span id="toast-text">Faucet unlocked. Go back to Discord.</span>
+    <span id="toast-text">Faucet unlocked. Redirecting...</span>
   </div>
 
   <script>
   const uidParamName = "uid";
-  const unlockEndpoint = "https://kryptonlegend.fun/api/unlock";
-  const checkEndpoint  = "https://kryptonlegend.fun/api/check";
   const GAME_URL = "https://kryptonlegend.fun/";
 
   const statusIndicator = document.getElementById("status-indicator");
@@ -449,6 +447,7 @@ setInterval(sendHeight, 300);
 
   function redirectToGame() {
     if (redirectTimeout) clearTimeout(redirectTimeout);
+    // Redirect to kryptonlegend.fun
     window.location.href = GAME_URL;
   }
 
@@ -460,43 +459,24 @@ setInterval(sendHeight, 300);
       return;
     }
 
-    // Disable button immediately to prevent double-clicks
     unlockBtn.disabled = true;
     unlockBtn.classList.add("disabled");
     btnLabel.textContent = "Unlocking…";
 
     try {
-      // Write to KV
-      const res = await fetch(unlockEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid })
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Non‑OK response");
+      // Tell parent page (if in iframe) to give coins
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          type: "faucet-complete"
+        }, "*");
       }
 
-      // Confirm KV write
-      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
-      const checkData = await checkRes.json();
+      setStatus("Verified! Redirecting to farm...", "ok");
+      btnLabel.textContent = "Unlocked!";
+      showToast("Faucet unlocked! Redirecting to KryptonLegend...", false);
 
-      if (checkData.verified) {
-        setStatus("Verified! Redirecting to farm...", "ok");
-        btnLabel.textContent = "Unlocked!";
-        showToast("Faucet unlocked! Redirecting to farm...", false);
-
-        // Tell parent page (if in iframe) to give coins
-        if (window.parent !== window) {
-          window.parent.postMessage({
-            type: "faucet-complete"
-          }, "*");
-        }
-
-        // Redirect to game after 1.5 seconds
-        redirectTimeout = setTimeout(redirectToGame, 1500);
-      }
+      // Redirect to game after 1.5 seconds
+      redirectTimeout = setTimeout(redirectToGame, 1500);
 
     } catch (err) {
       console.error(err);
@@ -521,25 +501,6 @@ setInterval(sendHeight, 300);
 
     const shortUid = uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
     uidPill.textContent = "uid: " + shortUid;
-
-    // Check if already verified BEFORE showing the button
-    try {
-      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
-      const checkData = await checkRes.json();
-      
-      if (checkData.verified) {
-        setStatus("Already verified! Redirecting to farm...", "ok");
-        showToast("You already unlocked the faucet today! Redirecting...", false);
-        unlockBtn.disabled = true;
-        unlockBtn.classList.add("disabled");
-        btnLabel.textContent = "Already unlocked";
-        redirectTimeout = setTimeout(redirectToGame, 1500);
-        return;
-      }
-    } catch (err) {
-      console.error("Initial check failed:", err);
-      // Continue anyway - let them try to unlock
-    }
 
     setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
     unlockBtn.disabled = false;
