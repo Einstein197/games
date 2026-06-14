@@ -1256,124 +1256,6 @@
     }
   });
 
-  // ===============================
-  // FAUCET CLAIM HANDLER - WITH 20 SECOND WAIT
-  // ===============================
-  let faucetClaimed = false;
-  let faucetTimer = null;
-  let faucetCountdown = 20;
-
-  function showFaucetPopup() {
-    // Create a popup overlay for the wait timer
-    const overlay = document.createElement("div");
-    overlay.id = "faucetOverlay";
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-    `;
-    
-    const popup = document.createElement("div");
-    popup.style.cssText = `
-      background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
-      border: 3px solid #ffd700;
-      border-radius: 20px;
-      padding: 30px;
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
-    `;
-    
-    popup.innerHTML = `
-      <div style="font-size: 60px; margin-bottom: 20px;">🎁</div>
-      <h2 style="color: #ffd700; margin: 0 0 10px 0;">Faucet Claim</h2>
-      <p style="margin: 10px 0;">You will receive:</p>
-      <p style="font-size: 24px; margin: 10px 0;">💰 +100 Coins &nbsp;|&nbsp; 💧 +20 Water</p>
-      <div style="margin: 20px 0;">
-        <div style="font-size: 14px; color: #aaa;">Please wait...</div>
-        <div style="font-size: 48px; font-weight: bold; color: #ffd700;" id="faucetTimerDisplay">20</div>
-        <div style="font-size: 12px; color: #aaa;">seconds remaining</div>
-      </div>
-      <div style="width: 100%; height: 4px; background: #333; border-radius: 2px; margin: 10px 0; overflow: hidden;">
-        <div id="faucetProgressBar" style="width: 100%; height: 100%; background: linear-gradient(90deg, #ffd700, #ffaa00); transition: width 1s linear;"></div>
-      </div>
-      <p style="font-size: 11px; color: #888; margin-top: 15px;">Complete the verification to claim your reward</p>
-    `;
-    
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
-    
-    // Start countdown
-    faucetCountdown = 20;
-    const timerDisplay = document.getElementById("faucetTimerDisplay");
-    const progressBar = document.getElementById("faucetProgressBar");
-    
-    faucetTimer = setInterval(() => {
-      faucetCountdown--;
-      if (timerDisplay) timerDisplay.textContent = faucetCountdown;
-      if (progressBar) progressBar.style.width = (faucetCountdown / 20) * 100 + "%";
-      
-      if (faucetCountdown <= 0) {
-        clearInterval(faucetTimer);
-        document.body.removeChild(overlay);
-        claimFaucetReward();
-      }
-    }, 1000);
-  }
-
-  function claimFaucetReward() {
-    if (faucetClaimed) return;
-    faucetClaimed = true;
-    
-    const uid = new URLSearchParams(window.location.search).get("uid");
-    
-    // Add rewards
-    const oldCoins = state.coins;
-    const oldWater = state.water.current;
-    
-    state.coins += 100;
-    state.water.current = Math.min(state.water.current + 20, state.water.max);
-    
-    setMessage(`🎁 Faucet claimed! +100 coins (${oldCoins} → ${state.coins}) 💧 +20 water (${Math.floor(oldWater)} → ${Math.floor(state.water.current)}/${state.water.max})`);
-    
-    save();
-    render();
-    
-    // Remove uid from URL
-    const newUrl = window.location.pathname;
-    window.history.replaceState({}, document.title, newUrl);
-    
-    // Call API to mark as claimed
-    if (uid) {
-      fetch("https://kryptonlegend.fun/api/unlock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid })
-      }).catch(e => console.log("API call failed:", e));
-    }
-  }
-
-  function handleFaucetClaim() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const uid = urlParams.get("uid");
-    
-    if (uid && uid.length > 0 && !faucetClaimed) {
-      console.log("Faucet claim detected for uid:", uid);
-      // Show popup with 20 second wait
-      setTimeout(() => {
-        showFaucetPopup();
-      }, 500);
-    }
-  }
-
   // Initialize
   load();
   initWell(state);
@@ -1388,9 +1270,6 @@
   setInterval(tick, 1000);
   
   checkFirstTimeUser();
-  
-  // Check for faucet claim from URL parameter
-  handleFaucetClaim();
 
   const params = new URLSearchParams(window.location.search);
   const userId = params.get("uid");
@@ -1411,7 +1290,8 @@
   });
 
   // ===============================
-  // MASTER FARMER WORKER SYSTEM
+  // ===============================
+  // MASTER FARMER WORKER SYSTEM (PRIORITIZES HARVESTING EVEN WHEN PAUSED)
   // ===============================
 
   let masterFarmerActive = false;
@@ -1475,6 +1355,7 @@
     let workDone = false;
     
     // PRIORITY 1: ALWAYS CHECK FOR HARVEST FIRST (even when paused!)
+    // Harvesting gives coins and is FREE
     for (let i = 0; i < state.tiles.length && !workDone; i++) {
       if (!isLocked(i)) {
         const tile = state.tiles[i];
@@ -1500,6 +1381,7 @@
           tile.plantedAt = 0;
           tile.watered = false;
           
+          // If we were paused, show that we're resuming to harvest
           if (farmerPaused) {
             farmerPaused = false;
             farmerPauseReason = "";
@@ -1516,23 +1398,26 @@
       }
     }
     
+    // If we harvested something, update button and continue
     if (workDone) {
       updateWorkerButtonStatus();
       return;
     }
     
+    // If we're paused and no harvest available, stay paused
     if (farmerPaused) {
+      // Still check if resources became available while paused
       checkAndResumeFarmer();
       return;
     }
     
-    // Second: Water unwatered crops
+    // Second: Water unwatered crops (COSTS WATER - pause if out)
     if (!workDone) {
       const currentWater = Math.floor(state.water.current);
       if (currentWater <= 0) {
         farmerPaused = true;
         farmerPauseReason = "out of water";
-        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! ${hoursRemaining}h left`);
+        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Harvest crops to get coins for well upgrades, or wait for rain. 💧 (${hoursRemaining}h left)`);
         updateWorkerButtonStatus();
         return;
       }
@@ -1552,7 +1437,7 @@
             } else {
               farmerPaused = true;
               farmerPauseReason = "out of water";
-              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! 💧`);
+              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Get water from well or rain to resume. 💧`);
               updateWorkerButtonStatus();
               return;
             }
@@ -1561,7 +1446,7 @@
       }
     }
     
-    // Third: Revive dead crops
+    // Third: Revive dead crops (FREE - doesn't cost anything)
     if (!workDone) {
       for (let i = 0; i < state.tiles.length && !workDone; i++) {
         if (!isLocked(i)) {
@@ -1583,13 +1468,13 @@
       }
     }
     
-    // Fourth: Plant new crops
+    // Fourth: Plant new crops (COSTS COINS - pause if out)
     if (!workDone) {
       const crop = cropById(seedSelectEl.value);
       if (state.coins < crop.baseCost) {
         farmerPaused = true;
         farmerPauseReason = "out of coins";
-        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! ${hoursRemaining}h left`);
+        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Harvest ready crops to get coins, then he'll resume. 💰 (${hoursRemaining}h left)`);
         updateWorkerButtonStatus();
         return;
       }
@@ -1614,7 +1499,7 @@
             } else {
               farmerPaused = true;
               farmerPauseReason = "out of coins";
-              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! 💰`);
+              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Need ${crop.baseCost} coins to plant. Harvest crops to resume. 💰`);
               updateWorkerButtonStatus();
               return;
             }
@@ -1623,6 +1508,7 @@
       }
     }
     
+    // Update button text
     updateWorkerButtonStatus();
   }
 
@@ -1635,20 +1521,26 @@
       return;
     }
     
-    const hoursRemaining = ((farmerEndTime - currentTime) / 3600000).toFixed(1);
+    const timeRemaining = farmerEndTime - currentTime;
+    const hoursRemaining = (timeRemaining / 3600000).toFixed(1);
     let canResume = false;
     
     if (farmerPauseReason === "out of water") {
-      if (Math.floor(state.water.current) > 0) canResume = true;
+      const currentWater = Math.floor(state.water.current);
+      if (currentWater > 0) {
+        canResume = true;
+      }
     } else if (farmerPauseReason === "out of coins") {
       const crop = cropById(seedSelectEl.value);
-      if (state.coins >= crop.baseCost) canResume = true;
+      if (state.coins >= crop.baseCost) {
+        canResume = true;
+      }
     }
     
     if (canResume) {
       farmerPaused = false;
       farmerPauseReason = "";
-      updateFarmerStatus(`▶️ Master Farmer resumed work! ${hoursRemaining}h left`);
+      updateFarmerStatus(`▶️ Master Farmer resumed work! ${hoursRemaining}h left in his shift.`);
       updateWorkerButtonStatus();
     }
   }
