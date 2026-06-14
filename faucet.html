@@ -392,7 +392,7 @@ setInterval(sendHeight, 300);
         </li>
         <li>
           <span class="step-badge">3</span>
-          <span>Page will auto-reload and your reward will be credited.</span>
+          <span>You will be redirected back to KryptonLegend.</span>
         </li>
       </ul>
 
@@ -418,7 +418,7 @@ setInterval(sendHeight, 300);
       </div>
 
       <div class="auto-reload-badge" id="reload-badge" style="display: none;">
-        <span>🔄 Auto-reloading in</span>
+        <span>🔄 Redirecting to KryptonLegend in</span>
         <span class="countdown" id="countdown">5</span>
         <span>seconds...</span>
       </div>
@@ -432,12 +432,12 @@ setInterval(sendHeight, 300);
 
   <div class="toast" id="toast">
     <div class="toast-dot"></div>
-    <span id="toast-text">Faucet unlocked. Redirecting...</span>
+    <span id="toast-text">Faucet unlocked! Redirecting to KryptonLegend...</span>
   </div>
 
   <script>
   const uidParamName = "uid";
-  const GAME_URL = "https://kryptonlegend.fun/";
+  const INDEX_URL = "https://kryptonlegend.fun/";
 
   const unlockEndpoint = "https://kryptonlegend.fun/api/unlock";
   const checkEndpoint  = "https://kryptonlegend.fun/api/check";
@@ -479,7 +479,7 @@ setInterval(sendHeight, 300);
     return uid && uid.trim().length > 0 ? uid.trim() : null;
   }
 
-  function startAutoReload(seconds = 5) {
+  function redirectToIndex(seconds = 5) {
     let timeLeft = seconds;
     reloadBadge.style.display = "inline-flex";
     countdownEl.textContent = timeLeft;
@@ -490,7 +490,7 @@ setInterval(sendHeight, 300);
       
       if (timeLeft <= 0) {
         clearInterval(interval);
-        window.location.reload();
+        window.location.href = INDEX_URL;
       }
     }, 1000);
   }
@@ -506,16 +506,26 @@ setInterval(sendHeight, 300);
           clearInterval(verificationCheckInterval);
         }
         
-        setStatus("Verified! Auto-reloading...", "ok");
+        setStatus("Verified! Redirecting to KryptonLegend...", "ok");
         btnLabel.textContent = "Verified!";
         unlockBtn.disabled = true;
         unlockBtn.classList.add("disabled");
-        showToast("Verification complete! Reloading page...");
+        showToast("Verification complete! Redirecting to KryptonLegend...");
         
-        // Start auto-reload in 3 seconds
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
+        // Tell parent page (if in iframe) that faucet is complete
+        if (window.parent !== window) {
+          window.parent.postMessage({
+            type: "faucet-complete"
+          }, "*");
+        }
+        
+        // Also try localStorage for cross-tab communication
+        try {
+          localStorage.setItem("faucet_complete", Date.now().toString());
+        } catch(e) {}
+        
+        // Redirect to index page after 3 seconds
+        redirectToIndex(3);
         
         return true;
       }
