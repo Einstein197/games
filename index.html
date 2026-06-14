@@ -44,6 +44,13 @@
   style="display:none; width:100%; height:400px;">
 </iframe>
 
+<iframe
+  src="about:blank"
+  id="faucetFrame"
+  loading="lazy"
+  style="display:none;">
+</iframe>
+
 <div id="ad-container"></div>
 
 <div id="topBar">
@@ -605,12 +612,14 @@
     const oldWeather = currentWeather();
     state.weatherIndex = WEATHER_TYPES.indexOf(newWeather);
     
+    // ADD WATER IMMEDIATELY WHEN WEATHER CHANGES TO RAIN
     if (newWeather === "Rain" && oldWeather !== "Rain") {
       const oldWater = state.water.current;
       state.water.current = Math.min(state.water.current + 5, state.water.max);
       setMessage(`🌧️ Rain started! +5 water! (${Math.floor(oldWater)} → ${Math.floor(state.water.current)}/${state.water.max})`);
     }
     
+    // Also add water if STORM gives water
     if (newWeather === "Storm" && oldWeather !== "Storm") {
       const oldWater = state.water.current;
       state.water.current = Math.min(state.water.current + 10, state.water.max);
@@ -1248,12 +1257,14 @@
   });
 
   // ===============================
-  // FAUCET CLAIM HANDLER - SIMPLE POPUP TIMER (NO API)
+  // FAUCET CLAIM HANDLER - WITH 20 SECOND WAIT
   // ===============================
   let faucetClaimed = false;
   let faucetTimer = null;
+  let faucetCountdown = 20;
 
   function showFaucetPopup() {
+    // Create a popup overlay for the wait timer
     const overlay = document.createElement("div");
     overlay.id = "faucetOverlay";
     overlay.style.cssText = `
@@ -1262,7 +1273,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.95);
+      background: rgba(0,0,0,0.9);
       z-index: 10000;
       display: flex;
       align-items: center;
@@ -1300,16 +1311,17 @@
     overlay.appendChild(popup);
     document.body.appendChild(overlay);
     
-    let countdown = 20;
+    // Start countdown
+    faucetCountdown = 20;
     const timerDisplay = document.getElementById("faucetTimerDisplay");
     const progressBar = document.getElementById("faucetProgressBar");
     
     faucetTimer = setInterval(() => {
-      countdown--;
-      if (timerDisplay) timerDisplay.textContent = countdown;
-      if (progressBar) progressBar.style.width = (countdown / 20) * 100 + "%";
+      faucetCountdown--;
+      if (timerDisplay) timerDisplay.textContent = faucetCountdown;
+      if (progressBar) progressBar.style.width = (faucetCountdown / 20) * 100 + "%";
       
-      if (countdown <= 0) {
+      if (faucetCountdown <= 0) {
         clearInterval(faucetTimer);
         document.body.removeChild(overlay);
         claimFaucetReward();
@@ -1321,6 +1333,9 @@
     if (faucetClaimed) return;
     faucetClaimed = true;
     
+    const uid = new URLSearchParams(window.location.search).get("uid");
+    
+    // Add rewards
     const oldCoins = state.coins;
     const oldWater = state.water.current;
     
@@ -1335,6 +1350,15 @@
     // Remove uid from URL
     const newUrl = window.location.pathname;
     window.history.replaceState({}, document.title, newUrl);
+    
+    // Call API to mark as claimed
+    if (uid) {
+      fetch("https://kryptonlegend.fun/api/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid })
+      }).catch(e => console.log("API call failed:", e));
+    }
   }
 
   function handleFaucetClaim() {
@@ -1343,6 +1367,7 @@
     
     if (uid && uid.length > 0 && !faucetClaimed) {
       console.log("Faucet claim detected for uid:", uid);
+      // Show popup with 20 second wait
       setTimeout(() => {
         showFaucetPopup();
       }, 500);
@@ -1366,6 +1391,24 @@
   
   // Check for faucet claim from URL parameter
   handleFaucetClaim();
+
+  const params = new URLSearchParams(window.location.search);
+  const userId = params.get("uid");
+  const faucetFrame = document.getElementById("faucetFrame");
+  if (userId) {
+    faucetFrame.style.display = "block";
+    faucetFrame.src = "faucet.html?uid=" + encodeURIComponent(userId);
+  }
+  window.addEventListener("message", (event) => {
+    if (event.data?.type === "faucet-complete") {
+      document.getElementById("faucetFrame").style.display = "none";
+      setMessage("🎁 +100! and 💧 +20 water!");
+      state.coins += 100;
+      state.water.current = Math.min(state.water.current + 20, state.water.max);
+      save();
+      render();
+    }
+  });
 
   // ===============================
   // MASTER FARMER WORKER SYSTEM
@@ -1431,7 +1474,7 @@
     
     let workDone = false;
     
-    // PRIORITY 1: ALWAYS CHECK FOR HARVEST FIRST
+    // PRIORITY 1: ALWAYS CHECK FOR HARVEST FIRST (even when paused!)
     for (let i = 0; i < state.tiles.length && !workDone; i++) {
       if (!isLocked(i)) {
         const tile = state.tiles[i];
