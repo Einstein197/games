@@ -1284,8 +1284,10 @@
       setMessage("🎁 +100! and 💧 +20 water!");
       state.coins += 100;
       state.water.current = Math.min(state.water.current + 20, state.water.max);
+
       save();
       render();
+      window.location.href = "https://kryptonlegend.fun";
     }
   });
 
