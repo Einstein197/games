@@ -322,6 +322,28 @@ setInterval(sendHeight, 300);
       box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
     }
 
+    .auto-reload-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 11px;
+      color: var(--accent);
+    }
+
+    .countdown {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.2);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
     @media (max-width: 480px) {
       .card {
         padding: 20px 16px 16px;
@@ -348,7 +370,7 @@ setInterval(sendHeight, 300);
           KryptonLegend <span class="accent">Faucet Unlock</span>
         </div>
         <div class="subtitle">
-          One click here → faucet unlocked on Discord.
+          Complete verification to claim your reward
         </div>
       </div>
     </div>
@@ -362,15 +384,15 @@ setInterval(sendHeight, 300);
       <ul class="step-list">
         <li>
           <span class="step-badge">1</span>
-          <span>Run <strong>faucet</strong> in the KryptonLegend Discord.</span>
+          <span>Run <strong>/faucet</strong> in the KryptonLegend Discord.</span>
         </li>
         <li>
           <span class="step-badge">2</span>
-          <span>Open this page from the link the bot sent you.</span>
+          <span>Click the button below to complete Cloudflare verification.</span>
         </li>
         <li>
           <span class="step-badge">3</span>
-          <span>Click the button below to unlock the faucet for your Discord account.</span>
+          <span>Page will auto-reload and your reward will be credited.</span>
         </li>
       </ul>
 
@@ -388,11 +410,17 @@ setInterval(sendHeight, 300);
 
       <div class="button-wrap">
         <button class="btn-main disabled" id="unlock-btn" disabled>
-          <span id="btn-label">Unlock faucet</span>
+          <span id="btn-label">Complete Verification</span>
         </button>
         <button class="btn-sub">
-          Use the same Discord account you ran <strong>faucet</strong> with.
+          Use the same Discord account you ran <strong>/faucet</strong> with.
         </button>
+      </div>
+
+      <div class="auto-reload-badge" id="reload-badge" style="display: none;">
+        <span>🔄 Auto-reloading in</span>
+        <span class="countdown" id="countdown">5</span>
+        <span>seconds...</span>
       </div>
     </div>
 
@@ -411,7 +439,6 @@ setInterval(sendHeight, 300);
   const uidParamName = "uid";
   const GAME_URL = "https://kryptonlegend.fun/";
 
-  // ALWAYS hit the Worker directly
   const unlockEndpoint = "https://kryptonlegend.fun/api/unlock";
   const checkEndpoint  = "https://kryptonlegend.fun/api/check";
 
@@ -422,8 +449,11 @@ setInterval(sendHeight, 300);
   const btnLabel = document.getElementById("btn-label");
   const toast = document.getElementById("toast");
   const toastText = document.getElementById("toast-text");
+  const reloadBadge = document.getElementById("reload-badge");
+  const countdownEl = document.getElementById("countdown");
 
   let redirectTimeout = null;
+  let verificationCheckInterval = null;
 
   function showToast(message, isError = false) {
     toastText.textContent = message;
@@ -449,9 +479,51 @@ setInterval(sendHeight, 300);
     return uid && uid.trim().length > 0 ? uid.trim() : null;
   }
 
-  function redirectToGame() {
-    if (redirectTimeout) clearTimeout(redirectTimeout);
-    window.location.replace(GAME_URL);
+  function startAutoReload(seconds = 5) {
+    let timeLeft = seconds;
+    reloadBadge.style.display = "inline-flex";
+    countdownEl.textContent = timeLeft;
+    
+    const interval = setInterval(() => {
+      timeLeft--;
+      countdownEl.textContent = timeLeft;
+      
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        window.location.reload();
+      }
+    }, 1000);
+  }
+
+  async function checkVerification(uid) {
+    try {
+      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
+      const checkData = await checkRes.json();
+      
+      if (checkData.verified) {
+        // Clear the interval if it exists
+        if (verificationCheckInterval) {
+          clearInterval(verificationCheckInterval);
+        }
+        
+        setStatus("Verified! Auto-reloading...", "ok");
+        btnLabel.textContent = "Verified!";
+        unlockBtn.disabled = true;
+        unlockBtn.classList.add("disabled");
+        showToast("Verification complete! Reloading page...");
+        
+        // Start auto-reload in 3 seconds
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+        
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Check error:", err);
+      return false;
+    }
   }
 
   async function unlock() {
@@ -464,10 +536,10 @@ setInterval(sendHeight, 300);
 
     unlockBtn.disabled = true;
     unlockBtn.classList.add("disabled");
-    btnLabel.textContent = "Unlocking…";
+    btnLabel.textContent = "Verifying...";
 
     try {
-      // Write to KV
+      // Call the unlock endpoint to start verification
       const res = await fetch(unlockEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -476,35 +548,33 @@ setInterval(sendHeight, 300);
 
       if (!res.ok) throw new Error("Non‑OK response");
 
-      // Confirm KV write
-      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
-      const checkData = await checkRes.json();
+      setStatus("Cloudflare challenge completed! Waiting for verification...", "ready");
+      btnLabel.textContent = "Verification in progress...";
+      showToast("Verification submitted! Checking status...");
 
-      if (checkData.verified) {
-        setStatus("Verified! Redirecting to KryptonLegend...", "ok");
-        btnLabel.textContent = "Unlocked! Redirecting...";
-        showToast("Faucet unlocked! Redirecting to KryptonLegend...");
-
-        // Tell parent page (if in iframe) to give coins
-        if (window.parent !== window) {
-          window.parent.postMessage({
-            type: "faucet-complete"
-          }, "*");
+      // Start checking verification status every 2 seconds
+      verificationCheckInterval = setInterval(async () => {
+        const verified = await checkVerification(uid);
+        if (verified) {
+          clearInterval(verificationCheckInterval);
         }
+      }, 2000);
 
-        // Also try localStorage for cross-tab communication
-        try {
-          localStorage.setItem("faucet_complete", Date.now().toString());
-        } catch(e) {}
-
-        // Redirect to kryptonlegend.fun after 2 seconds
-        redirectTimeout = setTimeout(redirectToGame, 2000);
-      }
+      // Also set a timeout to stop checking after 30 seconds
+      setTimeout(() => {
+        if (verificationCheckInterval) {
+          clearInterval(verificationCheckInterval);
+          setStatus("Verification timeout. Please try again.", "error");
+          btnLabel.textContent = "Try Again";
+          unlockBtn.disabled = false;
+          unlockBtn.classList.remove("disabled");
+        }
+      }, 30000);
 
     } catch (err) {
       console.error(err);
       setStatus("Something went wrong. Try again.", "error");
-      btnLabel.textContent = "Unlock faucet";
+      btnLabel.textContent = "Complete Verification";
       unlockBtn.disabled = false;
       unlockBtn.classList.remove("disabled");
       showToast("Error unlocking faucet. Try again.", true);
@@ -525,16 +595,20 @@ setInterval(sendHeight, 300);
     const shortUid = uid.length > 18 ? uid.slice(0, 6) + "…" + uid.slice(-4) : uid;
     uidPill.textContent = "uid: " + shortUid;
 
-    setStatus("Discord ID detected. Ready to unlock faucet.", "ready");
+    setStatus("Discord ID detected. Click button to complete verification.", "ready");
     unlockBtn.disabled = false;
     unlockBtn.classList.remove("disabled");
 
     unlockBtn.addEventListener("click", unlock);
+    
+    // Check if already verified on page load
+    checkVerification(uid);
   }
 
   // Clean up timeout before unload
   window.addEventListener("beforeunload", () => {
     if (redirectTimeout) clearTimeout(redirectTimeout);
+    if (verificationCheckInterval) clearInterval(verificationCheckInterval);
   });
 
   init();
