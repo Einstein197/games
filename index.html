@@ -63,6 +63,7 @@
   <div class="panel"><select id="seedSelect"></select></div>
   <button id="expandBtn">🚜 Expand</button>
   <button id="resetBtn">🔄 Reset</button>
+  <button id="resetTutorialBtn" onclick="resetTutorial()" style="background: #8b5a2b;">📖 Reset Tutorial</button>
   <button id="reviveBtn" onclick="reviveAllWithAd()" style="display: flex; align-items: center; gap: 5px;">
     <img src="revive.png" alt="Revive" style="width: 16px; height: 16px;"> Revive
   </button>
@@ -229,6 +230,7 @@
   const seasonDisplay = document.getElementById("seasonDisplay");
   const expandBtn = document.getElementById("expandBtn");
   const resetBtn = document.getElementById("resetBtn");
+  const resetTutorialBtn = document.getElementById("resetTutorialBtn");
   const seedSelectEl = document.getElementById("seedSelect");
   const msgEl = document.getElementById("msg");
   const levelPopup = document.getElementById("levelPopup");
@@ -264,6 +266,26 @@
   // ===============================
   const TUTORIAL_SEEN_KEY = "krypton_tutorial_seen";
   let tutorialSeen = localStorage.getItem(TUTORIAL_SEEN_KEY);
+
+  // ===============================
+  // RESET TUTORIAL FUNCTION
+  // ===============================
+  function resetTutorial() {
+    if (confirm("Reset the tutorial? It will show again on your next visit.")) {
+      localStorage.removeItem(TUTORIAL_SEEN_KEY);
+      localStorage.removeItem("tutorial_done");
+      localStorage.removeItem("tutorial_completed");
+      localStorage.removeItem("tutorial_skipped");
+      localStorage.removeItem("krypton_tutorial_seen_v2");
+      tutorialSeen = null;
+      setMessage("📖 Tutorial reset! Refresh the page to see it again.");
+      document.getElementById("tutorialMini").classList.add("hidden");
+      document.getElementById("tutorialCursor").classList.add("hidden");
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+    }
+  }
 
   // ===============================
   // INTERACTIVE TUTORIAL SYSTEM (ONLY ONCE)
