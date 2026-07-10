@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐄 Barn</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: transparent;
+      color: #eee; 
+      font-family: Arial, sans-serif; 
+      padding: 0;
+      margin: 0;
+      min-height: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+      margin: 0;
+      background: linear-gradient(145deg, #2a1a0a, #3d2a1a);
+      border: 2px solid #5a3a2a;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: none;
+    }
+    h1 { color: #ffaa44; text-align: center; }
+    .header p { color: #aa8866; text-align: center; margin: 8px 0 20px 0; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 12px; text-align: center; }
+    .stat-value { font-size: 24px; font-weight: bold; color: #ffd700; }
+    .stat-label { font-size: 12px; color: #aa8866; text-transform: uppercase; letter-spacing: 1px; }
+    .animal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+    .animal-card { 
+      background: linear-gradient(145deg, #2a1a0a, #1a0a0a); 
+      border: 2px solid #4a3a2a; 
+      border-radius: 12px; 
+      padding: 15px; 
+      text-align: center; 
+      transition: all 0.3s ease; 
+      cursor: pointer; 
+      position: relative;
+    }
+    .animal-card:hover { 
+      transform: translateY(-5px); 
+      border-color: #ffaa44; 
+      box-shadow: 0 6px 20px rgba(255, 170, 68, 0.2); 
+    }
+    .animal-icon { font-size: 48px; display: block; margin-bottom: 8px; }
+    .animal-name { font-size: 16px; font-weight: bold; color: #ffaa44; }
+    
+    /* Hidden info - shown on hover/click */
+    .animal-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+    .animal-card.active .animal-details,
+    .animal-card:hover .animal-details {
+      max-height: 400px;
+      opacity: 1;
+    }
+    
+    .animal-cost { font-size: 14px; color: #66ff66; margin-top: 2px; }
+    .animal-feed { font-size: 12px; color: #88ccff; margin-top: 2px; }
+    .animal-product { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .animal-count { font-size: 14px; color: #ffd700; margin-top: 4px; }
+    .animal-status { font-size: 12px; color: #66ff66; margin-top: 4px; }
+    
+    .buy-btn { 
+      background: #4a7c2a; 
+      color: white; 
+      padding: 6px 12px; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      width: 100%; 
+      margin-top: 8px; 
+      transition: background 0.2s; 
+      display: block;
+    }
+    .buy-btn:hover { background: #5a9c3a; }
+    
+    .animal-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .animal-actions button {
+      flex: 1;
+      min-width: 40px;
+      padding: 4px 6px;
+      border: none;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .animal-actions button:hover {
+      transform: scale(1.05);
+    }
+    .btn-feed-animal { background: #7c6a2a; color: #ffdd66; }
+    .btn-feed-animal:hover { background: #9c8a3a; }
+    .btn-collect-animal { background: #2a7c4a; color: #66ff66; }
+    .btn-collect-animal:hover { background: #3a9c5a; }
+    .btn-sell-animal { background: #7c2a2a; color: #ff6666; }
+    .btn-sell-animal:hover { background: #9c3a3a; }
+    
+    /* Popup overlay */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-overlay.show {
+      display: flex;
+    }
+    .popup-box {
+      background: linear-gradient(145deg, #2a1a0a, #3d2a1a);
+      border: 2px solid #5a3a2a;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+      animation: popIn 0.3s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .popup-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 15px;
+    }
+    .popup-message {
+      color: #eee;
+      font-size: 18px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .popup-btn {
+      background: linear-gradient(145deg, #4a7c2a, #2a5a1a);
+      color: #66ff66;
+      border: none;
+      padding: 10px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .popup-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(102, 255, 102, 0.3);
+    }
+    .popup-btn.error {
+      background: linear-gradient(145deg, #7c2a2a, #5a1a1a);
+      color: #ff6666;
+    }
+    .popup-btn.error:hover {
+      box-shadow: 0 4px 15px rgba(255, 102, 102, 0.3);
+    }
+    .popup-btn.success {
+      background: linear-gradient(145deg, #2a7c4a, #1a5a3a);
+      color: #66ff66;
+    }
+    .popup-btn.success:hover {
+      box-shadow: 0 4px 15px rgba(102, 255, 102, 0.3);
+    }
+    .popup-btn.info {
+      background: linear-gradient(145deg, #2a4a7c, #1a3a5a);
+      color: #66ddff;
+    }
+    .popup-btn.info:hover {
+      box-shadow: 0 4px 15px rgba(102, 221, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🐄 Barn</h1>
+      <p>Buy animals with coins. Feed them to collect products!</p>
+    </div>
+    
+    
+    <div class="animal-grid" id="animalGrid">
+      <div class="animal-card" onclick="toggleCard(this)">
+        <span class="animal-icon">🐄</span>
+        <div class="animal-name">Cow</div>
+        <div class="animal-details">
+          <div class="animal-cost">💰 500 coins</div>
+          <div class="animal-feed" id="cowFeed">🌾 Needs: Hay (0/3)</div>
+          <div class="animal-product">🥛 Produces: Milk</div>
+          <div class="animal-count" id="cowCount">Owned: 0</div>
+          <div class="animal-status" id="cowStatus">⚫ None</div>
+          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('cow')">Buy Cow</button>
+          <div class="animal-actions">
+            <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('cow')">🌾 Feed</button>
+            <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('cow')">🧺 Collect</button>
+            <button class="btn-sell-animal" onclick="event.stopPropagation(); sellAnimalProducts('cow')">💰 Sell</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="animal-card" onclick="toggleCard(this)">
+        <span class="animal-icon">🐷</span>
+        <div class="animal-name">Pig</div>
+        <div class="animal-details">
+          <div class="animal-cost">💰 300 coins</div>
+          <div class="animal-feed" id="pigFeed">🌽 Needs: Grain (0/2)</div>
+          <div class="animal-product">🥓 Produces: Pork</div>
+          <div class="animal-count" id="pigCount">Owned: 0</div>
+          <div class="animal-status" id="pigStatus">⚫ None</div>
+          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('pig')">Buy Pig</button>
+          <div class="animal-actions">
+            <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('pig')">🌾 Feed</button>
+            <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('pig')">🧺 Collect</button>
+            <button class="btn-sell-animal" onclick="event.stopPropagation(); sellAnimalProducts('pig')">💰 Sell</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="animal-card" onclick="toggleCard(this)">
+        <span class="animal-icon">🐔</span>
+        <div class="animal-name">Chicken</div>
+        <div class="animal-details">
+          <div class="animal-cost">💰 100 coins</div>
+          <div class="animal-feed" id="chickenFeed">🌽 Needs: Grain (0/1)</div>
+          <div class="animal-product">🥚 Produces: Eggs</div>
+          <div class="animal-count" id="chickenCount">Owned: 0</div>
+          <div class="animal-status" id="chickenStatus">⚫ None</div>
+          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('chicken')">Buy Chicken</button>
+          <div class="animal-actions">
+            <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('chicken')">🌾 Feed</button>
+            <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('chicken')">🧺 Collect</button>
+            <button class="btn-sell-animal" onclick="event.stopPropagation(); sellAnimalProducts('chicken')">💰 Sell</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="animal-card" onclick="toggleCard(this)">
+        <span class="animal-icon">🐑</span>
+        <div class="animal-name">Sheep</div>
+        <div class="animal-details">
+          <div class="animal-cost">💰 400 coins</div>
+          <div class="animal-feed" id="sheepFeed">🌾 Needs: Hay (0/2)</div>
+          <div class="animal-product">🧶 Produces: Wool</div>
+          <div class="animal-count" id="sheepCount">Owned: 0</div>
+          <div class="animal-status" id="sheepStatus">⚫ None</div>
+          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('sheep')">Buy Sheep</button>
+          <div class="animal-actions">
+            <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('sheep')">🌾 Feed</button>
+            <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('sheep')">🧺 Collect</button>
+            <button class="btn-sell-animal" onclick="event.stopPropagation(); sellAnimalProducts('sheep')">💰 Sell</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="animal-card" onclick="toggleCard(this)">
+        <span class="animal-icon">🐴</span>
+        <div class="animal-name">Horse</div>
+        <div class="animal-details">
+          <div class="animal-cost">💰 1800 coins</div>
+          <div class="animal-feed" id="horseFeed">🌾 Needs: Hay (0/4)</div>
+          <div class="animal-product">🏇 Produces: Ride</div>
+          <div class="animal-count" id="horseCount">Owned: 0</div>
+          <div class="animal-status" id="horseStatus">⚫ None</div>
+          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('horse')">Buy Horse</button>
+          <div class="animal-actions">
+            <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('horse')">🌾 Feed</button>
+            <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('horse')">🧺 Collect</button>
+            <button class="btn-sell-animal" onclick="event.stopPropagation(); sellAnimalProducts('horse')">💰 Sell</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup -->
+  <div class="popup-overlay" id="popupOverlay">
+    <div class="popup-box">
+      <span class="popup-icon" id="popupIcon">🌱</span>
+      <div class="popup-message" id="popupMessage">Hello!</div>
+      <button class="popup-btn" id="popupBtn" onclick="closePopup()">OK</button>
+    </div>
+  </div>
+  
+  <script>
+    // ==================== USE SAME SAVE KEY AS INDEX ====================
+    const SAVE_KEY = "krypton_simfarm_ultimate"; // SAME AS INDEX!
+    
+    // ==================== STATE MANAGEMENT ====================
+    let state = {
+      coins: 0,
+      animals: {
+        cow: { count: 0, cost: 500, feed: 'hay', feedAmount: 3, product: 'milk', productPrice: 10, fed: false },
+        pig: { count: 0, cost: 300, feed: 'grain', feedAmount: 2, product: 'pork', productPrice: 15, fed: false },
+        chicken: { count: 0, cost: 100, feed: 'grain', feedAmount: 1, product: 'eggs', productPrice: 5, fed: false },
+        sheep: { count: 0, cost: 400, feed: 'hay', feedAmount: 2, product: 'wool', productPrice: 12, fed: false },
+        horse: { count: 0, cost: 1800, feed: 'hay', feedAmount: 4, product: 'ride', productPrice: 20, fed: false }
+      },
+      feedStock: { hay: 0, grain: 0, mixed: 0, pellets: 0 },
+      products: { milk: 0, pork: 0, eggs: 0, wool: 0, ride: 0 },
+      barn: { animals: {} } // Barn-specific data
+    };
+
+    // Save function - uses SAME key as index
+    function save() {
+      try {
+        let mainData = {};
+        try {
+          const raw = localStorage.getItem(SAVE_KEY);
+          if (raw) mainData = JSON.parse(raw);
+        } catch(e) {}
+        
+        mainData.barn = {
+          animals: state.animals,
+          feedStock: state.feedStock,
+          products: state.products
+        };
+        
+        mainData.coins = state.coins;
+        localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
+        console.log('💾 Barn saved! Coins:', state.coins);
+      } catch (e) {
+        console.log('Save failed:', e);
+      }
+    }
+
+    // Load function - uses SAME key as index
+    function load() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return;
+        
+        const data = JSON.parse(raw);
+        state.coins = data.coins || 0;
+        
+        if (data.barn) {
+          if (data.barn.animals) {
+            for (const [key, animal] of Object.entries(state.animals)) {
+              if (data.barn.animals[key]) {
+                animal.count = data.barn.animals[key].count || 0;
+                animal.fed = data.barn.animals[key].fed || false;
+              }
+            }
+          }
+          if (data.barn.feedStock) {
+            state.feedStock = { ...state.feedStock, ...data.barn.feedStock };
+          }
+          if (data.barn.products) {
+            state.products = { ...state.products, ...data.barn.products };
+          }
+        }
+        
+        console.log('💾 Barn loaded! Coins:', state.coins);
+      } catch (e) {
+        console.log('Load failed:', e);
+      }
+    }
+
+    // Render function
+    function render() {
+      let total = 0;
+      let productTotal = 0;
+      
+      for (const [key, animal] of Object.entries(state.animals)) {
+        const countEl = document.getElementById(key + 'Count');
+        if (countEl) countEl.textContent = 'Owned: ' + animal.count;
+        total += animal.count;
+        
+        const feedEl = document.getElementById(key + 'Feed');
+        if (feedEl) {
+          const feedType = animal.feed;
+          const have = state.feedStock[feedType] || 0;
+          const needed = animal.count * animal.feedAmount;
+          const feedEmoji = feedType === 'hay' ? '🌾' : '🌽';
+          feedEl.textContent = feedEmoji + ' Needs: ' + feedType.charAt(0).toUpperCase() + feedType.slice(1) + ' (' + have + '/' + needed + ')';
+        }
+        
+        const statusEl = document.getElementById(key + 'Status');
+        if (statusEl) {
+          if (animal.fed && animal.count > 0) {
+            statusEl.textContent = '🟢 Fed & Ready!';
+            statusEl.style.color = '#66ff66';
+          } else if (animal.count > 0) {
+            statusEl.textContent = '🟡 Needs Food';
+            statusEl.style.color = '#ffaa44';
+          } else {
+            statusEl.textContent = '⚫ None';
+            statusEl.style.color = '#555';
+          }
+        }
+      }
+      
+      for (const [key, count] of Object.entries(state.products)) {
+        productTotal += count;
+      }
+      
+      const totalAnimalsEl = document.getElementById('totalAnimals');
+      const totalCoinsEl = document.getElementById('totalCoins');
+      const productsCountEl = document.getElementById('productsCount');
+      
+      if (totalAnimalsEl) totalAnimalsEl.textContent = total;
+      if (totalCoinsEl) totalCoinsEl.textContent = state.coins;
+      if (productsCountEl) productsCountEl.textContent = productTotal;
+      
+      setTimeout(resizeIframe, 100);
+    }
+
+    // ==================== MAIN FUNCTIONS ====================
+    
+    // Auto-resize iframe
+    function resizeIframe() {
+      if (window.parent && window.parent !== window) {
+        const height = document.documentElement.scrollHeight;
+        window.parent.postMessage({ 
+          type: 'resize-iframe', 
+          height: height 
+        }, '*');
+      }
+    }
+
+    // Toggle animal card details
+    function toggleCard(card) {
+      card.classList.toggle('active');
+    }
+
+    // Popup functions
+    function showPopup(message, icon = '🌱', btnType = 'success') {
+      const overlay = document.getElementById('popupOverlay');
+      const msgEl = document.getElementById('popupMessage');
+      const iconEl = document.getElementById('popupIcon');
+      const btnEl = document.getElementById('popupBtn');
+      
+      msgEl.textContent = message;
+      iconEl.textContent = icon;
+      
+      btnEl.className = 'popup-btn';
+      if (btnType === 'error') {
+        btnEl.classList.add('error');
+      } else if (btnType === 'info') {
+        btnEl.classList.add('info');
+      } else {
+        btnEl.classList.add('success');
+      }
+      
+      overlay.classList.add('show');
+      setTimeout(resizeIframe, 100);
+    }
+    
+    function closePopup() {
+      document.getElementById('popupOverlay').classList.remove('show');
+      setTimeout(resizeIframe, 100);
+    }
+    
+    // Buy animal with coins
+    function buyAnimal(type) {
+      const animal = state.animals[type];
+      console.log('Buying:', type, 'Cost:', animal.cost, 'Current coins:', state.coins);
+      
+      if (state.coins < animal.cost) {
+        showPopup('❌ Not enough coins! Need ' + animal.cost + ' for a ' + type + '. You have ' + state.coins + ' coins.', '❌', 'error');
+        return;
+      }
+      
+      state.coins -= animal.cost;
+      animal.count++;
+      animal.fed = false;
+      
+      console.log('Bought! New coins:', state.coins, 'Animal count:', animal.count);
+      
+      save();
+      render();
+      showPopup('✅ Bought a ' + type + ' for ' + animal.cost + ' coins!', '✅', 'success');
+      
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ 
+          type: 'coin-update', 
+          coins: state.coins 
+        }, '*');
+      }
+    }
+    
+    // Feed a specific animal type
+    function feedAnimal(type) {
+      const animal = state.animals[type];
+      if (animal.count === 0) {
+        showPopup('❌ You don\'t have any ' + type + 's!', '❌', 'error');
+        return;
+      }
+      
+      if (animal.fed) {
+        showPopup('✅ All ' + type + 's are already fed!', '✅', 'info');
+        return;
+      }
+      
+      const needed = animal.count * animal.feedAmount;
+      const feedType = animal.feed;
+      
+      if (state.feedStock[feedType] < needed) {
+        showPopup('❌ Not enough ' + feedType + '! Need ' + needed + ', have ' + state.feedStock[feedType], '❌', 'error');
+        return;
+      }
+      
+      state.feedStock[feedType] -= needed;
+      animal.fed = true;
+      
+      save();
+      render();
+      showPopup('🌾 Fed ' + animal.count + ' ' + type + '(s)!', '🌾', 'success');
+    }
+    
+    // Collect products from a specific animal type
+    function collectAnimal(type) {
+      const animal = state.animals[type];
+      if (animal.count === 0) {
+        showPopup('❌ You don\'t have any ' + type + 's!', '❌', 'error');
+        return;
+      }
+      
+      if (!animal.fed) {
+        showPopup('⚠️ ' + type.charAt(0).toUpperCase() + type.slice(1) + 's need to be fed first!', '⚠️', 'info');
+        return;
+      }
+      
+      const productKey = animal.product;
+      state.products[productKey] = (state.products[productKey] || 0) + animal.count;
+      animal.fed = false;
+      
+      save();
+      render();
+      showPopup('🧺 Collected ' + animal.count + ' ' + animal.product + ' from ' + type + 's!', '🧺', 'success');
+    }
+    
+    // Sell products from a specific animal type
+    function sellAnimalProducts(type) {
+      const animal = state.animals[type];
+      const productKey = animal.product;
+      const count = state.products[productKey] || 0;
+      
+      if (count === 0) {
+        showPopup('❌ No ' + animal.product + ' to sell!', '❌', 'error');
+        return;
+      }
+      
+      const price = animal.productPrice || 10;
+      const earned = count * price;
+      state.coins += earned;
+      state.products[productKey] = 0;
+      
+      save();
+      render();
+      showPopup('💰 Sold ' + count + ' ' + animal.product + ' for ' + earned + ' coins!', '💰', 'success');
+      
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ 
+          type: 'coin-update', 
+          coins: state.coins 
+        }, '*');
+      }
+    }
+    
+    // Feed all animals (kept for backward compatibility)
+    function feedAllAnimals() {
+      let totalFed = 0;
+      let missingFeed = [];
+      
+      for (const [type, animal] of Object.entries(state.animals)) {
+        if (animal.count > 0 && !animal.fed) {
+          const needed = animal.count * animal.feedAmount;
+          const feedType = animal.feed;
+          
+          if (state.feedStock[feedType] >= needed) {
+            state.feedStock[feedType] -= needed;
+            animal.fed = true;
+            totalFed += animal.count;
+          } else {
+            missingFeed.push(type + ' (need ' + needed + ' ' + feedType + ', have ' + state.feedStock[feedType] + ')');
+          }
+        }
+      }
+      
+      if (totalFed > 0) {
+        save();
+        showPopup('🌾 Fed ' + totalFed + ' animals!', '🌾', 'success');
+      }
+      if (missingFeed.length > 0) {
+        showPopup('⚠️ Not enough feed for: ' + missingFeed.join(', '), '⚠️', 'error');
+      }
+      if (totalFed === 0 && missingFeed.length === 0) {
+        showPopup('⚠️ No animals to feed!', '⚠️', 'info');
+      }
+      render();
+    }
+    
+    // Collect all products (kept for backward compatibility)
+    function collectProducts() {
+      let totalCollected = 0;
+      
+      for (const [type, animal] of Object.entries(state.animals)) {
+        if (animal.count > 0 && animal.fed) {
+          const productKey = animal.product;
+          state.products[productKey] = (state.products[productKey] || 0) + animal.count;
+          totalCollected += animal.count;
+          animal.fed = false;
+        }
+      }
+      
+      if (totalCollected > 0) {
+        save();
+        showPopup('🧺 Collected products from ' + totalCollected + ' animals!', '🧺', 'success');
+      } else {
+        showPopup('⚠️ No animals fed! Feed them first.', '⚠️', 'info');
+      }
+      render();
+    }
+    
+    // Sell all products (kept for backward compatibility)
+    function sellAllProducts() {
+      let totalCoins = 0;
+      let soldItems = [];
+      
+      for (const [type, animal] of Object.entries(state.animals)) {
+        const productKey = animal.product;
+        const count = state.products[productKey] || 0;
+        if (count > 0) {
+          const price = animal.productPrice || 10;
+          const earned = count * price;
+          totalCoins += earned;
+          soldItems.push(count + ' ' + productKey + ' (' + earned + ' coins)');
+          state.products[productKey] = 0;
+        }
+      }
+      
+      if (totalCoins > 0) {
+        state.coins += totalCoins;
+        save();
+        showPopup('💰 Sold: ' + soldItems.join(', ') + ' for ' + totalCoins + ' coins!', '💰', 'success');
+        
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ 
+            type: 'coin-update', 
+            coins: state.coins 
+          }, '*');
+        }
+      } else {
+        showPopup('❌ No products to sell!', '❌', 'error');
+      }
+      render();
+    }
+    
+    // Listen for coin updates from parent
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'coin-update') {
+        if (event.data.coins !== undefined) {
+          state.coins = event.data.coins;
+          save();
+          render();
+          console.log('💰 Barn coins updated from parent:', state.coins);
+        }
+      }
+    });
+    
+    // Make state globally accessible for console
+    window.state = state;
+    window.save = save;
+    window.load = load;
+    window.render = render;
+    window.feedAnimal = feedAnimal;
+    window.collectAnimal = collectAnimal;
+    window.sellAnimalProducts = sellAnimalProducts;
+    
+    // Initialize
+    load();
+    render();
+    resizeIframe();
+    
+    // Auto-save every 30 seconds
+    setInterval(save, 30000);
+    
+    // Observe DOM changes for resize
+    if (window.ResizeObserver) {
+      const observer = new ResizeObserver(resizeIframe);
+      observer.observe(document.body);
+    }
+  </script>
+</body>
+</html>

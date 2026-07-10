@@ -442,6 +442,7 @@ button:hover {
 /* BUILDINGS STYLES - FOR PNG IMAGES */
 /* ============================================ */
 
+/* ── Buildings Container ── */
 .buildings-container {
   display: flex;
   justify-content: center;
@@ -449,10 +450,15 @@ button:hover {
   margin: 20px auto;
   flex-wrap: wrap;
   padding: 15px;
-  background: linear-gradient(135deg, #1a2a1a 0%, #0a1a0a 100%);
+  background: var(--glass);
+  backdrop-filter: blur(28px);
+  border: 1px solid var(--glass-border);
   border-radius: 30px;
-  border: 1px solid #4a6a3a;
   max-width: 900px;
+}
+
+.buildings-container.hidden {
+  display: none;
 }
 
 .silo-building, .well-building, .water-building, .town-building {

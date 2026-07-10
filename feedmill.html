@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🏭 Feed Mill</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #0a0a1a; 
+      color: #eee; 
+      font-family: Arial, sans-serif; 
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: linear-gradient(145deg, #1a1a2a, #2a2a3d);
+      border: 2px solid #4a4a6a;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    h1 { color: #66ddff; text-align: center; }
+    .header p { color: #8888aa; text-align: center; margin: 8px 0 20px 0; }
+    .silo-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 12px; text-align: center; }
+    .stat-value { font-size: 24px; font-weight: bold; color: #ffd700; }
+    .stat-label { font-size: 12px; color: #8888aa; text-transform: uppercase; letter-spacing: 1px; }
+    .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+    .recipe-card { background: linear-gradient(145deg, #1a1a2a, #0a0a1a); border: 2px solid #3a3a5a; border-radius: 12px; padding: 15px; text-align: center; transition: all 0.3s ease; }
+    .recipe-card:hover { transform: translateY(-5px); border-color: #66ddff; box-shadow: 0 6px 20px rgba(102, 221, 255, 0.2); }
+    .recipe-icon { font-size: 36px; display: block; margin-bottom: 8px; }
+    .recipe-name { font-size: 16px; font-weight: bold; color: #66ddff; }
+    .recipe-requires { font-size: 12px; color: #ffaa44; margin-top: 4px; }
+    .recipe-output { font-size: 14px; color: #66ff66; margin-top: 4px; }
+    .process-btn { background: #2a4a7c; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
+    .process-btn:hover { background: #3a5a9c; }
+    .feed-display { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; }
+    .feed-item { text-align: center; }
+    .feed-item .label { color: #88ccff; font-size: 11px; }
+    .feed-item .value { color: #ffd700; font-size: 18px; font-weight: bold; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+    .btn { padding: 10px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; font-size: 14px; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    .btn.send { background: linear-gradient(145deg, #2a7c4a, #1a5a3a); color: #66ff66; }
+    .btn.send:hover { background: linear-gradient(145deg, #3a9c5a, #2a7c4a); }
+    .btn.upgrade { background: linear-gradient(145deg, #7c6a2a, #5a4a1a); color: #ffdd66; }
+    .btn.upgrade:hover { background: linear-gradient(145deg, #9c8a3a, #7c6a2a); }
+    .message { margin-top: 20px; padding: 12px; background: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; border-radius: 8px; text-align: center; color: #ffd700; display: none; }
+    .message.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏭 Feed Mill</h1>
+      <p>Process crops from silo into animal feed</p>
+    </div>
+    
+    <div class="silo-stats">
+      <div><div class="stat-value" id="wheatStock">0</div><div class="stat-label">🌾 Wheat</div></div>
+      <div><div class="stat-value" id="cornStock">0</div><div class="stat-label">🌽 Corn</div></div>
+      <div><div class="stat-value" id="millLevel">Lv 1</div><div class="stat-label">Mill Level</div></div>
+    </div>
+    
+    <div class="recipe-grid">
+      <div class="recipe-card">
+        <span class="recipe-icon">🌾</span>
+        <div class="recipe-name">Hay</div>
+        <div class="recipe-requires">Requires: 5 Wheat from Silo</div>
+        <div class="recipe-output">Produces: 10 Hay</div>
+        <button class="process-btn" onclick="processFeed('hay')">Process Hay</button>
+      </div>
+      
+      <div class="recipe-card">
+        <span class="recipe-icon">🌽</span>
+        <div class="recipe-name">Grain</div>
+        <div class="recipe-requires">Requires: 3 Corn from Silo</div>
+        <div class="recipe-output">Produces: 8 Grain</div>
+        <button class="process-btn" onclick="processFeed('grain')">Process Grain</button>
+      </div>
+      
+      <div class="recipe-card">
+        <span class="recipe-icon">🍲</span>
+        <div class="recipe-name">Mixed Feed</div>
+        <div class="recipe-requires">Requires: 2 Hay + 2 Grain</div>
+        <div class="recipe-output">Produces: 6 Mixed Feed</div>
+        <button class="process-btn" onclick="processFeed('mixed')">Process Mixed</button>
+      </div>
+      
+      <div class="recipe-card">
+        <span class="recipe-icon">🔵</span>
+        <div class="recipe-name">Feed Pellets</div>
+        <div class="recipe-requires">Requires: 4 Mixed Feed</div>
+        <div class="recipe-output">Produces: 4 Pellets</div>
+        <button class="process-btn" onclick="processFeed('pellets')">Process Pellets</button>
+      </div>
+    </div>
+    
+    <div class="feed-display">
+      <div class="feed-item"><div class="label">🌾 Hay</div><div class="value" id="hayStock">0</div></div>
+      <div class="feed-item"><div class="label">🌽 Grain</div><div class="value" id="grainStock">0</div></div>
+      <div class="feed-item"><div class="label">🍲 Mixed</div><div class="value" id="mixedStock">0</div></div>
+      <div class="feed-item"><div class="label">🔵 Pellets</div><div class="value" id="pelletsStock">0</div></div>
+    </div>
+    
+    <div class="actions">
+      <button class="btn send" onclick="sendToBarn()">📦 Send Feed to Barn</button>
+      <button class="btn upgrade" onclick="upgradeMill()">⬆️ Upgrade Mill</button>
+    </div>
+    
+    <div class="message" id="millMessage"></div>
+  </div>
+  
+  <script>
+    // Silo crops (from parent game)
+    let silo = { wheat: 0, corn: 0 };
+    
+    // Feed stock
+    let feed = { hay: 0, grain: 0, mixed: 0, pellets: 0 };
+    
+    let level = 1;
+    
+    // Update UI
+    function updateUI() {
+      document.getElementById('wheatStock').textContent = silo.wheat;
+      document.getElementById('cornStock').textContent = silo.corn;
+      document.getElementById('millLevel').textContent = 'Lv ' + level;
+      
+      document.getElementById('hayStock').textContent = feed.hay;
+      document.getElementById('grainStock').textContent = feed.grain;
+      document.getElementById('mixedStock').textContent = feed.mixed;
+      document.getElementById('pelletsStock').textContent = feed.pellets;
+    }
+    
+    // Process feed from silo crops
+    function processFeed(type) {
+      const recipes = {
+        hay: { requires: { wheat: 5 }, produces: { hay: 10 } },
+        grain: { requires: { corn: 3 }, produces: { grain: 8 } },
+        mixed: { requires: { hay: 2, grain: 2 }, produces: { mixed: 6 } },
+        pellets: { requires: { mixed: 4 }, produces: { pellets: 4 } }
+      };
+      
+      const recipe = recipes[type];
+      if (!recipe) return;
+      
+      // Check silo for required crops
+      for (const [crop, amount] of Object.entries(recipe.requires)) {
+        const stored = silo[crop] || 0;
+        if (stored < amount) {
+          showMessage('❌ Not enough ' + crop + ' in silo! Need ' + amount + ', have ' + stored + '.');
+          return;
+        }
+      }
+      
+      // Remove from silo
+      for (const [crop, amount] of Object.entries(recipe.requires)) {
+        silo[crop] = (silo[crop] || 0) - amount;
+      }
+      
+      // Add to feed
+      for (const [feedType, amount] of Object.entries(recipe.produces)) {
+        feed[feedType] = (feed[feedType] || 0) + amount;
+      }
+      
+      showMessage('✅ Processed ' + type + '! Produced ' + Object.values(recipe.produces)[0] + ' ' + type + '.');
+      updateUI();
+    }
+    
+    // Send feed to barn
+    function sendToBarn() {
+      const total = Object.values(feed).reduce((a, b) => a + b, 0);
+      if (total === 0) {
+        showMessage('❌ No feed to send! Process some first.');
+        return;
+      }
+      
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'feed-update',
+          hay: feed.hay || 0,
+          grain: feed.grain || 0,
+          mixed: feed.mixed || 0,
+          pellets: feed.pellets || 0
+        }, '*');
+      }
+      
+      showMessage('📦 Sent ' + total + ' feed to the Barn!');
+      
+      // Reset feed stock after sending
+      feed = { hay: 0, grain: 0, mixed: 0, pellets: 0 };
+      updateUI();
+    }
+    
+    // Upgrade mill
+    function upgradeMill() {
+      const cost = level * 500;
+      showMessage('⬆️ Upgrade to Lv ' + (level + 1) + ' costs ' + cost + ' coins.');
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'mill-upgrade', cost: cost }, '*');
+      }
+    }
+    
+    // Show message
+    function showMessage(msg) {
+      const el = document.getElementById('millMessage');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 3000);
+    }
+    
+    // Listen for silo data from parent
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'silo-data') {
+        if (event.data.wheat) silo.wheat += event.data.wheat;
+        if (event.data.corn) silo.corn += event.data.corn;
+        showMessage('🌾 Crops received from silo!');
+        updateUI();
+      }
+      
+      if (event.data && event.data.type === 'mill-confirm') {
+        if (event.data.success && event.data.upgrade) {
+          level++;
+          showMessage('⬆️ Mill upgraded to Lv ' + level + '!');
+          updateUI();
+        } else if (event.data.success) {
+          showMessage('✅ Purchase confirmed!');
+        } else {
+          showMessage('❌ Not enough coins!');
+        }
+      }
+    });
+    
+    // Initialize
+    updateUI();
+  </script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌿 Greenhouse</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: transparent; 
+      color: #eee; 
+      font-family: Arial, sans-serif; 
+      padding: 0;
+      margin: 0;
+      min-height: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+      margin: 0;
+      background: linear-gradient(145deg, #1a2a1a, #2a3a2a);
+      border: 2px solid #4a6a4a;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: none;
+    }
+    h1 { color: #66ff66; text-align: center; }
+    .header p { color: #88aa88; text-align: center; margin: 8px 0 20px 0; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 12px; text-align: center; }
+    .stat-value { font-size: 24px; font-weight: bold; color: #ffd700; }
+    .stat-label { font-size: 12px; color: #88aa88; text-transform: uppercase; letter-spacing: 1px; }
+    .plant-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+    .plant-card { background: linear-gradient(145deg, #1a2a1a, #0a1a0a); border: 2px solid #3a5a3a; border-radius: 12px; padding: 15px; text-align: center; transition: all 0.3s ease; cursor: pointer; }
+    .plant-card:hover { transform: translateY(-5px); border-color: #66ff66; box-shadow: 0 6px 20px rgba(102, 255, 102, 0.2); }
+    .plant-icon { font-size: 36px; display: block; margin-bottom: 8px; }
+    .plant-name { font-size: 16px; font-weight: bold; color: #66ff66; }
+    .plant-status { font-size: 12px; color: #88cc88; margin-top: 4px; }
+    .plant-harvest { font-size: 12px; color: #ffd700; margin-top: 4px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+    .btn { padding: 10px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; font-size: 14px; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    .btn.plant { background: linear-gradient(145deg, #2a7c4a, #1a5a3a); color: #66ff66; }
+    .btn.plant:hover { background: linear-gradient(145deg, #3a9c5a, #2a7c4a); }
+    .btn.harvest { background: linear-gradient(145deg, #7c6a2a, #5a4a1a); color: #ffdd66; }
+    .btn.harvest:hover { background: linear-gradient(145deg, #9c8a3a, #7c6a2a); }
+    .btn.upgrade { background: linear-gradient(145deg, #2a4a7c, #1a3a5a); color: #66ddff; }
+    .btn.upgrade:hover { background: linear-gradient(145deg, #3a5a9c, #2a4a7c); }
+    
+    /* Popup overlay */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-overlay.show {
+      display: flex;
+    }
+    .popup-box {
+      background: linear-gradient(145deg, #1a2a1a, #2a3a2a);
+      border: 2px solid #4a6a4a;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+      animation: popIn 0.3s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .popup-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 15px;
+    }
+    .popup-message {
+      color: #eee;
+      font-size: 18px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .popup-btn {
+      background: linear-gradient(145deg, #2a7c4a, #1a5a3a);
+      color: #66ff66;
+      border: none;
+      padding: 10px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .popup-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(102, 255, 102, 0.3);
+    }
+    .popup-btn.error {
+      background: linear-gradient(145deg, #7c2a2a, #5a1a1a);
+      color: #ff6666;
+    }
+    .popup-btn.error:hover {
+      box-shadow: 0 4px 15px rgba(255, 102, 102, 0.3);
+    }
+    .popup-btn.success {
+      background: linear-gradient(145deg, #2a7c4a, #1a5a3a);
+      color: #66ff66;
+    }
+    .popup-btn.success:hover {
+      box-shadow: 0 4px 15px rgba(102, 255, 102, 0.3);
+    }
+    .popup-btn.info {
+      background: linear-gradient(145deg, #2a4a7c, #1a3a5a);
+      color: #66ddff;
+    }
+    .popup-btn.info:hover {
+      box-shadow: 0 4px 15px rgba(102, 221, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌿 Greenhouse</h1>
+      <p>Grow special crops year-round</p>
+    </div>
+    
+    <div class="stats">
+      <div><div class="stat-value" id="plantCount">0</div><div class="stat-label">Plants Growing</div></div>
+      <div><div class="stat-value" id="harvestCount">0</div><div class="stat-label">Harvests</div></div>
+      <div><div class="stat-value" id="greenhouseLevel">Lv 1</div><div class="stat-label">Greenhouse Level</div></div>
+    </div>
+    
+    <div class="plant-grid">
+      <div class="plant-card" onclick="plantCrop('tomato')">
+        <span class="plant-icon">🍅</span>
+        <div class="plant-name">Tomato</div>
+        <div class="plant-status" id="tomatoStatus">🌱 Ready to plant</div>
+        <div class="plant-harvest">Harvest: 5 min</div>
+      </div>
+      <div class="plant-card" onclick="plantCrop('pepper')">
+        <span class="plant-icon">🌶️</span>
+        <div class="plant-name">Pepper</div>
+        <div class="plant-status" id="pepperStatus">🌱 Ready to plant</div>
+        <div class="plant-harvest">Harvest: 8 min</div>
+      </div>
+      <div class="plant-card" onclick="plantCrop('lettuce')">
+        <span class="plant-icon">🥬</span>
+        <div class="plant-name">Lettuce</div>
+        <div class="plant-status" id="lettuceStatus">🌱 Ready to plant</div>
+        <div class="plant-harvest">Harvest: 3 min</div>
+      </div>
+      <div class="plant-card" onclick="plantCrop('herbs')">
+        <span class="plant-icon">🌿</span>
+        <div class="plant-name">Herbs</div>
+        <div class="plant-status" id="herbsStatus">🌱 Ready to plant</div>
+        <div class="plant-harvest">Harvest: 10 min</div>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button class="btn harvest" onclick="harvestAll()">🧺 Harvest All</button>
+      <button class="btn upgrade" onclick="upgradeGreenhouse()">⬆️ Upgrade</button>
+      <button class="btn plant" onclick="sellCrops()">💰 Sell Crops</button>
+    </div>
+  </div>
+
+  <!-- Popup -->
+  <div class="popup-overlay" id="popupOverlay">
+    <div class="popup-box">
+      <span class="popup-icon" id="popupIcon">🌱</span>
+      <div class="popup-message" id="popupMessage">Hello!</div>
+      <button class="popup-btn" id="popupBtn" onclick="closePopup()">OK</button>
+    </div>
+  </div>
+  
+  <script>
+    // Auto-resize iframe
+    function resizeIframe() {
+      if (window.parent && window.parent !== window) {
+        const height = document.documentElement.scrollHeight;
+        window.parent.postMessage({ 
+          type: 'resize-iframe', 
+          height: height 
+        }, '*');
+      }
+    }
+
+    let plants = {
+      tomato: { planted: false, ready: false, plantedAt: 0, growTime: 300, count: 0 },
+      pepper: { planted: false, ready: false, plantedAt: 0, growTime: 480, count: 0 },
+      lettuce: { planted: false, ready: false, plantedAt: 0, growTime: 180, count: 0 },
+      herbs: { planted: false, ready: false, plantedAt: 0, growTime: 600, count: 0 }
+    };
+    
+    let harvests = 0;
+    let level = 1;
+    let cropStock = {};
+    
+    function updateUI() {
+      let total = 0;
+      for (const [key, plant] of Object.entries(plants)) {
+        if (plant.planted) total++;
+        const statusEl = document.getElementById(key + 'Status');
+        if (plant.ready) {
+          statusEl.textContent = '🌾 Ready to harvest!';
+          statusEl.style.color = '#ffd700';
+        } else if (plant.planted) {
+          const elapsed = (Date.now() - plant.plantedAt) / 1000;
+          const progress = Math.min(100, (elapsed / plant.growTime) * 100);
+          statusEl.textContent = '🌱 Growing ' + Math.floor(progress) + '%';
+          statusEl.style.color = '#88cc88';
+        } else {
+          statusEl.textContent = '🌱 Ready to plant';
+          statusEl.style.color = '#88cc88';
+        }
+      }
+      
+      document.getElementById('plantCount').textContent = total;
+      document.getElementById('harvestCount').textContent = harvests;
+      document.getElementById('greenhouseLevel').textContent = 'Lv ' + level;
+      
+      // Resize after UI update
+      setTimeout(resizeIframe, 100);
+    }
+    
+    function showPopup(message, icon = '🌱', btnType = 'success') {
+      const overlay = document.getElementById('popupOverlay');
+      const msgEl = document.getElementById('popupMessage');
+      const iconEl = document.getElementById('popupIcon');
+      const btnEl = document.getElementById('popupBtn');
+      
+      msgEl.textContent = message;
+      iconEl.textContent = icon;
+      
+      btnEl.className = 'popup-btn';
+      if (btnType === 'error') {
+        btnEl.classList.add('error');
+      } else if (btnType === 'info') {
+        btnEl.classList.add('info');
+      } else {
+        btnEl.classList.add('success');
+      }
+      
+      overlay.classList.add('show');
+      setTimeout(resizeIframe, 100);
+    }
+    
+    function closePopup() {
+      document.getElementById('popupOverlay').classList.remove('show');
+      setTimeout(resizeIframe, 100);
+    }
+    
+    function plantCrop(type) {
+      const plant = plants[type];
+      if (plant.planted) {
+        showPopup('❌ ' + type.charAt(0).toUpperCase() + type.slice(1) + ' already planted!', '❌', 'error');
+        return;
+      }
+      
+      if (Object.values(plants).filter(p => p.planted).length >= level * 2) {
+        showPopup('❌ Greenhouse full! Upgrade to grow more.', '❌', 'error');
+        return;
+      }
+      
+      plant.planted = true;
+      plant.ready = false;
+      plant.plantedAt = Date.now();
+      plant.count++;
+      
+      showPopup('🌱 Planted ' + type.charAt(0).toUpperCase() + type.slice(1) + '!', '🌱', 'success');
+      updateUI();
+      
+      setTimeout(() => {
+        if (plant.planted && !plant.ready) {
+          plant.ready = true;
+          harvests++;
+          updateUI();
+          showPopup('🌾 ' + type.charAt(0).toUpperCase() + type.slice(1) + ' is ready to harvest!', '🌾', 'success');
+        }
+      }, plant.growTime * 1000);
+    }
+    
+    function harvestAll() {
+      let harvested = 0;
+      for (const [key, plant] of Object.entries(plants)) {
+        if (plant.ready) {
+          plant.planted = false;
+          plant.ready = false;
+          cropStock[key] = (cropStock[key] || 0) + 1;
+          harvested++;
+        }
+      }
+      
+      if (harvested === 0) {
+        showPopup('❌ No crops ready to harvest!', '❌', 'error');
+        return;
+      }
+      
+      showPopup('🧺 Harvested ' + harvested + ' crops!', '🧺', 'success');
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'greenhouse-harvest', count: harvested }, '*');
+      }
+      updateUI();
+    }
+    
+    function upgradeGreenhouse() {
+      const cost = level * 500;
+      showPopup('⬆️ Upgrade to Lv ' + (level + 1) + ' costs ' + cost + ' coins.', '⬆️', 'info');
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'greenhouse-upgrade', cost: cost }, '*');
+      }
+    }
+    
+    function sellCrops() {
+      let total = 0;
+      let items = [];
+      const prices = { tomato: 3, pepper: 5, lettuce: 2, herbs: 8 };
+      
+      for (const [key, count] of Object.entries(cropStock)) {
+        if (count > 0) {
+          const earned = count * (prices[key] || 3) * level;
+          total += earned;
+          items.push(count + ' ' + key + ' (' + earned + ' coins)');
+          cropStock[key] = 0;
+        }
+      }
+      
+      if (total === 0) {
+        showPopup('❌ No crops to sell!', '❌', 'error');
+        return;
+      }
+      
+      showPopup('💰 Sold: ' + items.join(', ') + ' for ' + total + ' coins!', '💰', 'success');
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'greenhouse-sell', coins: total }, '*');
+      }
+    }
+    
+    // Initial resize and listen for changes
+    window.addEventListener('load', resizeIframe);
+    window.addEventListener('resize', resizeIframe);
+    
+    // Observe DOM changes
+    if (window.ResizeObserver) {
+      const observer = new ResizeObserver(resizeIframe);
+      observer.observe(document.body);
+    }
+    
+    updateUI();
+  </script>
+</body>
+</html>
