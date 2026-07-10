@@ -138,7 +138,6 @@
   <div class="container">
     <div class="header">
       <h1>🏭 Feed Mill</h1>
-      <p>Process crops from silo into animal feed</p>
     </div>
     
     <div class="silo-stats">
@@ -213,14 +212,70 @@
       feedmill: {
         level: 1,
         feed: { hay: 0, grain: 0, mixed: 0, pellets: 0 }
-        // NO silo here - it's shared from the main game!
       }
     };
 
     // Silo data from the main game (shared)
     let sharedSilo = { wheat: 0, corn: 0 };
 
-    // Save function - uses SAME key as index
+    // ==================== FIXED LOAD FUNCTION ====================
+    function load() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) {
+          state.coins = 100;
+          state.feedmill = {
+            level: 1,
+            feed: { hay: 0, grain: 0, mixed: 0, pellets: 0 }
+          };
+          sharedSilo.wheat = 0;
+          sharedSilo.corn = 0;
+          return;
+        }
+        
+        const data = JSON.parse(raw);
+        state.coins = data.coins || 100;
+        
+        if (data.feedmill) {
+          state.feedmill.level = data.feedmill.level || 1;
+          state.feedmill.feed = {
+            hay: data.feedmill.feed?.hay || 0,
+            grain: data.feedmill.feed?.grain || 0,
+            mixed: data.feedmill.feed?.mixed || 0,
+            pellets: data.feedmill.feed?.pellets || 0
+          };
+        }
+        
+        // ===== FIX: Look for silo data in the correct location =====
+        // The main Farm saves silo at data.silo.stored
+        if (data.silo && data.silo.stored) {
+          sharedSilo.wheat = data.silo.stored.wheat || 0;
+          sharedSilo.corn = data.silo.stored.corn || 0;
+        } else if (data.farm && data.farm.silo && data.farm.silo.stored) {
+          // Fallback: some versions might save under farm
+          sharedSilo.wheat = data.farm.silo.stored.wheat || 0;
+          sharedSilo.corn = data.farm.silo.stored.corn || 0;
+        } else {
+          // If no silo data found, default to 0
+          sharedSilo.wheat = 0;
+          sharedSilo.corn = 0;
+        }
+        
+        console.log('💾 Feedmill loaded! Coins:', state.coins);
+        console.log('🌾 Shared Silo - Wheat:', sharedSilo.wheat, 'Corn:', sharedSilo.corn);
+      } catch (e) {
+        console.log('Load failed:', e);
+        state.coins = 100;
+        state.feedmill = {
+          level: 1,
+          feed: { hay: 0, grain: 0, mixed: 0, pellets: 0 }
+        };
+        sharedSilo.wheat = 0;
+        sharedSilo.corn = 0;
+      }
+    }
+
+    // ==================== FIXED SAVE FUNCTION ====================
     function save() {
       try {
         let mainData = {};
@@ -243,60 +298,14 @@
           }
         };
         
+        // ===== IMPORTANT: Preserve existing silo data =====
+        // Don't overwrite the silo data from the main farm
+        // The main farm's silo data is already in mainData.silo
+        
         localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
         console.log('💾 Feedmill saved! Coins:', state.coins);
       } catch (e) {
         console.log('Save failed:', e);
-      }
-    }
-
-    // Load function - uses SAME key as index
-    function load() {
-      try {
-        const raw = localStorage.getItem(SAVE_KEY);
-        if (!raw) {
-          state.coins = 100;
-          state.feedmill = {
-            level: 1,
-            feed: { hay: 0, grain: 0, mixed: 0, pellets: 0 }
-          };
-          return;
-        }
-        
-        const data = JSON.parse(raw);
-        state.coins = data.coins || 100;
-        
-        if (data.feedmill) {
-          state.feedmill.level = data.feedmill.level || 1;
-          state.feedmill.feed = {
-            hay: data.feedmill.feed?.hay || 0,
-            grain: data.feedmill.feed?.grain || 0,
-            mixed: data.feedmill.feed?.mixed || 0,
-            pellets: data.feedmill.feed?.pellets || 0
-          };
-        }
-        
-        // Load silo data from the main game (shared)
-        if (data.silo) {
-          sharedSilo.wheat = data.silo.stored?.wheat || 0;
-          sharedSilo.corn = data.silo.stored?.corn || 0;
-        } else {
-          // If no silo data found, try to get it from farm
-          if (data.farm && data.farm.silo) {
-            sharedSilo.wheat = data.farm.silo.stored?.wheat || 0;
-            sharedSilo.corn = data.farm.silo.stored?.corn || 0;
-          }
-        }
-        
-        console.log('💾 Feedmill loaded! Coins:', state.coins);
-        console.log('🌾 Shared Silo - Wheat:', sharedSilo.wheat, 'Corn:', sharedSilo.corn);
-      } catch (e) {
-        console.log('Load failed:', e);
-        state.coins = 100;
-        state.feedmill = {
-          level: 1,
-          feed: { hay: 0, grain: 0, mixed: 0, pellets: 0 }
-        };
       }
     }
 
@@ -363,7 +372,7 @@
       }
     }
     
-    // Process feed from shared silo crops
+    // ==================== PROCESS FEED FROM SHARED SILO ====================
     function processFeed(type) {
       const recipes = {
         hay: { requires: { wheat: 5 }, produces: { hay: 10 } },
@@ -397,6 +406,19 @@
           corn: sharedSilo.corn || 0
         }, '*');
       }
+      
+      // Also save silo data to localStorage so it persists
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (raw) {
+          const mainData = JSON.parse(raw);
+          if (mainData.silo && mainData.silo.stored) {
+            mainData.silo.stored.wheat = sharedSilo.wheat || 0;
+            mainData.silo.stored.corn = sharedSilo.corn || 0;
+          }
+          localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
+        }
+      } catch(e) {}
       
       // Add to feed
       for (const [feedType, amount] of Object.entries(recipe.produces)) {
@@ -453,7 +475,7 @@
       render();
     }
     
-    // Listen for messages from parent
+    // ==================== LISTEN FOR MESSAGES FROM PARENT ====================
     window.addEventListener('message', function(event) {
       console.log('🏭 Feedmill received message:', event.data);
       
@@ -500,15 +522,20 @@
       }
     });
     
-    // Make state accessible for console
+    // ==================== EXPOSE FUNCTIONS ====================
     window.state = state;
     window.save = save;
     window.load = load;
     window.render = render;
     window.syncCoinsToParent = syncCoinsToParent;
     window.sharedSilo = sharedSilo;
+    window.processFeed = processFeed;
+    window.sendToBarn = sendToBarn;
+    window.upgradeMill = upgradeMill;
+    window.showPopup = showPopup;
+    window.closePopup = closePopup;
     
-    // Initialize
+    // ==================== INITIALIZE ====================
     load();
     render();
     resizeIframe();

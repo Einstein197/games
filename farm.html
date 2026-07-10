@@ -621,6 +621,7 @@
       }
     }
 
+    // ── Save to parent ──
     function saveToParent() {
         if (window.parent && window.parent !== window) {
             window.parent.postMessage({
@@ -642,12 +643,58 @@
                 water: state.water,
                 silo: state.silo,
                 well: state.well,
-                farmer: state.farmer  // <-- ADD THIS LINE
+                farmer: state.farmer
             }
             }, '*');
             console.log('📤 Farm saved state to parent');
         }
-        }
+        // Also save farmer state to localStorage for persistence across reloads
+        try {
+            localStorage.setItem('farm_farmer_backup', JSON.stringify({
+                active: masterFarmerActive,
+                endTime: farmerEndTime,
+                paused: farmerPaused,
+                pauseReason: farmerPauseReason
+            }));
+        } catch(e) {}
+    }
+
+    // ── Restore Farmer State from localStorage ──
+    function restoreFarmerState() {
+        try {
+            const backup = localStorage.getItem('farm_farmer_backup');
+            if (backup) {
+                const parsed = JSON.parse(backup);
+                if (parsed && parsed.active && parsed.endTime) {
+                    const now = Date.now();
+                    if (now < parsed.endTime) {
+                        masterFarmerActive = true;
+                        farmerEndTime = parsed.endTime;
+                        farmerPaused = parsed.paused || false;
+                        farmerPauseReason = parsed.pauseReason || "";
+                        farmerStartTime = Date.now();
+                        
+                        state.farmer.active = true;
+                        state.farmer.endTime = parsed.endTime;
+                        state.farmer.paused = parsed.paused || false;
+                        state.farmer.pauseReason = parsed.pauseReason || "";
+                        
+                        if (masterFarmerInterval) clearInterval(masterFarmerInterval);
+                        masterFarmerInterval = setInterval(doMasterFarmerWork, 200);
+                        
+                        const hoursLeft = ((farmerEndTime - now) / 3600000).toFixed(1);
+                        updateFarmerStatus(`👨‍🌾 Farmer resumed! ${hoursLeft}h left`);
+                        console.log('✅ Farmer restored with', hoursLeft, 'hours left');
+                        updateWorkerButtonStatus();
+                        return true;
+                    } else {
+                        localStorage.removeItem('farm_farmer_backup');
+                    }
+                }
+            }
+        } catch(e) {}
+        return false;
+    }
 
     // ── Listen for messages ──
     window.addEventListener('message', function(event) {
@@ -672,6 +719,7 @@
           state.water = loaded.water || { current: 20, max: 20 };
           state.silo = loaded.silo || { capacity: 100, stored: {} };
           state.well = loaded.well || { level: 0, lastUpdate: Date.now() };
+          state.farmer = loaded.farmer || { active: false, endTime: 0, paused: false, pauseReason: "" };
           
           for (var i = 0; i < state.tiles.length; i++) {
             var tile = state.tiles[i];
@@ -688,6 +736,9 @@
           updateWeather();
           updateMarket();
           render();
+          
+          // Restore farmer if active
+          restoreFarmerState();
         }
       }
       
@@ -715,6 +766,7 @@
       
       if (event.data && event.data.type === 'reset-game') {
         localStorage.removeItem(SAVE_KEY);
+        localStorage.removeItem('farm_farmer_backup');
         location.reload();
       }
       
@@ -1638,6 +1690,14 @@
       farmerPauseReason = "";
       farmerStartTime = Date.now();
       farmerEndTime = farmerStartTime + (DAY_LENGTH_SECONDS * 1000);
+      
+      // Save farmer state
+      state.farmer.active = true;
+      state.farmer.endTime = farmerEndTime;
+      state.farmer.paused = false;
+      state.farmer.pauseReason = "";
+      saveToParent();
+      
       updateFarmerStatus("👨‍🌾 Master Farmer started! He will work for " + (DAY_LENGTH_SECONDS / 3600) + " hours!");
       if (masterFarmerInterval) clearInterval(masterFarmerInterval);
       masterFarmerInterval = setInterval(doMasterFarmerWork, 200);
@@ -1681,6 +1741,9 @@
             if (farmerPaused) {
               farmerPaused = false;
               farmerPauseReason = "";
+              state.farmer.paused = false;
+              state.farmer.pauseReason = "";
+              saveToParent();
               updateFarmerStatus("🌾 Harvested " + crop.name + "! Farmer resumed work! " + hoursRemaining + "h left");
             } else {
               updateFarmerStatus("🌾 Harvested " + crop.name + " (" + tile.quality + ")! " + hoursRemaining + "h left");
@@ -1709,6 +1772,9 @@
         if (currentWater <= 0) {
           farmerPaused = true;
           farmerPauseReason = "out of water";
+          state.farmer.paused = true;
+          state.farmer.pauseReason = "out of water";
+          saveToParent();
           updateFarmerStatus("⏸️ Master Farmer paused - OUT OF WATER! Harvest crops to get coins for well upgrades, or wait for rain. 💧 (" + hoursRemaining + "h left)");
           updateWorkerButtonStatus();
           return;
@@ -1728,6 +1794,9 @@
               } else {
                 farmerPaused = true;
                 farmerPauseReason = "out of water";
+                state.farmer.paused = true;
+                state.farmer.pauseReason = "out of water";
+                saveToParent();
                 updateFarmerStatus("⏸️ Master Farmer paused - OUT OF WATER! Get water from well or rain to resume. 💧");
                 updateWorkerButtonStatus();
                 return;
@@ -1764,6 +1833,9 @@
         if (state.coins < crop3.baseCost) {
           farmerPaused = true;
           farmerPauseReason = "out of coins";
+          state.farmer.paused = true;
+          state.farmer.pauseReason = "out of coins";
+          saveToParent();
           updateFarmerStatus("⏸️ Master Farmer paused - OUT OF COINS! Harvest ready crops to get coins, then he'll resume. 💰 (" + hoursRemaining + "h left)");
           updateWorkerButtonStatus();
           return;
@@ -1788,6 +1860,9 @@
               } else {
                 farmerPaused = true;
                 farmerPauseReason = "out of coins";
+                state.farmer.paused = true;
+                state.farmer.pauseReason = "out of coins";
+                saveToParent();
                 updateFarmerStatus("⏸️ Master Farmer paused - OUT OF COINS! Need " + crop3.baseCost + " coins to plant. Harvest crops to resume. 💰");
                 updateWorkerButtonStatus();
                 return;
@@ -1820,6 +1895,9 @@
       if (canResume) {
         farmerPaused = false;
         farmerPauseReason = "";
+        state.farmer.paused = false;
+        state.farmer.pauseReason = "";
+        saveToParent();
         updateFarmerStatus("▶️ Master Farmer resumed work! " + hoursRemaining + "h left in his shift.");
         updateWorkerButtonStatus();
       }
@@ -1850,6 +1928,17 @@
       }
       farmerStartTime = null;
       farmerEndTime = null;
+      
+      // Clear farmer state
+      state.farmer.active = false;
+      state.farmer.endTime = 0;
+      state.farmer.paused = false;
+      state.farmer.pauseReason = "";
+      saveToParent();
+      
+      // Clear localStorage backup
+      try { localStorage.removeItem('farm_farmer_backup'); } catch(e) {}
+      
       var hireBtn = document.getElementById("hireWorkerBtn");
       if (hireBtn) {
         hireBtn.disabled = false;
@@ -1881,6 +1970,9 @@
         setMessage("🌾 Welcome! Click tiles to plant crops!");
         setInterval(tick, 1000);
         
+        // Try to restore farmer from saved state
+        restoreFarmerState();
+        
         if (tutorialSeen !== "true") {
           setTimeout(function() {
             if (tileElements && tileElements.length > 0) {
@@ -1890,6 +1982,9 @@
             }
           }, 1000);
         }
+      } else {
+        // Already loaded from parent, restore farmer
+        restoreFarmerState();
       }
     }, 1000);
 
