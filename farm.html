@@ -301,24 +301,139 @@
 
     /* ── Responsive ── */
     @media (max-width: 767px) {
-      .buildings-container { gap: 10px; padding: 10px; }
-      .silo-building, .well-building, .water-building, .town-building { min-width: 70px; padding: 10px 8px 8px 8px; }
-      .building-image { width: 50px; height: 50px; }
-      .building-icon-label { font-size: 20px; }
-      #townModal .collect-btn, #townModal .invest-btn { max-width: 100%; font-size: 14px; padding: 10px 16px; min-height: 44px; }
+    .buildings-container { gap: 10px; padding: 10px; }
+    .silo-building, .well-building, .water-building, .town-building { 
+        min-width: 70px; 
+        padding: 10px 8px 8px 8px; 
     }
+    .building-image { width: 50px; height: 50px; }
+    .building-icon-label { font-size: 20px; }
+    
+    #townModal .collect-btn, #townModal .invest-btn { 
+        max-width: 100%; 
+        font-size: 14px; 
+        padding: 10px 16px; 
+        min-height: 44px; 
+    }
+    
+    /* Feed Mill specific - make recipe cards 2 columns on tablet */
+    .recipe-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 12px; 
+    }
+    .container { padding: 15px; }
+    .silo-stats { gap: 10px; padding: 15px; }
+    .feed-display { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .btn { min-width: 80px; }
+    }
+
     @media (max-width: 480px) {
-      .buildings-container { gap: 6px; padding: 6px; }
-      .silo-building, .well-building, .water-building, .town-building { min-width: 55px; padding: 6px 4px 4px 4px; }
-      .building-image { width: 40px; height: 40px; }
-      .building-icon-label { font-size: 16px; }
-      .usage-text, .well-text, .water-text, .town-text { font-size: 9px; padding: 2px 6px; }
-      .building-label { font-size: 8px; }
-      #townModal .collect-btn, #townModal .invest-btn { font-size: 12px; padding: 8px 12px; min-height: 38px; }
-      #townModal .collect-btn .timer-text { font-size: 11px; min-width: 40px; }
-      .town-popup { padding: 20px; }
-      .town-popup .popup-message { font-size: 15px; }
+    .buildings-container { gap: 6px; padding: 6px; }
+    .silo-building, .well-building, .water-building, .town-building { 
+        min-width: 55px; 
+        padding: 6px 4px 4px 4px; 
     }
+    .building-image { width: 40px; height: 40px; }
+    .building-icon-label { font-size: 16px; }
+    .usage-text, .well-text, .water-text, .town-text { 
+        font-size: 9px; 
+        padding: 2px 6px; 
+    }
+    .building-label { font-size: 8px; }
+    
+    #townModal .collect-btn, #townModal .invest-btn { 
+        font-size: 12px; 
+        padding: 8px 12px; 
+        min-height: 38px; 
+    }
+    #townModal .collect-btn .timer-text { 
+        font-size: 11px; 
+        min-width: 40px; 
+    }
+    .town-popup { padding: 20px; }
+    .town-popup .popup-message { font-size: 15px; }
+    
+    /* Feed Mill specific - 2 columns on small phones */
+    .recipe-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 8px; 
+    }
+    .recipe-card { padding: 8px 6px; }
+    .recipe-requires { font-size: 9px; }
+    .recipe-output { font-size: 10px; }
+    .process-btn { font-size: 11px; padding: 8px 6px; min-height: 38px; }
+    .feed-display { 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 6px; 
+        padding: 10px 6px; 
+    }
+    .feed-item .label { font-size: 10px; }
+    .feed-item .value { font-size: 16px; }
+    .container { padding: 10px; }
+    .silo-stats { gap: 6px; padding: 10px 6px; }
+    .stat-value { font-size: 16px; }
+    .stat-label { font-size: 8px; }
+    .btn { 
+        min-width: 70px; 
+        padding: 10px 12px; 
+        font-size: 12px; 
+        min-height: 38px; 
+    }
+    .popup-box { padding: 15px; }
+    .popup-message { font-size: 15px; }
+    .popup-btn { font-size: 14px; padding: 10px 20px; min-height: 38px; }
+    }
+
+    /* Landscape phones */
+    @media (max-height: 500px) and (orientation: landscape) {
+    .buildings-container { gap: 6px; padding: 6px; }
+    .silo-building, .well-building, .water-building, .town-building { 
+        min-width: 55px; 
+        padding: 6px 4px; 
+    }
+    .building-image { width: 35px; height: 35px; }
+    .container { padding: 10px 15px; }
+    .silo-stats { padding: 8px 12px; margin: 8px 0; }
+    .recipe-grid { 
+        grid-template-columns: repeat(4, 1fr); 
+        gap: 8px; 
+        margin: 8px 0; 
+    }
+    .recipe-card { padding: 6px 4px; }
+    .feed-display { padding: 6px 10px; margin: 8px 0; }
+    .actions { margin-top: 8px; }
+    .btn { 
+        padding: 6px 12px; 
+        font-size: 11px; 
+        min-height: 32px; 
+    }
+    .process-btn { 
+        padding: 4px 6px; 
+        min-height: 28px; 
+        font-size: 10px; 
+    }
+    }
+
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+    .process-btn, .btn, .popup-btn { min-height: 44px; }
+    .recipe-card:active { transform: scale(0.96); }
+    .btn:active, .process-btn:active, .popup-btn:active { transform: scale(0.95); }
+    }
+
+    /* Responsive typography for Feed Mill */
+    h1 { font-size: clamp(20px, 5vw, 32px); }
+    .header p { font-size: clamp(12px, 2.5vw, 16px); }
+    .stat-value { font-size: clamp(18px, 4vw, 28px); }
+    .stat-label { font-size: clamp(9px, 1.8vw, 13px); }
+    .recipe-name { font-size: clamp(13px, 2.5vw, 18px); }
+    .recipe-requires { font-size: clamp(10px, 1.8vw, 13px); }
+    .recipe-output { font-size: clamp(11px, 2vw, 14px); }
+    .feed-item .label { font-size: clamp(9px, 1.6vw, 12px); }
+    .feed-item .value { font-size: clamp(16px, 3.5vw, 22px); }
+    .btn { font-size: clamp(13px, 2.5vw, 16px); }
+    .popup-message { font-size: clamp(15px, 3vw, 20px); }
+    .popup-btn { font-size: clamp(14px, 2.8vw, 18px); }
   </style>
 </head>
 <body>
