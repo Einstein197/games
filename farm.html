@@ -301,6 +301,67 @@
 
     /* ── Responsive ── */
     @media (max-width: 767px) {
+    /* Town Modal Mobile Scroll Fix */
+    .town-modal {
+      align-items: flex-start;
+      padding: 10px 0;
+    }
+    
+    #townModal .town-content {
+      max-height: 85vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 15px;
+      border-radius: 16px;
+      margin: 10px;
+      width: 95%;
+    }
+    
+    /* Custom scrollbar for mobile */
+    #townModal .town-content::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    #townModal .town-content::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 2px;
+    }
+    
+    #townModal .town-content::-webkit-scrollbar-thumb {
+      background: #4a4a6a;
+      border-radius: 2px;
+    }
+    
+    #townModal .town-stats div {
+      font-size: 13px;
+      margin: 4px 0;
+    }
+    
+    #townModal .workers-section h3 {
+      font-size: 14px;
+      margin: 8px 0;
+    }
+    
+    #townModal .worker-card-single {
+      padding: 10px;
+      margin: 6px 0;
+    }
+    
+    #townModal .worker-card-single .worker-desc {
+      font-size: 12px;
+    }
+    
+    #townModal .worker-card-single button {
+      padding: 8px 12px;
+      font-size: 13px;
+      min-height: 38px;
+    }
+    
+    #townModal .button-group {
+      gap: 6px;
+      margin-top: 10px;
+    }
+    
     .buildings-container { gap: 10px; padding: 10px; }
     .silo-building, .well-building, .water-building, .town-building { 
         min-width: 70px; 
@@ -328,6 +389,39 @@
     }
 
     @media (max-width: 480px) {
+    #townModal .town-content {
+      max-height: 90vh;
+      padding: 12px;
+      margin: 8px;
+      width: 96%;
+    }
+    
+    #townModal .town-stats div {
+      font-size: 12px;
+      margin: 3px 0;
+    }
+    
+    #townModal .worker-card-single {
+      padding: 8px;
+    }
+    
+    #townModal .worker-card-single .worker-desc {
+      font-size: 11px;
+    }
+    
+    #townModal .collect-btn, 
+    #townModal .invest-btn {
+      font-size: 12px;
+      padding: 8px 12px;
+      min-height: 38px;
+    }
+    
+    #townModal .worker-card-single button {
+      font-size: 12px;
+      padding: 6px 10px;
+      min-height: 34px;
+    }
+    
     .buildings-container { gap: 6px; padding: 6px; }
     .silo-building, .well-building, .water-building, .town-building { 
         min-width: 55px; 
@@ -386,6 +480,11 @@
 
     /* Landscape phones */
     @media (max-height: 500px) and (orientation: landscape) {
+    #townModal .town-content {
+      max-height: 80vh;
+      padding: 10px;
+    }
+    
     .buildings-container { gap: 6px; padding: 6px; }
     .silo-building, .well-building, .water-building, .town-building { 
         min-width: 55px; 
@@ -434,6 +533,38 @@
     .btn { font-size: clamp(13px, 2.5vw, 16px); }
     .popup-message { font-size: clamp(15px, 3vw, 20px); }
     .popup-btn { font-size: clamp(14px, 2.8vw, 18px); }
+
+    /* Town Modal scroll fix - ensure content doesn't overflow on desktop */
+    .town-modal {
+      align-items: flex-start;
+      padding: 20px 0;
+    }
+
+    #townModal .town-content {
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 20px;
+      scroll-behavior: smooth;
+    }
+
+    /* Custom scrollbar for desktop */
+    #townModal .town-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #townModal .town-content::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+
+    #townModal .town-content::-webkit-scrollbar-thumb {
+      background: #4a4a6a;
+      border-radius: 3px;
+    }
+
+    #townModal .town-content::-webkit-scrollbar-thumb:hover {
+      background: #5a5a8a;
+    }
   </style>
 </head>
 <body>
