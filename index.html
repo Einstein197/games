@@ -310,6 +310,41 @@
     /* ── Message ── */
     #msg { height: 18px; font-size: 12px; padding: 5px; text-align: center; color: var(--text-2); }
 
+    /* ── Faucet Section ── */
+    #faucetSection {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+      background: #0a0a12;
+      border-radius: 16px;
+      border: 1px solid #4f6ef7;
+      overflow: hidden;
+      padding: 10px;
+    }
+    #faucetSection .faucet-header {
+      text-align: center;
+      padding: 10px;
+      background: #141824;
+      border-bottom: 1px solid #333;
+    }
+    #faucetSection .faucet-header h3 {
+      color: #4f6ef7;
+      margin: 0;
+    }
+    #faucetSection .faucet-header p {
+      color: #94a3b8;
+      font-size: 12px;
+      margin: 5px 0;
+    }
+    #faucetFrame {
+      width: 100%;
+      height: 450px;
+      border: none;
+      display: block;
+      background: #0a0a12;
+    }
+
     /* ── Responsive ── */
     @media (max-width: 767px) {
       .sidebar { display: none; }
@@ -323,12 +358,14 @@
       #topBar button { font-size: 9px; padding: 2px 6px; }
       .panel { font-size: 10px; padding: 3px 6px; }
       .panel select { font-size: 10px; }
+      #faucetFrame { height: 350px; }
     }
     @media (min-width: 768px) {
       .bottom-nav { display: none; }
     }
     @media (max-width: 480px) {
       .building-iframe { height: 350px; }
+      #faucetFrame { height: 300px; }
     }
   </style>
 </head>
@@ -443,6 +480,19 @@
               </div>
             </div>
 
+            <!-- Faucet Section - Shows when uid is in URL -->
+            <div id="faucetSection">
+              <div class="faucet-header">
+                <h3>💧 Claim Your Free Coins!</h3>
+                <p>Get 100 coins + 20 water daily</p>
+              </div>
+              <iframe 
+                src="about:blank" 
+                id="faucetFrame" 
+                loading="lazy"
+              ></iframe>
+            </div>
+
             <div id="msg"></div>
 
           <!-- Page: Settings -->
@@ -499,7 +549,6 @@
 
   <!-- Ads -->
   <iframe src="https://acceptable.a-ads.com/2436395?rewarded=1" id="rewardedFrame" style="display:none;width:100%;height:400px;"></iframe>
-  <iframe src="about:blank" id="faucetFrame" loading="lazy" style="display:none;"></iframe>
 
   <script>
     // ── Toast notification ──
@@ -586,7 +635,7 @@
     function formatAmt(n) { return Number(n).toLocaleString(); }
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // GAME CODE - Now only handles main page state and communication
+    // GAME CODE
     // ──────────────────────────────────────────────────────────────────────────────
 
     const SAVE_KEY = "krypton_simfarm_ultimate";
@@ -622,7 +671,6 @@
       var seedSelect = document.getElementById('seedSelect');
       if (!seedSelect) return;
       seedSelect.innerHTML = '';
-      // Use CROPS from crops.js
       if (typeof CROPS !== 'undefined') {
         CROPS.filter(function(crop) { 
           return state.level >= crop.levelRequired; 
@@ -653,28 +701,51 @@
     render();
     initSeedSelect();
 
-    // Restore theme
     var savedTheme = localStorage.getItem('theme');
     if (savedTheme) applyTheme(savedTheme);
 
-    // Navigate to home
     navigate('home');
 
-    // ── Faucet (restored) ──
+    // ── Faucet ──
     var params = new URLSearchParams(window.location.search);
     var userId = params.get("uid");
+    var faucetSection = document.getElementById("faucetSection");
     var faucetFrame = document.getElementById("faucetFrame");
+
     if (userId) {
-      faucetFrame.style.display = "block";
+      console.log('💧 Faucet triggered with UID:', userId);
+      faucetSection.style.display = "block";
       faucetFrame.src = "faucet.html?uid=" + encodeURIComponent(userId);
+      toast("💧 Faucet loading... Claim your free coins!", "info");
+      
+      setTimeout(function() {
+        faucetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 800);
+    } else {
+      faucetSection.style.display = "none";
     }
+
+    // ── Faucet Complete Listener ──
     window.addEventListener("message", function(event) {
+      console.log('📨 Message received:', event.data);
+      
       if (event.data && event.data.type === "faucet-complete") {
-        document.getElementById("faucetFrame").style.display = "none";
+        console.log('💧 Faucet claimed!');
+        faucetSection.style.display = "none";
         state.coins += 100;
+        
+        var iframe = document.getElementById('farmIframe');
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({ 
+            type: 'faucet-water', 
+            water: 20 
+          }, '*');
+        }
+        
         save();
         render();
-        toast("🎁 +100 coins!", "success");
+        toast("🎁 +100 coins! 💧 +20 water! Enjoy!", "success");
+        
         setTimeout(function() {
           window.location.href = "https://kryptonlegend.fun";
         }, 3000);
@@ -683,7 +754,6 @@
 
     // ── Message handling from iframes ──
     window.addEventListener('message', function(event) {
-      // Handle coin updates from child iframes
       if (event.data && event.data.type === 'coin-update') {
         state.coins = event.data.coins;
         save();
@@ -691,7 +761,6 @@
         console.log('💰 Coins updated from child:', state.coins);
       }
       
-      // Handle barn sell
       if (event.data && event.data.type === 'barn-sell') {
         state.coins += event.data.coins;
         save();
@@ -699,12 +768,10 @@
         toast('💰 +' + event.data.coins + ' coins from Barn!', 'success');
       }
       
-      // Handle greenhouse harvest
       if (event.data && event.data.type === 'greenhouse-harvest') {
         console.log('🌿 Greenhouse harvest:', event.data.count);
       }
       
-      // Handle greenhouse sell
       if (event.data && event.data.type === 'greenhouse-sell') {
         state.coins += event.data.coins;
         save();
@@ -712,13 +779,11 @@
         toast('💰 +' + event.data.coins + ' coins from Greenhouse!', 'success');
       }
       
-      // Handle greenhouse upgrade
       if (event.data && event.data.type === 'greenhouse-upgrade') {
         if (state.coins >= event.data.cost) {
           state.coins -= event.data.cost;
           save();
           render();
-          // Send back to greenhouse that upgrade is approved
           var iframe = document.getElementById('greenhouseFrame');
           if (iframe) {
             iframe.contentWindow.postMessage({ 
@@ -731,7 +796,6 @@
         }
       }
       
-      // Handle resize requests from iframes
       if (event.data && event.data.type === 'resize-iframe') {
         const iframe = document.getElementById('greenhouseFrame');
         if (iframe) {
@@ -739,7 +803,6 @@
         }
       }
       
-      // Handle level up from farm
       if (event.data && event.data.type === 'level-up') {
         state.level = event.data.level;
         state.xp = event.data.xp;
@@ -750,14 +813,13 @@
       }
     });
 
-    // ── Revive function (now sends to farm iframe) ──
+    // ── Revive function ──
     function reviveAllWithAd() {
       var frame = document.getElementById("rewardedFrame");
       frame.style.display = "block";
       toast("📺 Watch ad...", "info");
       setTimeout(function() {
         frame.style.display = "none";
-        // Send revive command to farm iframe
         var iframe = document.getElementById('farmIframe');
         if (iframe && iframe.contentWindow) {
           iframe.contentWindow.postMessage({ type: 'revive-crops' }, '*');
@@ -767,7 +829,6 @@
     }
 
     function resetTutorial() {
-      // Send reset tutorial to farm iframe
       var iframe = document.getElementById('farmIframe');
       if (iframe && iframe.contentWindow) {
         iframe.contentWindow.postMessage({ type: 'reset-tutorial' }, '*');
@@ -777,7 +838,6 @@
 
     function resetGame() {
       if (confirm("⚠️ Reset ALL game progress? This cannot be undone!")) {
-        // Clear all game data
         localStorage.removeItem("krypton_simfarm_ultimate");
         localStorage.removeItem("krypton_simfarm_ultimate_farm");
         localStorage.removeItem("krypton_simfarm_ultimate_barn");
@@ -792,7 +852,6 @@
         
         toast("🔄 Game reset! Reloading...", "info");
         
-        // Reload after 1 second
         setTimeout(function() {
           location.reload();
         }, 1000);
