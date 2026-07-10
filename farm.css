@@ -214,6 +214,13 @@ button:hover {
   font-size: 14px;
 }
 
+/* ── Sidebar Footer Links ── */
+.sidebar-footer {
+  border-top: 1px solid var(--glass-border);
+  padding-top: 16px;
+  margin-top: auto;
+}
+
 @keyframes popupAnim {
   from {
     transform: scale(.7);

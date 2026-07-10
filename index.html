@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>Krypton SimFarm Ultimate</title>
   <link rel="icon" type="image/png" href="barn.jpg">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <meta name="description" content="Play Krypton SimFarm Ultimate - a free farming simulator game. Plant crops, raise animals, build your farm empire!">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- AdInPlay SDK -->
   <script src="https://api.adinplay.com/sdk.js"></script>
@@ -16,1608 +20,2047 @@
 
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7260296902287217"
      crossorigin="anonymous"></script>
+
+  <style>
+    /* ── CSS Variables ── */
+    :root {
+      --primary:       #4f6ef7;
+      --primary-dark:  #3a56e4;
+      --secondary:     #2dd4bf;
+      --green:         #10b981;
+      --red:           #f43f5e;
+      --bg:            radial-gradient(ellipse at top left, #121c38, #050811);
+      --text:          #eef2ff;
+      --text-2:        #94a3b8;
+      --text-3:        #475569;
+      --glass:         rgba(255,255,255,0.05);
+      --glass-border:  rgba(255,255,255,0.09);
+      --radius:        20px;
+      --radius-sm:     12px;
+      --sidebar-w:     240px;
+      --topbar-h:      64px;
+    }
+
+    /* ── Background Orbs ── */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.15;
+    }
+    .bg-orb-1 { width:50vw; height:50vw; min-width:300px; background:var(--primary); top:-10%; left:-10%; animation:float1 20s ease-in-out infinite; }
+    .bg-orb-2 { width:40vw; height:40vw; min-width:250px; background:var(--secondary); bottom:0; right:-10%; animation:float2 25s ease-in-out infinite; }
+    .bg-orb-3 { width:30vw; height:30vw; min-width:200px; background:var(--primary-dark); top:40%; left:50%; animation:float1 30s ease-in-out infinite reverse; }
+    @keyframes float1 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(5%,-10%) scale(1.1)} 66%{transform:translate(-5%,5%) scale(0.9)} }
+    @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-5%,10%) scale(1.2)} 66%{transform:translate(5%,-5%) scale(0.8)} }
+
+    /* ── Top Progress Bar ── */
+    #top-progress-bar {
+      position:fixed; top:0; left:0; height:3px;
+      background:linear-gradient(90deg, var(--primary), var(--secondary));
+      z-index:9999; width:0;
+      transition:width 0.2s ease, opacity 0.3s ease;
+      opacity:0; pointer-events:none;
+    }
+
+    /* ── App Shell ── */
+    .app-shell { display:flex; height:100vh; position:relative; z-index:1; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      border-right: 1px solid var(--glass-border);
+      background: rgba(8,12,24,0.7);
+      backdrop-filter: blur(20px);
+      position: fixed; top:0; left:0; z-index:100;
+    }
+    .sidebar-logo { display:flex; align-items:center; gap:10px; padding:8px 12px; margin-bottom:32px; }
+    .logo-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--primary),var(--secondary)); border-radius:10px; display:flex; align-items:center; justify-content:center; }
+    .logo-icon svg { width:20px; height:20px; color:white; }
+    .logo-name { font-size:18px; font-weight:700; background:linear-gradient(135deg,var(--text),var(--text-2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .sidebar-nav { flex:0; display:flex; flex-direction:column; gap:4px; margin-bottom: 20px;}
+
+    .nav-item {
+      display: flex; align-items:center; gap:12px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      font-size: 14px; font-weight:500;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .nav-item svg { width:18px; height:18px; flex-shrink:0; }
+    .nav-item:hover { background:rgba(255,255,255,0.05); color:var(--text); }
+    .nav-item.active { background:color-mix(in srgb, var(--primary) 15%, transparent); color:var(--text); }
+    .nav-item.active svg { color:var(--primary); }
+
+    /* ── Sidebar Footer Links ── */
+    .sidebar-footer {
+      border-top: 1px solid var(--glass-border);
+      padding-top: 8px;
+      margin-top: 0;
+    }
+
+    .sidebar-footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sidebar-footer-links a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      color: var(--text-3);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .sidebar-footer-links a:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-2);
+    }
+    .sidebar-footer-links a svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ── Main Area ── */
+    .main-area { flex:1; display:flex; flex-direction:column; margin-left:var(--sidebar-w); min-height:100vh; }
+
+    /* ── Topbar ── */
+    .topbar {
+      height: var(--topbar-h);
+      display: flex; align-items:center; justify-content:space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(8,12,24,0.6);
+      backdrop-filter: blur(20px);
+      position: sticky; top:0; z-index:50; flex-shrink:0;
+    }
+    .topbar-left { display:flex; align-items:center; gap:16px; }
+    .topbar-page-title { font-size:15px; font-weight:600; color:var(--text-2); }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .refresh-btn {
+      width:34px; height:34px; border-radius:50%;
+      background:var(--glass); border:1px solid var(--glass-border);
+      display:flex; align-items:center; justify-content:center;
+      color:var(--text-2); transition:all 0.2s;
+    }
+    .refresh-btn:hover { background:color-mix(in srgb, var(--primary) 15%, transparent); color:var(--primary); transform:rotate(20deg); }
+    .refresh-btn svg { width:16px; height:16px; }
+
+    /* ── Pages ── */
+    .pages-wrap { flex:1; overflow-y:auto; padding:32px; }
+    .pages-inner { max-width:860px; margin:0 auto; }
+    .page { display:none; }
+    .page.active { display:block; animation:pageIn 0.25s ease; }
+    @keyframes pageIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Glass Card ── */
+    .card {
+      background: var(--glass);
+      backdrop-filter: blur(28px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Section Header ── */
+    .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .section-title { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-3); }
+
+    /* ── Game Container ── */
+    #farm {
+      margin: 0 auto;
+      width: 70vmin;
+      height: 70vmin;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: repeat(12, 1fr);
+      gap: .5vmin;
+      background: rgba(6,7,12,0.8);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: .5vmin;
+      box-sizing: border-box;
+    }
+
+    /* ── Building Views ── */
+    .building-view {
+      display: none;
+      width: 100%;
+      min-height: 500px;
+      margin-top: 20px;
+    }
+    .building-view.active {
+      display: block;
+    }
+    #farmView {
+      display: block;
+    }
+    .building-iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--glass);
+    }
+
+    /* ── Top Bar (game controls) ── */
+    #topBar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      padding: 8px 4px;
+      font-size: 12px;
+      background: var(--glass);
+      backdrop-filter: blur(28px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+    }
+    .panel {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-direction: column;
+    }
+    .panel select {
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      border: 1px solid var(--glass-border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 11px;
+      cursor: pointer;
+      width: 100%;
+    }
+    #topBar button {
+      background: var(--glass);
+      color: var(--text-2);
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #topBar button:hover { background: rgba(255,255,255,0.08); color: var(--text); border-color: var(--primary); }
+
+    .farm-container { position: relative; display: inline-block; margin: 10px auto; width: 100%; text-align: center; }
+
+    /* ── Toast ── */
+    #toast {
+      position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
+      background:rgba(20,26,46,0.95); backdrop-filter:blur(20px);
+      border:1px solid var(--glass-border); border-radius:12px;
+      padding:12px 20px; font-size:13px; font-weight:500;
+      z-index:300; white-space:nowrap;
+      opacity:0; transition:opacity 0.2s, transform 0.2s;
+      transform:translateX(-50%) translateY(10px);
+      pointer-events:none;
+    }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    #toast.success { border-color:rgba(16,185,129,0.4); color:var(--green); }
+    #toast.error   { border-color:rgba(244,63,94,0.4);  color:var(--red); }
+    #toast.info    { border-color:rgba(79,110,247,0.4);  color:var(--primary); }
+
+    /* ── Popup ── */
+    .popup {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+    }
+    .hidden { display: none; }
+    .popupBox {
+      width: 320px;
+      background: #141824;
+      border: 2px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(79,110,247,.4);
+      animation: popupAnim .25s ease;
+    }
+    .popupBox h2 { margin-top: 0; color: var(--primary); letter-spacing: .08em; }
+    .popupBox button { margin-top: 18px; width: 120px; padding: 10px; font-size: 14px; background: var(--primary); color: white; border-radius: var(--radius-sm); transition: background 0.2s; }
+    .popupBox button:hover { background: var(--primary-dark); }
+    @keyframes popupAnim { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    /* ── Modal (Silo, Well, Water, Town) ── */
+    .silo-modal, .well-modal, .water-modal, .town-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .silo-modal.hidden, .well-modal.hidden, .water-modal.hidden, .town-modal.hidden { display: none; }
+    .silo-content, .well-content, .water-content, .town-content {
+      background: linear-gradient(135deg, #1a1f2e 0%, #0f1219 100%);
+      border: 2px solid var(--glass-border);
+      border-radius: var(--radius);
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: slideUp 0.3s ease;
+    }
+    .silo-content { border-color: #8b5a2b; }
+    .well-content { border-color: #4488aa; max-width: 400px; text-align: center; }
+    .water-content { border-color: #66ffcc; max-width: 400px; text-align: center; }
+    .town-content { border-color: #ffaa66; max-width: 500px; }
+    @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .close-modal { background: #8b3a2a; padding: 8px 16px; border: none; border-radius: 8px; color: white; cursor: pointer; margin-top: 10px; }
+    .close-modal:hover { background: #a84a3a; }
+
+    .silo-stats { display: flex; justify-content: space-between; margin: 10px 0; color: #ffd966; }
+    .silo-crops { max-height: 50vh; overflow-y: auto; }
+    .silo-crop-item { background: #1e2438; border-radius: 12px; padding: 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .crop-info { display: flex; align-items: center; gap: 12px; flex: 2; min-width: 150px; }
+    .crop-emoji { font-size: 32px; }
+    .crop-name { font-weight: bold; color: #ffd700; }
+    .crop-qty { font-size: 20px; font-weight: bold; color: #ffd700; }
+    .crop-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .crop-actions button { padding: 6px 12px; background: #2a3a5a; border: none; border-radius: 6px; color: white; cursor: pointer; }
+    .crop-actions button:hover { background: #3a4a6a; }
+    .silo-expand { margin: 10px 0; text-align: center; }
+    .silo-expand button { background: #4a7c2a; padding: 10px 20px; border: none; border-radius: 8px; color: white; cursor: pointer; }
+    .silo-expand button:hover { background: #5a9c3a; }
+    .empty-silo { text-align: center; padding: 30px; color: #888; }
+    .modal-message { background: #0a1a2a; padding: 10px; border-radius: 8px; margin: 10px 0; color: #ffcc66; text-align: center; display: none; }
+    .well-stats, .water-stats, .town-stats { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; margin: 15px 0; }
+    .well-stats div, .water-stats div, .town-stats div { margin: 5px 0; }
+
+    /* ── Bottom Nav (mobile) ── */
+    .bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:rgba(8,12,24,0.9); backdrop-filter:blur(20px); border-top:1px solid var(--glass-border); z-index:100; padding:8px 0; }
+    .bottom-nav-inner { display:flex; justify-content:space-around; }
+    .bnav-item { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 12px; color:var(--text-3); cursor:pointer; transition:color 0.15s; flex:1; }
+    .bnav-item svg { width:22px; height:22px; }
+    .bnav-item span { font-size:10px; font-weight:500; }
+    .bnav-item.active { color:var(--primary); }
+
+    /* ── Message ── */
+    #msg { height: 18px; font-size: 12px; padding: 5px; text-align: center; color: var(--text-2); }
+
+    /* ── Responsive ── */
+    @media (max-width: 767px) {
+      .sidebar { display: none; }
+      .main-area { margin-left: 0; }
+      .bottom-nav { display: block; }
+      .topbar { padding: 0 12px; height: 56px; }
+      .topbar-page-title { font-size: 13px; }
+      .pages-wrap { padding: 16px 12px 80px; }
+      .pages-inner { max-width: 100%; }
+      #farm { width: 85vmin; height: 85vmin; gap: 0.3vmin; padding: 0.3vmin; }
+      .tile { font-size: 2.8vmin; border-radius: 4px; }
+      .building-iframe { height: 400px; }
+      #topBar button { font-size: 9px; padding: 2px 6px; }
+      .panel { font-size: 10px; padding: 3px 6px; }
+      .panel select { font-size: 10px; }
+    }
+    @media (min-width: 768px) {
+      .bottom-nav { display: none; }
+    }
+    @media (max-width: 480px) {
+      #farm { width: 92vmin; height: 92vmin; }
+      .tile { font-size: 3.2vmin; }
+      .panel { font-size: 9px; padding: 2px 4px; }
+      #topBar button { font-size: 8px; padding: 2px 4px; }
+      .building-iframe { height: 350px; }
+    }
+  </style>
 </head>
 
 <body>
 
-<h1>Krypton SimFarm Ultimate</h1>
+  <!-- Background Orbs -->
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
 
-<div id="frame">
-  <iframe data-aa="2436395" src="//acceptable.a-ads.com/2436395/?size=Adaptive"></iframe>
-</div>
+  <!-- Top Progress Bar -->
+  <div id="top-progress-bar"></div>
 
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7260296902287217"
-     crossorigin="anonymous"></script>
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-7260296902287217"
-     data-ad-slot="5846585594"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>     
+  <!-- Toast -->
+  <div id="toast"></div>
 
-<iframe
-  src="https://acceptable.a-ads.com/2436395?rewarded=1"
-  id="rewardedFrame"
-  style="display:none; width:100%; height:400px;">
-</iframe>
-
-<iframe
-  src="about:blank"
-  id="faucetFrame"
-  loading="lazy"
-  style="display:none;">
-</iframe>
-
-<div id="ad-container"></div>
-
-<div id="topBar">
-  <div class="panel">
-    <div>⭐ Lv <span id="level"></span></div>
-    <div>XP <span id="xp"></span>/<span id="xpNext"></span></div>
-    <div>💰 <span id="coins"></span></div>
-  </div>
-  <div class="panel"><span id="seasonDisplay"></span></div>
-  <div class="panel"><select id="seedSelect"></select></div>
-  <button id="expandBtn">🚜 Expand</button>
-  <button id="resetBtn">🔄 Reset</button>
-  <button id="resetTutorialBtn" onclick="resetTutorial()" style="background: #8b5a2b;">📖 Reset Tutorial</button>
-  <button id="reviveBtn" onclick="reviveAllWithAd()" style="display: flex; align-items: center; gap: 5px;">
-    <img src="revive.png" alt="Revive" style="width: 16px; height: 16px;"> Revive
-  </button>
-</div>
-
-<!-- Farm Container with tutorial inside but on the right -->
-<div class="farm-container">
-  <div id="farm"></div>
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
   
-  <!-- Tutorial - inside farm container, positioned to the RIGHT of the grid -->
-  <div id="tutorialMini" class="tutorial-mini hidden">
-    <div class="tutorial-mini-header">
-      <span class="tutorial-mini-step" id="tutorialStepBadge">Step 1/7</span>
-      <button class="tutorial-mini-exit" onclick="exitTutorial()">✖</button>
-    </div>
-    <div class="tutorial-mini-body">
-      <div class="tutorial-mini-emoji" id="tutorialEmoji">🌱</div>
-      <div class="tutorial-mini-title" id="tutorialTitle">Plant Your First Crop</div>
-      <div class="tutorial-mini-message" id="tutorialMessage">Click an empty brown tile to plant Wheat!</div>
-      <div class="tutorial-mini-progress">
-        <div class="tutorial-mini-progress-fill" id="tutorialProgressFill" style="width: 0%"></div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" id="snav-home" onclick="navigate('home')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1"/></svg>
+          Home
+        </div>
+        <div class="nav-item" id="snav-settings" onclick="navigate('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.68 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Settings
+        </div>
+      </nav>
+
+      <!-- Sidebar Footer - Privacy, Terms, Contact -->
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-links">
+          <a href="/privacy.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Privacy
+          </a>
+          <a href="/terms.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+            Terms
+          </a>
+          <a href="/contact.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Contact
+          </a>
+        </div>
+      </div>
+    </aside>
+
+
+
+      <div class="pages-wrap">
+        <div class="pages-inner">
+
+          <!-- Page: Home -->
+          <div class="page active" id="page-home">
+            <!-- Game Controls -->
+            <div id="topBar">
+              <div class="panel">
+                <span>⭐ Lv <span id="level"></span></span>
+                <span>| XP <span id="xp"></span>/<span id="xpNext"></span></span>
+                <span>| 💰 <span id="coins"></span></span>
+              </div>
+              <div id="seasonDisplay" style="font-size:16px; font-weight:500; color:var(--text-2); padding:12px; background:var(--glass); border-radius:12px; border:1px solid var(--glass-border);">
+                🌸 Spring Day 1<br>☀️ Weather: Sunny
+              </div>
+              <div class="panel" style="flex-direction:column; gap:2px;">
+                <select id="seedSelect"></select>
+                <select id="buildingSelect" onchange="switchBuilding()" style="width:100%;">
+                  <option value="farm">🌾 Farm</option>
+                  <option value="barn">🏠 Barn</option>
+                  <option value="feedmill">🏭 Feed Mill</option>
+                  <option value="greenhouse">🌿 Greenhouse</option>
+                </select>
+              </div>
+              <button id="expandBtn">🚜 Expand</button>
+              <button id="resetBtn">🔄 Reset</button>
+              <button id="resetTutorialBtn" onclick="resetTutorial()">📖 Reset Tutorial</button>
+              <button id="reviveBtn" onclick="reviveAllWithAd()" style="display:flex;align-items:center;gap:5px;">
+                <img src="revive.png" alt="Revive" style="width:16px;height:16px;"> Revive
+              </button>
+            </div>
+
+            <!-- Farm Container with Building Views -->
+            <div class="farm-container">
+              <!-- Farm View -->
+              <div id="farmView">
+                <div id="farm"></div>
+              </div>
+              
+              <!-- Building Views -->
+              <div id="barnView" class="building-view">
+                <iframe src="barn.html" class="building-iframe" id="barnIframe"></iframe>
+              </div>
+              
+              <div id="feedmillView" class="building-view">
+                <iframe src="feedmill.html" class="building-iframe" id="feedmillIframe"></iframe>
+              </div>
+              
+              <div id="greenhouseView" class="building-view">
+                <iframe src="greenhouse.html" class="building-iframe" id="greenhouseIframe"></iframe>
+              </div>
+
+              <!-- Tutorial -->
+              <div id="tutorialMini" class="tutorial-mini hidden">
+                <div class="tutorial-mini-header">
+                  <span class="tutorial-mini-step" id="tutorialStepBadge">Step 1/7</span>
+                  <button class="tutorial-mini-exit" onclick="exitTutorial()">✖</button>
+                </div>
+                <div class="tutorial-mini-body">
+                  <div class="tutorial-mini-emoji" id="tutorialEmoji">🌱</div>
+                  <div class="tutorial-mini-title" id="tutorialTitle">Plant Your First Crop</div>
+                  <div class="tutorial-mini-message" id="tutorialMessage">Click an empty brown tile to plant Wheat!</div>
+                  <div class="tutorial-mini-progress">
+                    <div class="tutorial-mini-progress-fill" id="tutorialProgressFill" style="width:0%"></div>
+                  </div>
+                </div>
+                <div class="tutorial-mini-footer">
+                  <button class="tutorial-mini-skip" onclick="exitTutorial()">Skip</button>
+                  <button class="tutorial-mini-next" id="tutorialNextBtn" onclick="tutorialNext()" style="display:none;">Next →</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="msg"></div>
+
+            <!-- Buildings -->
+            <div class="buildings-container">
+              <div class="silo-building" onclick="openSiloModal()">
+                <img src="silo.png" alt="Silo" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 120%22%3E%3Crect width=%22100%22 height=%22120%22 fill=%22%238b5a2b%22/%3E%3Crect x=%2220%22 y=%2210%22 width=%2260%22 height=%2280%22 fill=%22%23a07030%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%236b3a1a%22/%3E%3Crect x=%2235%22 y=%2260%22 width=%2230%22 height=%2240%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
+                <div class="usage-text" id="siloUsageText">📦 0/100</div>
+                <div class="building-label">SILO</div>
+              </div>
+              <div class="well-building" onclick="openWellModal()">
+                <img src="well.png" alt="Well" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 100%22%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2220%22 fill=%22%23446688%22/%3E%3Crect x=%2235%22 y=%2230%22 width=%2210%22 height=%2240%22 fill=%22%23886644%22/%3E%3C/svg%3E'">
+                <div class="well-text" id="wellLevelText">🚰 Lv0</div>
+                <div class="building-label">WELL</div>
+              </div>
+              <div class="water-building" onclick="openWaterModal()">
+                <img src="water.png" alt="Water Tank" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 70 100%22%3E%3Crect x=%2215%22 y=%2220%22 width=%2240%22 height=%2250%22 fill=%22%234488aa%22/%3E%3Crect x=%2210%22 y=%2215%22 width=%2250%22 height=%2210%22 fill=%22%2366aacc%22/%3E%3C/svg%3E'">
+                <div class="water-text" id="waterTankText">💧 20/20</div>
+                <div class="building-label">WATER</div>
+              </div>
+              <div class="town-building" onclick="openTownModal()">
+                <img src="town.png" alt="Town" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect x=%220%22 y=%2230%22 width=%22100%22 height=%2250%22 fill=%22%238B7355%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%238B4513%22/%3E%3Crect x=%2235%22 y=%2255%22 width=%2230%22 height=%4025%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
+                <div class="town-text" id="townStatsText">🏘️ 10</div>
+                <div class="building-label">TOWN</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page: Settings -->
+          <div class="page" id="page-settings">
+            <div class="card">
+              <div class="section-header">
+                <span class="section-title">Settings</span>
+              </div>
+
+              <div class="setting-row" style="display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--glass-border);">
+                <div>
+                  <div class="setting-name" style="font-size:14px;font-weight:600;color:var(--text);">Theme</div>
+                  <div class="setting-desc" style="font-size:12px;color:var(--text-3);margin-top:2px;">Choose your color scheme</div>
+                </div>
+                <select onchange="applyTheme(this.value)" style="background:rgba(0,0,0,0.3);color:var(--text);border:1px solid var(--glass-border);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;">
+                  <option value="navy">Navy</option>
+                  <option value="purple">Purple</option>
+                  <option value="ocean">Ocean</option>
+                  <option value="amoled">AMOLED</option>
+                </select>
+              </div>
+
+              <div class="setting-row" style="display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--glass-border);">
+                <div>
+                  <div class="setting-name" style="font-size:14px;font-weight:600;color:var(--text);">Auto Save</div>
+                  <div class="setting-desc" style="font-size:12px;color:var(--text-3);margin-top:2px;">Automatically save your progress</div>
+                </div>
+                <label class="toggle" style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;">
+                  <input type="checkbox" checked onchange="toast('Auto save ' + (this.checked ? 'enabled' : 'disabled'), 'info')" style="opacity:0;width:0;height:0;">
+                  <span class="toggle-slider" style="position:absolute;inset:0;background:rgba(255,255,255,0.1);border-radius:12px;transition:0.2s;cursor:pointer;"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
-    <div class="tutorial-mini-footer">
-      <button class="tutorial-mini-skip" onclick="exitTutorial()">Skip</button>
-      <button class="tutorial-mini-next" id="tutorialNextBtn" onclick="tutorialNext()" style="display:none;">Next →</button>
+  </div>
+
+  <!-- Bottom Nav (mobile) -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <div class="bnav-item active" id="bnav-home" onclick="navigate('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1"/></svg>
+        <span>Home</span>
+      </div>
+      <div class="bnav-item" id="bnav-settings" onclick="navigate('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.68 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Settings</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Level Popup -->
+  <div id="levelPopup" class="popup hidden">
+    <div class="popupBox">
+      <h2>LEVEL UP!</h2>
+      <div id="popupText"></div>
+      <button id="popupBtn">OK</button>
     </div>
   </div>
-</div>
 
-<!-- Tutorial Cursor -->
-<div id="tutorialCursor" class="tutorial-cursor hidden"></div>
-
-<div id="msg"></div>
-
-<div class="buildings-container">
-  <div class="silo-building" onclick="openSiloModal()">
-    <img src="silo.png" alt="Silo" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 120%22%3E%3Crect width=%22100%22 height=%22120%22 fill=%22%238b5a2b%22/%3E%3Crect x=%2220%22 y=%2210%22 width=%2260%22 height=%2280%22 fill=%22%23a07030%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%236b3a1a%22/%3E%3Crect x=%2235%22 y=%2260%22 width=%2230%22 height=%2240%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
-    <div class="usage-text" id="siloUsageText">📦 0/100</div>
-    <div class="building-label">SILO</div>
-  </div>
-  
-  <div class="well-building" onclick="openWellModal()">
-    <img src="well.png" alt="Well" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 100%22%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2220%22 fill=%22%23446688%22/%3E%3Crect x=%2235%22 y=%2230%22 width=%2210%22 height=%2240%22 fill=%22%23886644%22/%3E%3C/svg%3E'">
-    <div class="well-text" id="wellLevelText">🚰 Lv0</div>
-    <div class="building-label">WELL</div>
-  </div>
-  
-  <div class="water-building" onclick="openWaterModal()">
-    <img src="water.png" alt="Water Tank" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 70 100%22%3E%3Crect x=%2215%22 y=%2220%22 width=%2240%22 height=%2250%22 fill=%22%234488aa%22/%3E%3Crect x=%2210%22 y=%2215%22 width=%2250%22 height=%2210%22 fill=%22%2366aacc%22/%3E%3C/svg%3E'">
-    <div class="water-text" id="waterTankText">💧 20/20</div>
-    <div class="building-label">WATER</div>
-  </div>
-  
-  <div class="town-building" onclick="openTownModal()">
-    <img src="town.png" alt="Town" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect x=%220%22 y=%2230%22 width=%22100%22 height=%2250%22 fill=%22%238B7355%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%238B4513%22/%3E%3Crect x=%2235%22 y=%2255%22 width=%2230%22 height=%4025%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
-    <div class="town-text" id="townStatsText">🏘️ 10</div>
-    <div class="building-label">TOWN</div>
-  </div>
-</div>
-
-<div id="levelPopup" class="popup hidden">
-  <div class="popupBox">
-    <h2>LEVEL UP!</h2>
-    <div id="popupText"></div>
-    <button id="popupBtn">OK</button>
-  </div>
-</div>
-
-<div id="siloModal" class="silo-modal hidden">
-  <div class="silo-content">
-    <div class="silo-header">
-      <h2>🏚️🌾 SILO</h2>
+  <!-- Modals -->
+  <div id="siloModal" class="silo-modal hidden">
+    <div class="silo-content">
+      <h2 style="color:#ffd966;text-align:center;">🌾 SILO</h2>
       <div class="silo-stats">
         <span>📦 <span id="modalSiloUsed">0</span>/<span id="modalSiloCapacity">100</span></span>
         <span>🏗️ <span id="modalSiloCapacity2">100</span></span>
       </div>
-    </div>
-    <div id="siloModalMessage" class="modal-message" style="display:none;"></div>
-    <div class="silo-crops" id="siloCropsList"></div>
-    <div class="silo-expand">
-      <button id="expandSiloModalBtn" onclick="expandSiloFromModal()">⬆️ Expand (<span id="modalExpandCost">2000</span>)</button>
-      <button class="close-silo" onclick="closeSiloModal()">❌</button>
-    </div>
-  </div>
-</div>
-
-<div id="wellModal" class="well-modal hidden">
-  <div class="well-content">
-    <h2>🚰 WELL</h2>
-    <div class="well-stats">
-      <div>📊 Lv <span id="wellLevel">0</span></div>
-      <div>⚡ <span id="wellProduction">0</span>💧/hr</div>
-    </div>
-    <div id="wellModalMessage" class="modal-message" style="display:none;"></div>
-    <button id="buyWellBtn" onclick="buyWell()">🛒 Buy (1000)</button>
-    <button id="upgradeWellBtn" onclick="upgradeWellAction()" style="display:none;">⬆️ Upgrade</button>
-    <button class="close-well" onclick="closeWellModal()">❌</button>
-  </div>
-</div>
-
-<div id="waterModal" class="water-modal hidden">
-  <div class="water-content">
-    <h2>💧 WATER</h2>
-    <div class="water-stats">
-      <div>💦 <span id="waterCurrent">0</span>/<span id="waterMax">0</span></div>
-      <div>🏗️ <span id="waterCapacity">0</span></div>
-    </div>
-    <div id="waterModalMessage" class="modal-message" style="display:none;"></div>
-    <button id="expandWaterTankBtn" onclick="expandWaterTank()">⬆️ Expand</button>
-    <button class="close-water" onclick="closeWaterModal()">❌</button>
-  </div>
-</div>
-
-<div id="townModal" class="town-modal hidden">
-  <div class="town-content">
-    <h2>🏘️🌆 TOWN HALL</h2>
-    <div class="town-stats">
-      <div>👥 Population: <span id="townPopulation">10</span></div>
-      <div>📈 Prosperity: <span id="townProsperity">1.0</span></div>
-      <div>💰 Tax Rate: 10%</div>
-      <div>⏰ Next Tax: <span id="taxCooldown">Ready!</span></div>
-    </div>
-    
-    <!-- Worker Section -->
-    <div class="workers-section">
-      <h3>👨‍🌾 HIRE FARM HAND</h3>
-      <div class="worker-card-single">
-        <div class="worker-emoji">👨‍🌾</div>
-        <div class="worker-name">Master Farmer</div>
-        <div class="worker-desc">Works for 1 full day (6 hours). Harvests, Waters, Revives, and Plants!</div>
-        <div class="worker-cost">💰 100 coins per day</div>
-        <button id="hireWorkerBtn" onclick="hireMasterFarmer()">Hire Master Farmer (100💰)</button>
+      <div id="siloModalMessage" class="modal-message"></div>
+      <div class="silo-crops" id="siloCropsList"></div>
+      <div class="silo-expand">
+        <button id="expandSiloModalBtn" onclick="expandSiloFromModal()">⬆️ Expand (<span id="modalExpandCost">2000</span>)</button>
       </div>
-      <div id="workerStatus" class="worker-status"></div>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="close-modal" onclick="closeSiloModal()">❌ Close</button>
+      </div>
     </div>
-    
-    <button id="collectTaxesBtn" onclick="collectTaxes()">💰 Collect</button>
-    <button onclick="investInTown()">📈 Invest (<span id="investCost">500</span>)</button>
-    <button class="close-town" onclick="closeTownModal()">❌ Close</button>
   </div>
-</div>
 
-<script>
-  window.adinplay = window.adinplay || {};
-  adinplay.unit = adinplay.unit || {};
-  adinplay.unit['test'] = {};
+  <div id="wellModal" class="well-modal hidden">
+    <div class="well-content">
+      <h2 style="color:#88ccff;">🚰 WELL</h2>
+      <div class="well-stats">
+        <div>📊 Lv <span id="wellLevel">0</span></div>
+        <div>⚡ <span id="wellProduction">0</span>💧/hr</div>
+      </div>
+      <div id="wellModalMessage" class="modal-message"></div>
+      <button id="buyWellBtn" onclick="buyWell()" style="background:#2a4a7c;color:white;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;margin:5px;">🛒 Buy (1000)</button>
+      <button id="upgradeWellBtn" onclick="upgradeWellAction()" style="display:none;background:#4a7c2a;color:white;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;margin:5px;">⬆️ Upgrade</button>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="close-modal" onclick="closeWellModal()">❌ Close</button>
+      </div>
+    </div>
+  </div>
 
-  const SAVE_KEY = "krypton_simfarm_ultimate";
-  const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
-  const WEATHER_TYPES = ["Sunny", "Rain", "Cloudy", "Storm", "Drought", "Snow"];
-  const GRID_SIZE = 12;
-  
-  const seasonEmojis = { "Spring": "🌸", "Summer": "☀️", "Fall": "🍂", "Winter": "⛄" };
-  const weatherEmojis = { "Sunny": "☀️", "Rain": "🌧️", "Cloudy": "☁️", "Storm": "⛈️", "Drought": "🏜️", "Snow": "❄️" };
-  
-  const DAY_LENGTH_SECONDS = 21600;
+  <div id="waterModal" class="water-modal hidden">
+    <div class="water-content">
+      <h2 style="color:#66ffcc;">💧 WATER</h2>
+      <div class="water-stats">
+        <div>💦 <span id="waterCurrent">0</span>/<span id="waterMax">0</span></div>
+        <div>🏗️ <span id="waterCapacity">0</span></div>
+      </div>
+      <div id="waterModalMessage" class="modal-message"></div>
+      <button id="expandWaterTankBtn" onclick="expandWaterTank()" style="background:#2a4a7c;color:white;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;margin:5px;">⬆️ Expand</button>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="close-modal" onclick="closeWaterModal()">❌ Close</button>
+      </div>
+    </div>
+  </div>
 
-  const farmEl = document.getElementById("farm");
-  const coinsEl = document.getElementById("coins");
-  const levelEl = document.getElementById("level");
-  const xpEl = document.getElementById("xp");
-  const xpNextEl = document.getElementById("xpNext");
-  const seasonDisplay = document.getElementById("seasonDisplay");
-  const expandBtn = document.getElementById("expandBtn");
-  const resetBtn = document.getElementById("resetBtn");
-  const resetTutorialBtn = document.getElementById("resetTutorialBtn");
-  const seedSelectEl = document.getElementById("seedSelect");
-  const msgEl = document.getElementById("msg");
-  const levelPopup = document.getElementById("levelPopup");
-  const popupText = document.getElementById("popupText");
-  const popupBtn = document.getElementById("popupBtn");
-  const siloUsageText = document.getElementById("siloUsageText");
-  const wellLevelText = document.getElementById("wellLevelText");
-  const waterTankText = document.getElementById("waterTankText");
-  const townStatsText = document.getElementById("townStatsText");
+  <div id="townModal" class="town-modal hidden">
+    <div class="town-content">
+      <h2 style="color:#ffaa66;text-align:center;">🏘️🌆 TOWN HALL</h2>
+      <div class="town-stats">
+        <div>👥 Population: <span id="townPopulation">10</span></div>
+        <div>📈 Prosperity: <span id="townProsperity">1.0</span></div>
+        <div>💰 Tax Rate: 10%</div>
+        <div>⏰ Next Tax: <span id="taxCooldown">Ready!</span></div>
+      </div>
+      <div class="workers-section" style="margin:15px 0;padding:10px;background:rgba(0,0,0,0.3);border-radius:12px;">
+        <h3 style="margin:0 0 8px 0;color:#ffaa66;">👨‍🌾 HIRE FARM HAND</h3>
+        <div class="worker-card-single" style="text-align:center;">
+          <div class="worker-emoji" style="font-size:32px;">👨‍🌾</div>
+          <div class="worker-name" style="font-weight:bold;color:#ffaa66;">Master Farmer</div>
+          <div class="worker-desc" style="font-size:12px;color:#aaa;">Works 6 hours. Harvests, Waters, Revives, Plants!</div>
+          <div class="worker-cost" style="color:#88ccff;">💰 100 coins/day</div>
+          <button id="hireWorkerBtn" onclick="hireMasterFarmer()" style="background:#4a7c2a;color:white;padding:8px 16px;border:none;border-radius:6px;cursor:pointer;margin:5px;">Hire (100💰)</button>
+        </div>
+        <div id="workerStatus" class="worker-status" style="margin-top:8px;padding:6px;background:#0a1a1a;border-radius:8px;font-size:11px;color:#88ffcc;"></div>
+      </div>
+      <button id="collectTaxesBtn" onclick="collectTaxes()" style="background:#ffaa44;color:#1a1a1a;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;margin:5px;font-weight:bold;">💰 Collect</button>
+      <button onclick="investInTown()" style="background:#4a7c2a;color:white;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;margin:5px;">📈 Invest (<span id="investCost">500</span>)</button>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="close-modal" onclick="closeTownModal()">❌ Close</button>
+      </div>
+    </div>
+  </div>
 
-  let tileElements = [];
+  <!-- Ads -->
+  <iframe src="https://acceptable.a-ads.com/2436395?rewarded=1" id="rewardedFrame" style="display:none;width:100%;height:400px;"></iframe>
+  <iframe src="about:blank" id="faucetFrame" loading="lazy" style="display:none;"></iframe>
 
-  let state = {
-    coins: 100,
-    xp: 0,
-    level: 1,
-    unlockedSize: 3,
-    day: 1,
-    seasonIndex: 0,
-    weatherIndex: 0,
-    lastDayTick: now(),
-    tiles: [],
-    soil: [],
-    machinery: { tractor: 0, harvester: 0 },
-    market: { prices: {}, demand: {} },
-    town: { population: 10, prosperity: 1, lastTaxCollect: now() },
-    water: { current: 20, max: 20 },
-    silo: { capacity: 100, stored: {} }
-  };
+  <script>
+    // ── Toast notification ──
+    var toastTimer = null;
+    function toast(msg, type) {
+      var el = document.getElementById('toast');
+      if (!el) return;
+      el.textContent = msg;
+      el.className = 'show ' + (type || 'info');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function() { el.className = ''; }, 3000);
+    }
 
-  // ===============================
-  // TUTORIAL FLAG - Check IMMEDIATELY
-  // ===============================
-  const TUTORIAL_SEEN_KEY = "krypton_tutorial_seen";
-  let tutorialSeen = localStorage.getItem(TUTORIAL_SEEN_KEY);
+    // ── Top progress bar ──
+    function setProgress(val) {
+      var el = document.getElementById('top-progress-bar');
+      if (!el) return;
+      if (val === 0) { el.style.opacity='1'; el.style.width='0%'; }
+      else if (val >= 100) { el.style.width='100%'; setTimeout(function(){ el.style.opacity='0'; },300); }
+      else { el.style.width = val + '%'; }
+    }
 
-  // ===============================
-  // RESET TUTORIAL FUNCTION
-  // ===============================
-  function resetTutorial() {
-    if (confirm("Reset the tutorial? It will show again on your next visit.")) {
-      localStorage.removeItem(TUTORIAL_SEEN_KEY);
-      localStorage.removeItem("tutorial_done");
-      localStorage.removeItem("tutorial_completed");
-      localStorage.removeItem("tutorial_skipped");
-      localStorage.removeItem("krypton_tutorial_seen_v2");
-      tutorialSeen = null;
-      setMessage("📖 Tutorial reset! Refresh the page to see it again.");
+    // ── Page navigation ──
+    var currentPage = 'home';
+    function navigate(name) {
+      document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+      var pg = document.getElementById('page-' + name);
+      if (pg) pg.classList.add('active');
+      currentPage = name;
+      document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+      var ni = document.getElementById('snav-' + name);
+      if (ni) ni.classList.add('active');
+      document.querySelectorAll('.bnav-item').forEach(function(n) { n.classList.remove('active'); });
+      var bi = document.getElementById('bnav-' + name);
+      if (bi) bi.classList.add('active');
+      var tt = document.getElementById('page-title');
+      if (tt) tt.textContent = { home:'Home', settings:'Settings' }[name] || name;
+    }
+
+    // ── Theme switching ──
+    function applyTheme(name) {
+      var THEMES = {
+        navy:   { '--primary':'#4f6ef7', '--primary-dark':'#3a56e4', '--secondary':'#2dd4bf', '--bg':'radial-gradient(ellipse at top left, #121c38, #050811)', '--text':'#eef2ff', '--text-2':'#94a3b8' },
+        purple: { '--primary':'#9333ea', '--primary-dark':'#7e22ce', '--secondary':'#ec4899', '--bg':'radial-gradient(circle at top right, #2a1147, #0b0512)', '--text':'#f3e8ff', '--text-2':'#c084fc' },
+        ocean:  { '--primary':'#0ea5e9', '--primary-dark':'#0284c7', '--secondary':'#14b8a6', '--bg':'radial-gradient(circle at bottom left, #0b2f44, #020d18)', '--text':'#f0f9ff', '--text-2':'#7dd3fc' },
+        amoled: { '--primary':'#ffffff', '--primary-dark':'#e2e8f0', '--secondary':'#94a3b8', '--bg':'#000000', '--text':'#ffffff', '--text-2':'#94a3b8' }
+      };
+      var t = THEMES[name] || THEMES.navy;
+      var root = document.documentElement;
+      Object.keys(t).forEach(function(k) { root.style.setProperty(k, t[k]); });
+      localStorage.setItem('theme', name);
+      toast('Theme switched to ' + name, 'info');
+    }
+
+    // ── Refresh ──
+    function refreshAll() {
+      setProgress(30);
+      setTimeout(function() {
+        render();
+        setProgress(100);
+        toast('Refreshed!', 'success');
+      }, 300);
+    }
+
+    // ── BUILDING SWITCHING ──
+    function switchBuilding() {
+      var building = document.getElementById('buildingSelect').value;
+      
+      // Hide all building views
+      document.querySelectorAll('.building-view').forEach(function(view) {
+        view.classList.remove('active');
+      });
+      
+      // Show the selected building view
+      var view = document.getElementById(building + 'View');
+      if (view) {
+        view.classList.add('active');
+      }
+      
+      // Show/hide farm
+      var farmView = document.getElementById('farmView');
+      if (farmView) {
+        if (building === 'farm') {
+          farmView.style.display = 'block';
+        } else {
+          farmView.style.display = 'none';
+        }
+      }
+      
+      // Update dropdown
+      document.getElementById('buildingSelect').value = building;
+    }
+
+    // ── Format numbers ──
+    function formatAmt(n) { return Number(n).toLocaleString(); }
+
+    // ──────────────────────────────────────────────────────────────────────────────
+    // GAME CODE START
+    // ──────────────────────────────────────────────────────────────────────────────
+
+    window.adinplay = window.adinplay || {};
+    adinplay.unit = adinplay.unit || {};
+    adinplay.unit['test'] = {};
+
+    const SAVE_KEY = "krypton_simfarm_ultimate";
+    const SEASONS = ["Spring", "Summer", "Fall", "Winter"];
+    const WEATHER_TYPES = ["Sunny", "Rain", "Cloudy", "Storm", "Drought", "Snow"];
+    const GRID_SIZE = 12;
+
+    const seasonEmojis = { "Spring": "🌸", "Summer": "☀️", "Fall": "🍂", "Winter": "⛄" };
+    const weatherEmojis = { "Sunny": "☀️", "Rain": "🌧️", "Cloudy": "☁️", "Storm": "⛈️", "Drought": "🏜️", "Snow": "❄️" };
+
+    const DAY_LENGTH_SECONDS = 21600;
+
+    const farmEl = document.getElementById("farm");
+    const coinsEl = document.getElementById("coins");
+    const levelEl = document.getElementById("level");
+    const xpEl = document.getElementById("xp");
+    const xpNextEl = document.getElementById("xpNext");
+    const seasonDisplay = document.getElementById("seasonDisplay");
+    const expandBtn = document.getElementById("expandBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const resetTutorialBtn = document.getElementById("resetTutorialBtn");
+    const seedSelectEl = document.getElementById("seedSelect");
+    const msgEl = document.getElementById("msg");
+    const levelPopup = document.getElementById("levelPopup");
+    const popupText = document.getElementById("popupText");
+    const popupBtn = document.getElementById("popupBtn");
+    const siloUsageText = document.getElementById("siloUsageText");
+    const wellLevelText = document.getElementById("wellLevelText");
+    const waterTankText = document.getElementById("waterTankText");
+    const townStatsText = document.getElementById("townStatsText");
+
+    let tileElements = [];
+
+    let state = {
+      coins: 100,
+      xp: 0,
+      level: 1,
+      unlockedSize: 3,
+      day: 1,
+      seasonIndex: 0,
+      weatherIndex: 0,
+      lastDayTick: now(),
+      tiles: [],
+      soil: [],
+      machinery: { tractor: 0, harvester: 0 },
+      market: { prices: {}, demand: {} },
+      town: { population: 10, prosperity: 1, lastTaxCollect: now() },
+      water: { current: 20, max: 20 },
+      silo: { capacity: 100, stored: {} }
+    };
+
+    // ── TUTORIAL ──
+    const TUTORIAL_SEEN_KEY = "krypton_tutorial_seen";
+    let tutorialSeen = localStorage.getItem(TUTORIAL_SEEN_KEY);
+
+    function resetTutorial() {
+      if (confirm("Reset the tutorial? It will show again on your next visit.")) {
+        localStorage.removeItem(TUTORIAL_SEEN_KEY);
+        localStorage.removeItem("tutorial_done");
+        localStorage.removeItem("tutorial_completed");
+        localStorage.removeItem("tutorial_skipped");
+        localStorage.removeItem("krypton_tutorial_seen_v2");
+        tutorialSeen = null;
+        setMessage("📖 Tutorial reset! Refresh the page to see it again.");
+        document.getElementById("tutorialMini").classList.add("hidden");
+        document.getElementById("tutorialCursor").classList.add("hidden");
+        setTimeout(function() { location.reload(); }, 1000);
+      }
+    }
+
+    let tutorialActive = false;
+    let tutorialStep = 1;
+    let tutorialPlantedTile = null;
+
+    const tutorialSteps = {
+      1: { title: "🌱 Plant First Crop", message: "Click an empty brown tile to plant Wheat!", emoji: "🌱", action: "plant", target: "tile" },
+      2: { title: "💧 Water Your Crop", message: "Click the planted crop to water it!", emoji: "💧", action: "water", target: "tile" },
+      3: { title: "⏰ Wait to Grow", message: "Wheat takes 30 seconds. Click 'Ready' when it sparkles!", emoji: "⏳", action: "wait", target: null },
+      4: { title: "🌾 Harvest!", message: "Click the sparkling crop to harvest!", emoji: "🌾", action: "harvest", target: "tile" },
+      5: { title: "🏚️ Sell in Silo", message: "Click the SILO building to sell your crop!", emoji: "💰", action: "openSilo", target: "silo" },
+      6: { title: "💀 Revive Dead Crops", message: "If a crop dies, click the REVIVE button to bring it back!", emoji: "💀", action: "revive", target: "revive" },
+      7: { title: "🏘️ Collect Taxes", message: "Click the TOWN building to collect taxes!", emoji: "🏘️", action: "openTown", target: "town" }
+    };
+
+    function startTutorial() {
+      if (tutorialSeen === "true") return;
+      tutorialActive = true;
+      tutorialStep = 1;
+      tutorialPlantedTile = null;
+      document.getElementById("tutorialMini").classList.remove("hidden");
+      setTimeout(function() { updateTutorialUI(); }, 100);
+    }
+
+    function exitTutorial() {
+      tutorialActive = false;
       document.getElementById("tutorialMini").classList.add("hidden");
       document.getElementById("tutorialCursor").classList.add("hidden");
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
+      removeTileHighlights();
+      removeBuildingHighlights();
+      tutorialSeen = "true";
+      localStorage.setItem(TUTORIAL_SEEN_KEY, "true");
+      setMessage("🌾 Tutorial skipped! Click the farm to start planting!");
     }
-  }
 
-  // ===============================
-  // INTERACTIVE TUTORIAL SYSTEM (ONLY ONCE)
-  // ===============================
-
-  let tutorialActive = false;
-  let tutorialStep = 1;
-  let tutorialPlantedTile = null;
-
-  const tutorialSteps = {
-    1: { title: "🌱 Plant First Crop", message: "Click an empty brown tile to plant Wheat!", emoji: "🌱", action: "plant", target: "tile" },
-    2: { title: "💧 Water Your Crop", message: "Click the planted crop to water it!", emoji: "💧", action: "water", target: "tile" },
-    3: { title: "⏰ Wait to Grow", message: "Wheat takes 30 seconds. Click 'Ready' when it sparkles!", emoji: "⏳", action: "wait", target: null },
-    4: { title: "🌾 Harvest!", message: "Click the sparkling crop to harvest!", emoji: "🌾", action: "harvest", target: "tile" },
-    5: { title: "🏚️ Sell in Silo", message: "Click the SILO building to sell your crop!", emoji: "💰", action: "openSilo", target: "silo" },
-    6: { title: "💀 Revive Dead Crops", message: "If a crop dies, click the REVIVE button to bring it back!", emoji: "💀", action: "revive", target: "revive" },
-    7: { title: "🏘️ Collect Taxes", message: "Click the TOWN building to collect taxes!", emoji: "🏘️", action: "openTown", target: "town" }
-  };
-
-  function startTutorial() {
-    if (tutorialSeen === "true") return;
-    
-    tutorialActive = true;
-    tutorialStep = 1;
-    tutorialPlantedTile = null;
-    document.getElementById("tutorialMini").classList.remove("hidden");
-    
-    setTimeout(() => {
-      updateTutorialUI();
-    }, 100);
-  }
-
-  function exitTutorial() {
-    tutorialActive = false;
-    document.getElementById("tutorialMini").classList.add("hidden");
-    document.getElementById("tutorialCursor").classList.add("hidden");
-    removeTileHighlights();
-    removeBuildingHighlights();
-    
-    tutorialSeen = "true";
-    localStorage.setItem(TUTORIAL_SEEN_KEY, "true");
-    
-    setMessage("🌾 Tutorial skipped! Click the farm to start planting!");
-  }
-
-  function updateTutorialUI() {
-    const step = tutorialSteps[tutorialStep];
-    if (!step) {
-      completeTutorial();
-      return;
+    function updateTutorialUI() {
+      var step = tutorialSteps[tutorialStep];
+      if (!step) { completeTutorial(); return; }
+      document.getElementById("tutorialStepBadge").textContent = "Step " + tutorialStep + "/7";
+      document.getElementById("tutorialEmoji").textContent = step.emoji;
+      document.getElementById("tutorialTitle").textContent = step.title;
+      document.getElementById("tutorialMessage").textContent = step.message;
+      var progress = (tutorialStep / 7) * 100;
+      document.getElementById("tutorialProgressFill").style.width = progress + "%";
+      var nextBtn = document.getElementById("tutorialNextBtn");
+      if (step.action === "wait") {
+        nextBtn.style.display = "block";
+        nextBtn.textContent = "Ready →";
+      } else {
+        nextBtn.style.display = "none";
+      }
+      highlightTutorialTarget(step.target);
     }
-    
-    document.getElementById("tutorialStepBadge").textContent = `Step ${tutorialStep}/7`;
-    document.getElementById("tutorialEmoji").textContent = step.emoji;
-    document.getElementById("tutorialTitle").textContent = step.title;
-    document.getElementById("tutorialMessage").textContent = step.message;
-    
-    const progress = (tutorialStep / 7) * 100;
-    document.getElementById("tutorialProgressFill").style.width = `${progress}%`;
-    
-    const nextBtn = document.getElementById("tutorialNextBtn");
-    if (step.action === "wait") {
-      nextBtn.style.display = "block";
-      nextBtn.textContent = "Ready →";
-    } else {
-      nextBtn.style.display = "none";
-    }
-    
-    highlightTutorialTarget(step.target);
-  }
 
-  function highlightTutorialTarget(target) {
-    removeTileHighlights();
-    removeBuildingHighlights();
-    
-    const cursor = document.getElementById("tutorialCursor");
-    if (!cursor) return;
-    
-    if (target === "tile") {
-      const step = tutorialSteps[tutorialStep];
-      let tileIndex = -1;
-      
-      if (step.action === "plant") {
-        for (let i = 0; i < state.tiles.length; i++) {
-          if (state.tiles[i] && !state.tiles[i].cropId && !isLocked(i)) {
-            tileIndex = i;
-            break;
+    function highlightTutorialTarget(target) {
+      removeTileHighlights();
+      removeBuildingHighlights();
+      var cursor = document.getElementById("tutorialCursor");
+      if (!cursor) return;
+      if (target === "tile") {
+        var step = tutorialSteps[tutorialStep];
+        var tileIndex = -1;
+        if (step.action === "plant") {
+          for (var i = 0; i < state.tiles.length; i++) {
+            if (state.tiles[i] && !state.tiles[i].cropId && !isLocked(i)) {
+              tileIndex = i; break;
+            }
           }
-        }
-      } else if (step.action === "water" && tutorialPlantedTile !== null) {
-        tileIndex = tutorialPlantedTile;
-      } else if (step.action === "harvest") {
-        for (let i = 0; i < state.tiles.length; i++) {
-          if (!isLocked(i) && state.tiles[i]) {
-            const info = getTileState(state.tiles[i]);
-            if (info && info.stage === "ready") {
-              tileIndex = i;
-              break;
+        } else if (step.action === "water" && tutorialPlantedTile !== null) {
+          tileIndex = tutorialPlantedTile;
+        } else if (step.action === "harvest") {
+          for (var j = 0; j < state.tiles.length; j++) {
+            if (!isLocked(j) && state.tiles[j]) {
+              var info = getTileState(state.tiles[j]);
+              if (info && info.stage === "ready") { tileIndex = j; break; }
             }
           }
         }
-      }
-      
-      if (tileIndex !== -1 && tileElements && tileElements[tileIndex]) {
-        const tileRect = tileElements[tileIndex].getBoundingClientRect();
-        if (tileRect) {
-          cursor.style.left = (tileRect.left + tileRect.width / 2 - 30) + "px";
-          cursor.style.top = (tileRect.top - 25) + "px";
+        if (tileIndex !== -1 && tileElements && tileElements[tileIndex]) {
+          var tileRect = tileElements[tileIndex].getBoundingClientRect();
+          if (tileRect) {
+            cursor.style.left = (tileRect.left + tileRect.width / 2 - 30) + "px";
+            cursor.style.top = (tileRect.top - 25) + "px";
+            cursor.classList.remove("hidden");
+            tileElements[tileIndex].classList.add("tile-highlight");
+            return;
+          }
+        }
+        cursor.classList.add("hidden");
+      } else if (target === "silo") {
+        var siloBuilding = document.querySelector(".silo-building");
+        if (siloBuilding) {
+          var siloRect = siloBuilding.getBoundingClientRect();
+          cursor.style.left = (siloRect.left + siloRect.width / 2 - 30) + "px";
+          cursor.style.top = (siloRect.top - 25) + "px";
           cursor.classList.remove("hidden");
-          tileElements[tileIndex].classList.add("tile-highlight");
+          siloBuilding.classList.add("building-highlight");
           return;
         }
+        cursor.classList.add("hidden");
+      } else if (target === "revive") {
+        var reviveBtn = document.getElementById("reviveBtn");
+        if (reviveBtn) {
+          var btnRect = reviveBtn.getBoundingClientRect();
+          cursor.style.left = (btnRect.left + btnRect.width / 2 - 30) + "px";
+          cursor.style.top = (btnRect.top - 25) + "px";
+          cursor.classList.remove("hidden");
+          reviveBtn.style.border = "2px solid #ffd700";
+          reviveBtn.style.boxShadow = "0 0 15px #ffd700";
+          reviveBtn.style.animation = "tutorialGlow 1s infinite";
+          return;
+        }
+        cursor.classList.add("hidden");
+      } else if (target === "town") {
+        var townBuilding = document.querySelector(".town-building");
+        if (townBuilding) {
+          var townRect = townBuilding.getBoundingClientRect();
+          cursor.style.left = (townRect.left + townRect.width / 2 - 30) + "px";
+          cursor.style.top = (townRect.top - 25) + "px";
+          cursor.classList.remove("hidden");
+          townBuilding.classList.add("building-highlight");
+          return;
+        }
+        cursor.classList.add("hidden");
+      } else {
+        cursor.classList.add("hidden");
       }
-      cursor.classList.add("hidden");
-      
-    } else if (target === "silo") {
-      const siloBuilding = document.querySelector(".silo-building");
-      if (siloBuilding) {
-        const siloRect = siloBuilding.getBoundingClientRect();
-        cursor.style.left = (siloRect.left + siloRect.width / 2 - 30) + "px";
-        cursor.style.top = (siloRect.top - 25) + "px";
-        cursor.classList.remove("hidden");
-        siloBuilding.classList.add("building-highlight");
-        return;
-      }
-      cursor.classList.add("hidden");
-      
-    } else if (target === "revive") {
-      const reviveBtn = document.getElementById("reviveBtn");
-      if (reviveBtn) {
-        const btnRect = reviveBtn.getBoundingClientRect();
-        cursor.style.left = (btnRect.left + btnRect.width / 2 - 30) + "px";
-        cursor.style.top = (btnRect.top - 25) + "px";
-        cursor.classList.remove("hidden");
-        reviveBtn.style.border = "2px solid #ffd700";
-        reviveBtn.style.boxShadow = "0 0 15px #ffd700";
-        reviveBtn.style.animation = "tutorialGlow 1s infinite";
-        return;
-      }
-      cursor.classList.add("hidden");
-      
-    } else if (target === "town") {
-      const townBuilding = document.querySelector(".town-building");
-      if (townBuilding) {
-        const townRect = townBuilding.getBoundingClientRect();
-        cursor.style.left = (townRect.left + townRect.width / 2 - 30) + "px";
-        cursor.style.top = (townRect.top - 25) + "px";
-        cursor.classList.remove("hidden");
-        townBuilding.classList.add("building-highlight");
-        return;
-      }
-      cursor.classList.add("hidden");
-      
-    } else {
-      cursor.classList.add("hidden");
     }
-  }
 
-  function removeTileHighlights() {
-    if (tileElements) {
-      tileElements.forEach(tile => {
-        if (tile) tile.classList.remove("tile-highlight");
+    function removeTileHighlights() {
+      if (tileElements) {
+        tileElements.forEach(function(tile) { if (tile) tile.classList.remove("tile-highlight"); });
+      }
+    }
+
+    function removeBuildingHighlights() {
+      var buildings = document.querySelectorAll(".silo-building, .town-building");
+      buildings.forEach(function(b) { b.classList.remove("building-highlight"); });
+      var reviveBtn = document.getElementById("reviveBtn");
+      if (reviveBtn) {
+        reviveBtn.style.border = "";
+        reviveBtn.style.boxShadow = "";
+        reviveBtn.style.animation = "";
+      }
+    }
+
+    function tutorialNext() {
+      if (tutorialSteps[tutorialStep] && tutorialSteps[tutorialStep].action === "wait") {
+        tutorialStep++;
+        updateTutorialUI();
+      }
+    }
+
+    function checkTutorialAction(action, data) {
+      if (!tutorialActive) return false;
+      var step = tutorialSteps[tutorialStep];
+      if (!step) return false;
+      if (step.action === "plant" && action === "plant") {
+        tutorialPlantedTile = data;
+        tutorialStep++;
+        updateTutorialUI();
+        setMessage("✅ Great! Now water your crop!");
+        return true;
+      }
+      if (step.action === "water" && action === "water") {
+        tutorialStep++;
+        updateTutorialUI();
+        setMessage("✅ Perfect! Your crop is growing!");
+        return true;
+      }
+      if (step.action === "harvest" && action === "harvest") {
+        tutorialStep++;
+        updateTutorialUI();
+        setMessage("✅ Awesome! Now sell it in the silo!");
+        return true;
+      }
+      if (step.action === "openSilo" && action === "openSilo") {
+        tutorialStep++;
+        updateTutorialUI();
+        setMessage("✅ Great! If a crop dies, you can revive it!");
+        return true;
+      }
+      if (step.action === "revive" && action === "revive") {
+        tutorialStep++;
+        updateTutorialUI();
+        setMessage("✅ Perfect! Now collect taxes from the town!");
+        return true;
+      }
+      if (step.action === "openTown" && action === "openTown") {
+        completeTutorial();
+        return true;
+      }
+      return false;
+    }
+
+    function completeTutorial() {
+      tutorialActive = false;
+      document.getElementById("tutorialMini").classList.add("hidden");
+      document.getElementById("tutorialCursor").classList.add("hidden");
+      removeTileHighlights();
+      removeBuildingHighlights();
+      tutorialSeen = "true";
+      localStorage.setItem(TUTORIAL_SEEN_KEY, "true");
+      state.coins += 100;
+      setMessage("🎉 Tutorial complete! +100 bonus coins! Happy farming! 🌾");
+      save();
+      render();
+    }
+
+    function checkFirstTimeUser() {
+      if (tutorialSeen !== "true") {
+        setTimeout(function() {
+          if (tileElements && tileElements.length > 0) {
+            startTutorial();
+          } else {
+            setTimeout(startTutorial, 500);
+          }
+        }, 1000);
+      }
+    }
+
+    // ── GAME FUNCTIONS ──
+
+    function now() { return Math.floor(Date.now() / 1000); }
+    function xpForLevel(level) { return level * 10000; }
+    function currentSeason() { return SEASONS[state.seasonIndex]; }
+    function currentWeather() { return WEATHER_TYPES[state.weatherIndex]; }
+    function cropById(id) { return CROPS.find(function(c) { return c.id === id; }); }
+
+    function formatTime(seconds) {
+      var hours = Math.floor(seconds / 3600);
+      var minutes = Math.floor((seconds % 3600) / 60);
+      var secs = seconds % 60;
+      if (hours > 0) return hours + "h " + minutes + "m";
+      if (minutes > 0) return minutes + "m " + secs + "s";
+      return secs + "s";
+    }
+
+    function setMessage(text) {
+      msgEl.textContent = text;
+      setTimeout(function() { if (msgEl.textContent === text) msgEl.textContent = ""; }, 4000);
+    }
+
+    function showModalMessage(modalId, message, isError) {
+      var msgDiv = document.getElementById(modalId);
+      if (msgDiv) {
+        msgDiv.textContent = message;
+        msgDiv.style.display = "block";
+        msgDiv.style.backgroundColor = isError ? '#8b3a2a' : '#2a4a3a';
+        setTimeout(function() { msgDiv.style.display = "none"; }, 3000);
+      }
+    }
+
+    function showLevelPopup(level) {
+      popupText.innerHTML = "🎉 Level " + level + "!<br><br>🌾 New crops unlocked!";
+      levelPopup.classList.remove("hidden");
+    }
+
+    popupBtn.addEventListener("click", function() { levelPopup.classList.add("hidden"); });
+
+    function save() { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
+
+    function load() {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      try {
+        var data = JSON.parse(raw);
+        state = Object.assign(state, data);
+        for (var i = 0; i < state.tiles.length; i++) {
+          var tile = state.tiles[i];
+          if (tile.watered === undefined) tile.watered = false;
+          if (tile.dead === undefined) tile.dead = false;
+          if (tile.quality === undefined) tile.quality = "normal";
+          if (tile.lastCropId === undefined) tile.lastCropId = null;
+        }
+        if (!state.well) state.well = { level: 0, lastUpdate: Date.now() };
+        if (!state.well.lastUpdate) state.well.lastUpdate = Date.now();
+        if (!state.water) state.water = { current: 20, max: 20 };
+        if (!state.town.lastTaxCollect) state.town.lastTaxCollect = now();
+      } catch (e) { console.error("Load error:", e); }
+    }
+
+    function initTiles() {
+      if (!state.tiles.length) {
+        state.tiles = Array.from({ length: GRID_SIZE * GRID_SIZE }, function() {
+          return { cropId: null, plantedAt: 0, dead: false, quality: "normal", lastCropId: null, watered: false };
+        });
+      }
+      if (!state.soil.length) state.soil = Array.from({ length: GRID_SIZE * GRID_SIZE }, function() { return 0.7; });
+    }
+
+    function randomChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function updateWeather() {
+      var season = currentSeason();
+      var pool;
+      if (season === "Spring") pool = ["Sunny", "Rain", "Rain", "Cloudy"];
+      else if (season === "Summer") pool = ["Sunny", "Sunny", "Drought", "Storm"];
+      else if (season === "Fall") pool = ["Sunny", "Rain", "Cloudy", "Storm"];
+      else pool = ["Snow", "Cloudy", "Sunny"];
+      var newWeather = randomChoice(pool);
+      var oldWeather = currentWeather();
+      state.weatherIndex = WEATHER_TYPES.indexOf(newWeather);
+      if (newWeather === "Rain" && oldWeather !== "Rain") {
+        var oldWater = state.water.current;
+        state.water.current = Math.min(state.water.current + 5, state.water.max);
+        setMessage("🌧️ Rain started! +5 water! (" + Math.floor(oldWater) + " → " + Math.floor(state.water.current) + "/" + state.water.max + ")");
+      }
+      if (newWeather === "Storm" && oldWeather !== "Storm") {
+        var oldWater2 = state.water.current;
+        state.water.current = Math.min(state.water.current + 10, state.water.max);
+        setMessage("⛈️ Storm! +10 water! (" + Math.floor(oldWater2) + " → " + Math.floor(state.water.current) + "/" + state.water.max + ")");
+      }
+    }
+
+    function updateMarket() {
+      CROPS.forEach(function(crop) {
+        var price = crop.baseSell;
+        if (crop.bestSeasons.indexOf(currentSeason()) !== -1) price *= 1.2;
+        if (currentWeather() === "Drought") price *= 1.15;
+        if (currentWeather() === "Rain") price *= 0.95;
+        var demand = state.market.demand[crop.id] || 0;
+        price *= Math.max(0.7, 1.2 - demand * 0.03);
+        price *= 0.9 + Math.random() * 0.25;
+        state.market.prices[crop.id] = Math.round(price);
       });
     }
-  }
 
-  function removeBuildingHighlights() {
-    const buildings = document.querySelectorAll(".silo-building, .town-building");
-    buildings.forEach(b => b.classList.remove("building-highlight"));
-    const reviveBtn = document.getElementById("reviveBtn");
-    if (reviveBtn) {
-      reviveBtn.style.border = "";
-      reviveBtn.style.boxShadow = "";
-      reviveBtn.style.animation = "";
+    function advanceDay() {
+      state.day++;
+      if (state.day > 30) {
+        state.day = 1;
+        state.seasonIndex = (state.seasonIndex + 1) % SEASONS.length;
+      }
+      updateWeather();
+      for (var i = 0; i < state.tiles.length; i++) {
+        var tile = state.tiles[i];
+        if (tile.cropId && !tile.dead) tile.watered = false;
+      }
+      if (currentWeather() === "Rain") {
+        state.water.current += 5;
+        if (state.water.current > state.water.max) state.water.current = state.water.max;
+      }
+      updateMarket();
+      var townModal = document.getElementById("townModal");
+      if (!townModal.classList.contains("hidden")) openTownModal();
     }
-  }
 
-  function tutorialNext() {
-    if (tutorialSteps[tutorialStep] && tutorialSteps[tutorialStep].action === "wait") {
-      tutorialStep++;
-      updateTutorialUI();
+    function getTileState(tile) {
+      if (!tile.cropId) return { stage: "empty" };
+      var crop = cropById(tile.cropId);
+      var elapsed = tile.watered ? now() - tile.plantedAt : 0;
+      var remaining = crop.growSeconds - elapsed;
+      if (elapsed > crop.growSeconds * 4) tile.dead = true;
+      if (tile.dead) return { stage: "dead", crop: crop };
+      if (remaining <= 0) return { stage: "ready", crop: crop };
+      if (elapsed > crop.growSeconds * 0.5) return { stage: "growing", crop: crop, remaining: remaining };
+      return { stage: "planted", crop: crop, remaining: remaining };
     }
-  }
 
-  function checkTutorialAction(action, data) {
-    if (!tutorialActive) return false;
-    
-    const step = tutorialSteps[tutorialStep];
-    if (!step) return false;
-    
-    if (step.action === "plant" && action === "plant") {
-      tutorialPlantedTile = data;
-      tutorialStep++;
-      updateTutorialUI();
-      setMessage("✅ Great! Now water your crop!");
-      return true;
+    function qualityRoll() {
+      var r = Math.random();
+      if (r > 0.995) return "golden";
+      if (r > 0.95) return "excellent";
+      if (r > 0.75) return "good";
+      return "normal";
     }
-    
-    if (step.action === "water" && action === "water") {
-      tutorialStep++;
-      updateTutorialUI();
-      setMessage("✅ Perfect! Your crop is growing!");
-      return true;
-    }
-    
-    if (step.action === "harvest" && action === "harvest") {
-      tutorialStep++;
-      updateTutorialUI();
-      setMessage("✅ Awesome! Now sell it in the silo!");
-      return true;
-    }
-    
-    if (step.action === "openSilo" && action === "openSilo") {
-      tutorialStep++;
-      updateTutorialUI();
-      setMessage("✅ Great! If a crop dies, you can revive it!");
-      return true;
-    }
-    
-    if (step.action === "revive" && action === "revive") {
-      tutorialStep++;
-      updateTutorialUI();
-      setMessage("✅ Perfect! Now collect taxes from the town!");
-      return true;
-    }
-    
-    if (step.action === "openTown" && action === "openTown") {
-      completeTutorial();
-      return true;
-    }
-    
-    return false;
-  }
 
-  function completeTutorial() {
-    tutorialActive = false;
-    document.getElementById("tutorialMini").classList.add("hidden");
-    document.getElementById("tutorialCursor").classList.add("hidden");
-    removeTileHighlights();
-    removeBuildingHighlights();
-    
-    tutorialSeen = "true";
-    localStorage.setItem(TUTORIAL_SEEN_KEY, "true");
-    
-    state.coins += 100;
-    setMessage("🎉 Tutorial complete! +100 bonus coins! Happy farming! 🌾");
-    save();
-    render();
-  }
+    function isLocked(index) {
+      var row = Math.floor(index / GRID_SIZE);
+      var col = index % GRID_SIZE;
+      return row >= state.unlockedSize || col >= state.unlockedSize;
+    }
 
-  function checkFirstTimeUser() {
-    if (tutorialSeen !== "true") {
-      setTimeout(() => {
-        if (tileElements && tileElements.length > 0) {
-          startTutorial();
-        } else {
-          setTimeout(startTutorial, 500);
+    function plant(index) {
+      var tile = state.tiles[index];
+      if (tile.cropId) return;
+      var crop = cropById(seedSelectEl.value);
+      if (state.coins < crop.baseCost) return setMessage("❌ Need " + crop.baseCost + " for " + crop.name);
+      state.coins -= crop.baseCost;
+      tile.cropId = crop.id;
+      tile.plantedAt = now();
+      tile.dead = false;
+      tile.quality = qualityRoll();
+      tile.watered = false;
+      checkTutorialAction("plant", index);
+      setMessage("🌱 " + crop.name + " (" + tile.quality + ")");
+      save();
+      render();
+    }
+
+    function siloUsed() { return Object.values(state.silo.stored).reduce(function(a, b) { return a + b; }, 0); }
+    function siloFree() { return state.silo.capacity - siloUsed(); }
+
+    function addToSilo(cropId, amount) {
+      if (!amount) amount = 1;
+      if (!state.silo.stored[cropId]) state.silo.stored[cropId] = 0;
+      state.silo.stored[cropId] += amount;
+    }
+
+    function sellOne(cropId) {
+      if (!state.silo.stored[cropId]) return;
+      var price = state.market.prices[cropId] || cropById(cropId).baseSell;
+      state.silo.stored[cropId]--;
+      state.coins += price;
+      setMessage("💰 +" + price + " (" + cropById(cropId).name + ")");
+      save();
+      render();
+      updateSiloModal();
+    }
+
+    function sellMax(cropId) {
+      var qty = state.silo.stored[cropId] || 0;
+      if (qty <= 0) return;
+      var price = state.market.prices[cropId] || cropById(cropId).baseSell;
+      var total = qty * price;
+      state.silo.stored[cropId] = 0;
+      state.coins += total;
+      setMessage("💰 +" + total + " (" + qty + " " + cropById(cropId).name + ")");
+      save();
+      render();
+      updateSiloModal();
+    }
+
+    function sellPrompt(cropId) {
+      var qty = state.silo.stored[cropId] || 0;
+      if (qty <= 0) return;
+      var amount = parseInt(prompt("Sell? (Max " + qty + ")"));
+      if (!amount || amount <= 0) return;
+      if (amount > qty) return setMessage("❌ Only " + qty);
+      var price = state.market.prices[cropId] || cropById(cropId).baseSell;
+      var total = amount * price;
+      state.silo.stored[cropId] -= amount;
+      state.coins += total;
+      setMessage("💰 +" + total + " (" + amount + " " + cropById(cropId).name + ")");
+      save();
+      render();
+      updateSiloModal();
+    }
+
+    function harvest(index) {
+      var tile = state.tiles[index];
+      var info = getTileState(tile);
+      if (info.stage !== "ready") return;
+      if (siloFree() <= 0) return setMessage("❌ Silo full! Expand!");
+      var crop = info.crop;
+      addToSilo(crop.id, 1);
+      var xpGain = crop.xp;
+      if (tile.quality === "good") xpGain = Math.round(xpGain * 1.2);
+      if (tile.quality === "excellent") xpGain = Math.round(xpGain * 1.5);
+      if (tile.quality === "golden") xpGain = Math.round(xpGain * 2.5);
+      state.xp += xpGain;
+      while (state.level < 99 && state.xp >= xpForLevel(state.level)) {
+        state.xp -= xpForLevel(state.level);
+        state.level++;
+        showLevelPopup(state.level);
+        initSeedSelect();
+      }
+      tile.cropId = null;
+      tile.plantedAt = 0;
+      tile.watered = false;
+      checkTutorialAction("harvest", index);
+      setMessage("🌾 +" + crop.name + " (" + tile.quality + ") +" + xpGain + "✨");
+      save();
+      render();
+      updateSiloModal();
+    }
+
+    function waterTile(index) {
+      var tile = state.tiles[index];
+      if (!tile.cropId) return setMessage("❌ Nothing here");
+      if (tile.watered) return setMessage("💧 Already watered");
+      var currentWater = Math.floor(state.water.current);
+      if (currentWater <= 0) {
+        return setMessage("❌ Not enough water! You have " + currentWater + "/" + state.water.max);
+      }
+      state.water.current--;
+      tile.watered = true;
+      checkTutorialAction("water", index);
+      setMessage("💧 Watered! " + Math.floor(state.water.current) + "/" + state.water.max + " left");
+      save();
+      render();
+    }
+
+    function clearDead(index) {
+      state.tiles[index].cropId = null;
+      state.tiles[index].dead = false;
+      setMessage("🗑️ Cleared");
+      render();
+      save();
+    }
+
+    function tileClick(index) {
+      if (isLocked(index)) return setMessage("🔒 Expand! (" + (state.unlockedSize * 1000) + ")");
+      var tile = state.tiles[index];
+      var info = getTileState(tile);
+      if (info.stage === "empty") return plant(index);
+      if (tile.cropId && !tile.watered && !tile.dead) return waterTile(index);
+      if (info.stage === "ready") return harvest(index);
+      if (info.stage === "dead") return clearDead(index);
+      setMessage(info.crop.name + " — " + Math.ceil(info.remaining) + "s");
+    }
+
+    function createFarm() {
+      farmEl.innerHTML = "";
+      farmEl.style.gridTemplateColumns = "repeat(" + GRID_SIZE + ", 1fr)";
+      farmEl.style.gridTemplateRows = "repeat(" + GRID_SIZE + ", 1fr)";
+      tileElements = [];
+      for (var i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+        var div = document.createElement("div");
+        div.className = "tile";
+        div.addEventListener("click", (function(idx) { return function() { tileClick(idx); }; })(i));
+        farmEl.appendChild(div);
+        tileElements.push(div);
+      }
+    }
+
+    function renderTiles() {
+      for (var i = 0; i < tileElements.length; i++) {
+        var div = tileElements[i];
+        if (isLocked(i)) {
+          div.className = "tile locked";
+          div.textContent = "🔒";
+          continue;
         }
-      }, 1000);
-    }
-  }
-
-  // ===============================
-  // GAME FUNCTIONS
-  // ===============================
-
-  function now() { return Math.floor(Date.now() / 1000); }
-  function xpForLevel(level) { return level * 10000; }
-  function currentSeason() { return SEASONS[state.seasonIndex]; }
-  function currentWeather() { return WEATHER_TYPES[state.weatherIndex]; }
-  function cropById(id) { return CROPS.find(c => c.id === id); }
-
-  function formatTime(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    if (minutes > 0) return `${minutes}m ${secs}s`;
-    return `${secs}s`;
-  }
-
-  function setMessage(text) {
-    msgEl.textContent = text;
-    setTimeout(() => { if (msgEl.textContent === text) msgEl.textContent = ""; }, 4000);
-  }
-
-  function showModalMessage(modalId, message, isError = false) {
-    const msgDiv = document.getElementById(modalId);
-    if (msgDiv) {
-      msgDiv.textContent = message;
-      msgDiv.style.display = "block";
-      msgDiv.style.backgroundColor = isError ? '#8b3a2a' : '#2a4a3a';
-      setTimeout(() => { msgDiv.style.display = "none"; }, 3000);
-    }
-  }
-
-  function showLevelPopup(level) {
-    popupText.innerHTML = `🎉 Level ${level}!<br><br>🌾 New crops unlocked!`;
-    levelPopup.classList.remove("hidden");
-  }
-
-  popupBtn.addEventListener("click", () => levelPopup.classList.add("hidden"));
-
-  function save() { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
-
-  function load() {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return;
-    try {
-      const data = JSON.parse(raw);
-      state = Object.assign(state, data);
-      for (let i = 0; i < state.tiles.length; i++) {
-        const tile = state.tiles[i];
-        if (tile.watered === undefined) tile.watered = false;
-        if (tile.dead === undefined) tile.dead = false;
-        if (tile.quality === undefined) tile.quality = "normal";
-        if (tile.lastCropId === undefined) tile.lastCropId = null;
-      }
-      if (!state.well) state.well = { level: 0, lastUpdate: Date.now() };
-      if (!state.well.lastUpdate) state.well.lastUpdate = Date.now();
-      if (!state.water) state.water = { current: 20, max: 20 };
-      if (!state.town.lastTaxCollect) state.town.lastTaxCollect = now();
-    } catch (e) { console.error("Load error:", e); }
-  }
-
-  function initTiles() {
-    if (!state.tiles.length) {
-      state.tiles = Array.from({ length: GRID_SIZE * GRID_SIZE }, () => ({
-        cropId: null, plantedAt: 0, dead: false, quality: "normal", lastCropId: null, watered: false
-      }));
-    }
-    if (!state.soil.length) state.soil = Array.from({ length: GRID_SIZE * GRID_SIZE }, () => 0.7);
-  }
-
-  function randomChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
-  function updateWeather() {
-    const season = currentSeason();
-    let pool;
-    if (season === "Spring") pool = ["Sunny", "Rain", "Rain", "Cloudy"];
-    else if (season === "Summer") pool = ["Sunny", "Sunny", "Drought", "Storm"];
-    else if (season === "Fall") pool = ["Sunny", "Rain", "Cloudy", "Storm"];
-    else pool = ["Snow", "Cloudy", "Sunny"];
-    
-    const newWeather = randomChoice(pool);
-    const oldWeather = currentWeather();
-    state.weatherIndex = WEATHER_TYPES.indexOf(newWeather);
-    
-    // ADD WATER IMMEDIATELY WHEN WEATHER CHANGES TO RAIN
-    if (newWeather === "Rain" && oldWeather !== "Rain") {
-      const oldWater = state.water.current;
-      state.water.current = Math.min(state.water.current + 5, state.water.max);
-      setMessage(`🌧️ Rain started! +5 water! (${Math.floor(oldWater)} → ${Math.floor(state.water.current)}/${state.water.max})`);
-    }
-    
-    // Also add water if STORM gives water
-    if (newWeather === "Storm" && oldWeather !== "Storm") {
-      const oldWater = state.water.current;
-      state.water.current = Math.min(state.water.current + 10, state.water.max);
-      setMessage(`⛈️ Storm! +10 water! (${Math.floor(oldWater)} → ${Math.floor(state.water.current)}/${state.water.max})`);
-    }
-  }
-
-  function updateMarket() {
-    CROPS.forEach(crop => {
-      let price = crop.baseSell;
-      if (crop.bestSeasons.includes(currentSeason())) price *= 1.2;
-      if (currentWeather() === "Drought") price *= 1.15;
-      if (currentWeather() === "Rain") price *= 0.95;
-      const demand = state.market.demand[crop.id] || 0;
-      price *= Math.max(0.7, 1.2 - demand * 0.03);
-      price *= 0.9 + Math.random() * 0.25;
-      state.market.prices[crop.id] = Math.round(price);
-    });
-  }
-
-  function advanceDay() {
-    state.day++;
-    if (state.day > 30) {
-      state.day = 1;
-      state.seasonIndex = (state.seasonIndex + 1) % SEASONS.length;
-    }
-    updateWeather();
-    for (const tile of state.tiles) {
-      if (tile.cropId && !tile.dead) tile.watered = false;
-    }
-    if (currentWeather() === "Rain") {
-      state.water.current += 5;
-      if (state.water.current > state.water.max) state.water.current = state.water.max;
-    }
-    updateMarket();
-    
-    const townModal = document.getElementById("townModal");
-    if (!townModal.classList.contains("hidden")) openTownModal();
-  }
-
-  function getTileState(tile) {
-    if (!tile.cropId) return { stage: "empty" };
-    const crop = cropById(tile.cropId);
-    let elapsed = tile.watered ? now() - tile.plantedAt : 0;
-    const remaining = crop.growSeconds - elapsed;
-    if (elapsed > crop.growSeconds * 4) tile.dead = true;
-    if (tile.dead) return { stage: "dead", crop };
-    if (remaining <= 0) return { stage: "ready", crop };
-    if (elapsed > crop.growSeconds * 0.5) return { stage: "growing", crop, remaining };
-    return { stage: "planted", crop, remaining };
-  }
-
-  function qualityRoll() {
-    const r = Math.random();
-    if (r > 0.995) return "golden";
-    if (r > 0.95) return "excellent";
-    if (r > 0.75) return "good";
-    return "normal";
-  }
-
-  function isLocked(index) {
-    const row = Math.floor(index / GRID_SIZE);
-    const col = index % GRID_SIZE;
-    return row >= state.unlockedSize || col >= state.unlockedSize;
-  }
-
-  function plant(index) {
-    const tile = state.tiles[index];
-    if (tile.cropId) return;
-    const crop = cropById(seedSelectEl.value);
-    if (state.coins < crop.baseCost) return setMessage(`❌ Need ${crop.baseCost} for ${crop.name}`);
-    
-    state.coins -= crop.baseCost;
-    tile.cropId = crop.id;
-    tile.plantedAt = now();
-    tile.dead = false;
-    tile.quality = qualityRoll();
-    tile.watered = false;
-    
-    checkTutorialAction("plant", index);
-    
-    setMessage(`🌱 ${crop.name} (${tile.quality})`);
-    save();
-    render();
-  }
-
-  function siloUsed() { return Object.values(state.silo.stored).reduce((a, b) => a + b, 0); }
-  function siloFree() { return state.silo.capacity - siloUsed(); }
-
-  function addToSilo(cropId, amount = 1) {
-    if (!state.silo.stored[cropId]) state.silo.stored[cropId] = 0;
-    state.silo.stored[cropId] += amount;
-  }
-
-  function sellOne(cropId) {
-    if (!state.silo.stored[cropId]) return;
-    const price = state.market.prices[cropId] || cropById(cropId).baseSell;
-    state.silo.stored[cropId]--;
-    state.coins += price;
-    setMessage(`💰 +${price} (${cropById(cropId).name})`);
-    save();
-    render();
-    updateSiloModal();
-  }
-
-  function sellMax(cropId) {
-    const qty = state.silo.stored[cropId] || 0;
-    if (qty <= 0) return;
-    const price = state.market.prices[cropId] || cropById(cropId).baseSell;
-    const total = qty * price;
-    state.silo.stored[cropId] = 0;
-    state.coins += total;
-    setMessage(`💰 +${total} (${qty} ${cropById(cropId).name})`);
-    save();
-    render();
-    updateSiloModal();
-  }
-
-  function sellPrompt(cropId) {
-    const qty = state.silo.stored[cropId] || 0;
-    if (qty <= 0) return;
-    const amount = parseInt(prompt(`Sell? (Max ${qty})`));
-    if (!amount || amount <= 0) return;
-    if (amount > qty) return setMessage(`❌ Only ${qty}`);
-    const price = state.market.prices[cropId] || cropById(cropId).baseSell;
-    const total = amount * price;
-    state.silo.stored[cropId] -= amount;
-    state.coins += total;
-    setMessage(`💰 +${total} (${amount} ${cropById(cropId).name})`);
-    save();
-    render();
-    updateSiloModal();
-  }
-
-  function harvest(index) {
-    const tile = state.tiles[index];
-    const info = getTileState(tile);
-    if (info.stage !== "ready") return;
-    if (siloFree() <= 0) return setMessage(`❌ Silo full! Expand!`);
-    
-    const crop = info.crop;
-    addToSilo(crop.id, 1);
-    let xpGain = crop.xp;
-    if (tile.quality === "good") xpGain = Math.round(xpGain * 1.2);
-    if (tile.quality === "excellent") xpGain = Math.round(xpGain * 1.5);
-    if (tile.quality === "golden") xpGain = Math.round(xpGain * 2.5);
-    state.xp += xpGain;
-    
-    while (state.level < 99 && state.xp >= xpForLevel(state.level)) {
-      state.xp -= xpForLevel(state.level);
-      state.level++;
-      showLevelPopup(state.level);
-      initSeedSelect();
-    }
-    
-    tile.cropId = null;
-    tile.plantedAt = 0;
-    tile.watered = false;
-    
-    checkTutorialAction("harvest", index);
-    
-    setMessage(`🌾 +${crop.name} (${tile.quality}) +${xpGain}✨`);
-    save();
-    render();
-    updateSiloModal();
-  }
-
-  function waterTile(index) {
-    const tile = state.tiles[index];
-    if (!tile.cropId) return setMessage("❌ Nothing here");
-    if (tile.watered) return setMessage("💧 Already watered");
-    
-    const currentWater = Math.floor(state.water.current);
-    if (currentWater <= 0) {
-      return setMessage(`❌ Not enough water! You have ${currentWater}/${state.water.max}`);
-    }
-    
-    state.water.current--;
-    tile.watered = true;
-    
-    checkTutorialAction("water", index);
-    
-    setMessage(`💧 Watered! ${Math.floor(state.water.current)}/${state.water.max} left`);
-    save();
-    render();
-  }
-
-  function clearDead(index) {
-    state.tiles[index].cropId = null;
-    state.tiles[index].dead = false;
-    setMessage(`🗑️ Cleared`);
-    render();
-    save();
-  }
-
-  function tileClick(index) {
-    if (isLocked(index)) return setMessage(`🔒 Expand! (${state.unlockedSize * 1000})`);
-    const tile = state.tiles[index];
-    const info = getTileState(tile);
-    if (info.stage === "empty") return plant(index);
-    if (tile.cropId && !tile.watered && !tile.dead) return waterTile(index);
-    if (info.stage === "ready") return harvest(index);
-    if (info.stage === "dead") return clearDead(index);
-    setMessage(`${info.crop.name} — ${Math.ceil(info.remaining)}s`);
-  }
-
-  function createFarm() {
-    farmEl.innerHTML = "";
-    farmEl.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
-    farmEl.style.gridTemplateRows = `repeat(${GRID_SIZE}, 1fr)`;
-    
-    tileElements = [];
-    for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
-      const div = document.createElement("div");
-      div.className = "tile";
-      div.addEventListener("click", () => tileClick(i));
-      farmEl.appendChild(div);
-      tileElements.push(div);
-    }
-  }
-
-  function renderTiles() {
-    for (let i = 0; i < tileElements.length; i++) {
-      const div = tileElements[i];
-      if (isLocked(i)) {
-        div.className = "tile locked";
-        div.textContent = "🔒";
-        continue;
-      }
-      const tile = state.tiles[i];
-      const info = getTileState(tile);
-      let className = "tile " + info.stage;
-      if (tile.quality && tile.cropId && info.stage !== "empty") className += " " + tile.quality;
-      div.className = className;
-      
-      if (info.stage === "empty") {
-        div.textContent = "";
-      } else if (info.stage === "planted") {
-        div.textContent = tile.watered ? "🌱" : "💧";
-      } else if (info.stage === "growing") {
-        div.textContent = info.crop.emoji;
-      } else if (info.stage === "ready") {
-        div.textContent = info.crop.emoji;
-      } else if (info.stage === "dead") {
-        div.textContent = "";
-        div.innerHTML = `<img src="deadweed.png" style="width: 100%; height: 100%; object-fit: contain;" alt="dead">`;
+        var tile = state.tiles[i];
+        var info = getTileState(tile);
+        var className = "tile " + info.stage;
+        if (tile.quality && tile.cropId && info.stage !== "empty") className += " " + tile.quality;
+        div.className = className;
+        if (info.stage === "empty") {
+          div.textContent = "";
+        } else if (info.stage === "planted") {
+          div.textContent = tile.watered ? "🌱" : "💧";
+        } else if (info.stage === "growing") {
+          div.textContent = info.crop.emoji;
+        } else if (info.stage === "ready") {
+          div.textContent = info.crop.emoji;
+        } else if (info.stage === "dead") {
+          div.textContent = "";
+          div.innerHTML = '<img src="deadweed.png" style="width:100%;height:100%;object-fit:contain;" alt="dead">';
+        }
       }
     }
-  }
 
-  function openSiloModal() {
-    checkTutorialAction("openSilo", null);
-    document.getElementById("siloModal").classList.remove("hidden");
-    updateSiloModal();
-  }
-  
-  function closeSiloModal() { document.getElementById("siloModal").classList.add("hidden"); }
-  
-  function updateSiloModal() {
-    document.getElementById("modalSiloUsed").textContent = siloUsed();
-    document.getElementById("modalSiloCapacity").textContent = state.silo.capacity;
-    document.getElementById("modalSiloCapacity2").textContent = state.silo.capacity;
-    document.getElementById("modalExpandCost").textContent = state.silo.capacity * 20;
-    const cropsList = document.getElementById("siloCropsList");
-    cropsList.innerHTML = "";
-    let hasAnyCrops = false;
-    for (const crop of CROPS) {
-      const qty = state.silo.stored[crop.id] || 0;
-      if (qty > 0) {
-        hasAnyCrops = true;
-        const price = state.market.prices[crop.id] || crop.baseSell;
-        cropsList.innerHTML += `
-          <div class="silo-crop-item">
-            <div class="crop-info">
-              <div class="crop-emoji">${crop.emoji}</div>
-              <div class="crop-details">
-                <div class="crop-name">${crop.name}</div>
-                <div class="crop-price">💰 ${price}</div>
-              </div>
-            </div>
-            <div class="crop-qty">📦 ${qty}</div>
-            <div class="crop-actions">
-              <button onclick="sellOne('${crop.id}'); closeSiloModal(); openSiloModal();">1</button>
-              <button onclick="sellPrompt('${crop.id}'); closeSiloModal(); openSiloModal();">✏️</button>
-              <button onclick="sellMax('${crop.id}'); closeSiloModal(); openSiloModal();">📦</button>
-            </div>
-          </div>
-        `;
+    // ── SILO MODAL ──
+    function openSiloModal() {
+      checkTutorialAction("openSilo", null);
+      document.getElementById("siloModal").classList.remove("hidden");
+      updateSiloModal();
+    }
+    function closeSiloModal() { document.getElementById("siloModal").classList.add("hidden"); }
+
+    function updateSiloModal() {
+      document.getElementById("modalSiloUsed").textContent = siloUsed();
+      document.getElementById("modalSiloCapacity").textContent = state.silo.capacity;
+      document.getElementById("modalSiloCapacity2").textContent = state.silo.capacity;
+      document.getElementById("modalExpandCost").textContent = state.silo.capacity * 20;
+      var cropsList = document.getElementById("siloCropsList");
+      cropsList.innerHTML = "";
+      var hasAnyCrops = false;
+      CROPS.forEach(function(crop) {
+        var qty = state.silo.stored[crop.id] || 0;
+        if (qty > 0) {
+          hasAnyCrops = true;
+          var price = state.market.prices[crop.id] || crop.baseSell;
+          cropsList.innerHTML += '<div class="silo-crop-item"><div class="crop-info"><div class="crop-emoji">' + crop.emoji + '</div><div class="crop-details"><div class="crop-name">' + crop.name + '</div><div class="crop-price">💰 ' + price + '</div></div></div><div class="crop-qty">📦 ' + qty + '</div><div class="crop-actions"><button onclick="sellOne(\'' + crop.id + '\');closeSiloModal();openSiloModal();">1</button><button onclick="sellPrompt(\'' + crop.id + '\');closeSiloModal();openSiloModal();">✏️</button><button onclick="sellMax(\'' + crop.id + '\');closeSiloModal();openSiloModal();">📦</button></div></div>';
+        }
+      });
+      if (!hasAnyCrops) cropsList.innerHTML = '<div class="empty-silo">🌾 Empty!</div>';
+    }
+
+    function expandSiloFromModal() {
+      var cost = state.silo.capacity * 20;
+      if (state.coins < cost) {
+        showModalMessage("siloModalMessage", "❌ Need " + cost + " (" + Math.floor(state.coins) + ")", true);
+        return;
+      }
+      var oldCapacity = state.silo.capacity;
+      state.coins -= cost;
+      state.silo.capacity += 50;
+      showModalMessage("siloModalMessage", "✅ " + oldCapacity + " → " + state.silo.capacity, false);
+      save();
+      render();
+      updateSiloModal();
+    }
+
+    // ── WELL ──
+    function openWellModal() {
+      document.getElementById("wellModal").classList.remove("hidden");
+      document.getElementById("wellLevel").textContent = state.well.level;
+      document.getElementById("wellProduction").textContent = getWellProduction(state.well.level);
+      var buyBtn = document.getElementById("buyWellBtn");
+      var upgradeBtn = document.getElementById("upgradeWellBtn");
+      if (state.well.level === 0) {
+        buyBtn.style.display = "inline-block";
+        upgradeBtn.style.display = "none";
+      } else {
+        buyBtn.style.display = "none";
+        upgradeBtn.style.display = "inline-block";
+        upgradeBtn.innerHTML = "⬆️ (" + getWellCost(state.well.level + 1) + ")";
       }
     }
-    if (!hasAnyCrops) cropsList.innerHTML = '<div class="empty-silo">🌾 Empty!</div>';
-  }
-  
-  function expandSiloFromModal() {
-    const cost = state.silo.capacity * 20;
-    if (state.coins < cost) {
-      showModalMessage("siloModalMessage", `❌ Need ${cost} (${Math.floor(state.coins)})`, true);
-      return;
-    }
-    const oldCapacity = state.silo.capacity;
-    state.coins -= cost;
-    state.silo.capacity += 50;
-    showModalMessage("siloModalMessage", `✅ ${oldCapacity} → ${state.silo.capacity}`, false);
-    save();
-    render();
-    updateSiloModal();
-  }
+    function closeWellModal() { document.getElementById("wellModal").classList.add("hidden"); }
 
-  function openWellModal() {
-    document.getElementById("wellModal").classList.remove("hidden");
-    document.getElementById("wellLevel").textContent = state.well.level;
-    document.getElementById("wellProduction").textContent = getWellProduction(state.well.level);
-    const buyBtn = document.getElementById("buyWellBtn");
-    const upgradeBtn = document.getElementById("upgradeWellBtn");
-    if (state.well.level === 0) {
-      buyBtn.style.display = "inline-block";
-      upgradeBtn.style.display = "none";
-    } else {
-      buyBtn.style.display = "none";
-      upgradeBtn.style.display = "inline-block";
-      upgradeBtn.innerHTML = `⬆️ (${getWellCost(state.well.level + 1)})`;
-    }
-  }
-  function closeWellModal() { document.getElementById("wellModal").classList.add("hidden"); }
-
-  function buyWell() {
-    const cost = getWellCost(1);
-    if (state.coins < cost) {
-      showModalMessage("wellModalMessage", `❌ Need ${cost}`, true);
-      return;
-    }
-    state.coins -= cost;
-    state.well = { level: 1, lastUpdate: Date.now() };
-    showModalMessage("wellModalMessage", `✅ Well Lv1 (${getWellProduction(1)}💧/hr)`, false);
-    save();
-    render();
-    openWellModal();
-  }
-
-  function upgradeWellAction() {
-    const result = window.upgradeWell(state);
-    if (result && result.ok) {
-      showModalMessage("wellModalMessage", result.msg, false);
+    function buyWell() {
+      var cost = getWellCost(1);
+      if (state.coins < cost) {
+        showModalMessage("wellModalMessage", "❌ Need " + cost, true);
+        return;
+      }
+      state.coins -= cost;
+      state.well = { level: 1, lastUpdate: Date.now() };
+      showModalMessage("wellModalMessage", "✅ Well Lv1 (" + getWellProduction(1) + "💧/hr)", false);
       save();
       render();
       openWellModal();
-    } else if (result) {
-      showModalMessage("wellModalMessage", result.msg, true);
     }
-  }
 
-  function openWaterModal() {
-    document.getElementById("waterModal").classList.remove("hidden");
-    document.getElementById("waterCurrent").textContent = Math.floor(state.water.current);
-    document.getElementById("waterMax").textContent = state.water.max;
-    document.getElementById("waterCapacity").textContent = state.water.max;
-    const expandCost = state.water.max * 100;
-    const expandBtn = document.getElementById("expandWaterTankBtn");
-    expandBtn.innerHTML = `⬆️ Expand Tank (${expandCost}💰)`;
-  }
-  function closeWaterModal() { document.getElementById("waterModal").classList.add("hidden"); }
-
-  function expandWaterTank() {
-    const cost = state.water.max * 100;
-    const currentCoins = Math.floor(state.coins);
-    
-    if (state.coins < cost) {
-      const shortfall = cost - currentCoins;
-      showModalMessage("waterModalMessage", `❌ Need ${cost} coins! You have ${currentCoins}. Missing ${shortfall} coins. Harvest and sell crops! 💧`, true);
-      const btn = document.getElementById("expandWaterTankBtn");
-      if (btn) {
-        btn.style.backgroundColor = '#8b3a2a';
-        setTimeout(() => btn.style.backgroundColor = '', 500);
+    function upgradeWellAction() {
+      var result = window.upgradeWell(state);
+      if (result && result.ok) {
+        showModalMessage("wellModalMessage", result.msg, false);
+        save();
+        render();
+        openWellModal();
+      } else if (result) {
+        showModalMessage("wellModalMessage", result.msg, true);
       }
-      return;
     }
-    
-    const oldMax = state.water.max;
-    state.coins -= cost;
-    state.water.max += 20;
-    state.water.current += 20;
-    
-    showModalMessage("waterModalMessage", `✅ Water Tank: ${oldMax} → ${state.water.max}! Cost: ${cost} coins. +20 water added! 💧`, false);
-    
-    const btn = document.getElementById("expandWaterTankBtn");
-    if (btn) {
-      btn.style.backgroundColor = '#2a7c4a';
-      setTimeout(() => btn.style.backgroundColor = '', 500);
-      btn.innerHTML = `⬆️ Expand Tank (${state.water.max * 100}💰)`;
+
+    // ── WATER ──
+    function openWaterModal() {
+      document.getElementById("waterModal").classList.remove("hidden");
+      document.getElementById("waterCurrent").textContent = Math.floor(state.water.current);
+      document.getElementById("waterMax").textContent = state.water.max;
+      document.getElementById("waterCapacity").textContent = state.water.max;
+      var expandCost = state.water.max * 100;
+      var expandBtn = document.getElementById("expandWaterTankBtn");
+      expandBtn.innerHTML = "⬆️ Expand Tank (" + expandCost + "💰)";
     }
-    
-    save();
-    render();
-    openWaterModal();
-  }
+    function closeWaterModal() { document.getElementById("waterModal").classList.add("hidden"); }
 
-  function openTownModal() {
-    checkTutorialAction("openTown", null);
-    const modal = document.getElementById("townModal");
-    modal.classList.remove("hidden");
-    
-    document.getElementById("townPopulation").textContent = state.town.population;
-    document.getElementById("townProsperity").textContent = state.town.prosperity.toFixed(1);
-    document.getElementById("investCost").textContent = Math.floor(state.town.prosperity * 500);
+    function expandWaterTank() {
+      var cost = state.water.max * 100;
+      var currentCoins = Math.floor(state.coins);
+      if (state.coins < cost) {
+        var shortfall = cost - currentCoins;
+        showModalMessage("waterModalMessage", "❌ Need " + cost + " coins! You have " + currentCoins + ". Missing " + shortfall + " coins. Harvest and sell crops! 💧", true);
+        return;
+      }
+      var oldMax = state.water.max;
+      state.coins -= cost;
+      state.water.max += 20;
+      state.water.current += 20;
+      showModalMessage("waterModalMessage", "✅ Water Tank: " + oldMax + " → " + state.water.max + "! Cost: " + cost + " coins. +20 water added! 💧", false);
+      save();
+      render();
+      openWaterModal();
+    }
 
-    const hireBtn = document.getElementById("hireWorkerBtn");
-    if (hireBtn) {
-      if (masterFarmerActive && farmerEndTime) {
-        const now = Date.now();
-        if (now < farmerEndTime) {
-          const hoursLeft = ((farmerEndTime - now) / 3600000).toFixed(1);
-          hireBtn.disabled = true;
-          hireBtn.textContent = `👨‍🌾 Working... (${hoursLeft}h left)`;
+    // ── TOWN ──
+    function openTownModal() {
+      checkTutorialAction("openTown", null);
+      var modal = document.getElementById("townModal");
+      modal.classList.remove("hidden");
+      document.getElementById("townPopulation").textContent = state.town.population;
+      document.getElementById("townProsperity").textContent = state.town.prosperity.toFixed(1);
+      document.getElementById("investCost").textContent = Math.floor(state.town.prosperity * 500);
+
+      var hireBtn = document.getElementById("hireWorkerBtn");
+      if (hireBtn) {
+        if (masterFarmerActive && farmerEndTime) {
+          var now = Date.now();
+          if (now < farmerEndTime) {
+            var hoursLeft = ((farmerEndTime - now) / 3600000).toFixed(1);
+            hireBtn.disabled = true;
+            hireBtn.textContent = "👨‍🌾 Working... (" + hoursLeft + "h left)";
+          } else {
+            hireBtn.disabled = false;
+            hireBtn.textContent = "Hire Master Farmer (100💰)";
+          }
         } else {
           hireBtn.disabled = false;
           hireBtn.textContent = "Hire Master Farmer (100💰)";
         }
+      }
+
+      var statusDiv = document.getElementById("workerStatus");
+      if (statusDiv && !masterFarmerActive) {
+        statusDiv.innerHTML = "<span style='color:#88ffcc'>✨ Hire the Master Farmer to work for a full day (6 hours)!</span>";
+      }
+
+      var timeSinceLastTax = now() - state.town.lastTaxCollect;
+      var secondsUntilNextTax = Math.max(0, DAY_LENGTH_SECONDS - timeSinceLastTax);
+      var taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
+      var collectBtn = document.getElementById("collectTaxesBtn");
+      var cooldownSpan = document.getElementById("taxCooldown");
+
+      if (secondsUntilNextTax > 0) {
+        collectBtn.disabled = true;
+        collectBtn.textContent = "⏰ " + formatTime(secondsUntilNextTax);
+        collectBtn.style.opacity = "0.5";
+        cooldownSpan.textContent = formatTime(secondsUntilNextTax);
+        cooldownSpan.style.color = "#ff8866";
+        if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+        window.taxCountdownInterval = setInterval(function() {
+          var newTimeSince = now() - state.town.lastTaxCollect;
+          var newSecondsLeft = Math.max(0, DAY_LENGTH_SECONDS - newTimeSince);
+          if (newSecondsLeft <= 0) {
+            if (collectBtn) {
+              collectBtn.disabled = false;
+              collectBtn.textContent = "💰 " + taxAmount;
+              collectBtn.style.opacity = "1";
+              cooldownSpan.textContent = "✅";
+              cooldownSpan.style.color = "#66ff66";
+            }
+            if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+          } else {
+            if (collectBtn) collectBtn.textContent = "⏰ " + formatTime(newSecondsLeft);
+            cooldownSpan.textContent = formatTime(newSecondsLeft);
+          }
+        }, 1000);
       } else {
+        collectBtn.disabled = false;
+        collectBtn.textContent = "💰 " + taxAmount;
+        collectBtn.style.opacity = "1";
+        cooldownSpan.textContent = "✅";
+        cooldownSpan.style.color = "#66ff66";
+        if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+      }
+    }
+
+    function closeTownModal() {
+      document.getElementById("townModal").classList.add("hidden");
+      if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+    }
+
+    function collectTaxes() {
+      var timeSinceLastTax = now() - state.town.lastTaxCollect;
+      if (timeSinceLastTax < DAY_LENGTH_SECONDS) {
+        var remaining = DAY_LENGTH_SECONDS - timeSinceLastTax;
+        showModalMessage("townModalMessage", "⏰ " + formatTime(remaining), true);
+        return;
+      }
+      var taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
+      state.coins += taxAmount;
+      state.town.lastTaxCollect = now();
+      showModalMessage("townModalMessage", "💰 +" + taxAmount, false);
+      save();
+      render();
+      openTownModal();
+    }
+
+    function investInTown() {
+      var cost = Math.floor(state.town.prosperity * 500);
+      if (state.coins < cost) {
+        showModalMessage("townModalMessage", "❌ Need " + cost, true);
+        return;
+      }
+      state.coins -= cost;
+      state.town.prosperity += 0.5;
+      var popGrowth = Math.floor(Math.random() * 5) + 1;
+      state.town.population += popGrowth;
+      showModalMessage("townModalMessage", "✅ " + cost + " → 📈" + state.town.prosperity.toFixed(1) + " 👥+" + popGrowth, false);
+      save();
+      render();
+      openTownModal();
+    }
+
+    // ── WELL WATER UPDATE ──
+    function updateWellWater() {
+      if (!state.well || state.well.level === 0) return;
+      var nowMs = Date.now();
+      var hoursPassed = (nowMs - (state.well.lastUpdate || nowMs)) / 3600000;
+      var productionRate = getWellProduction(state.well.level);
+      var produced = hoursPassed * productionRate;
+      if (produced >= 0.01) {
+        var wholeWater = Math.floor(produced);
+        if (wholeWater > 0) {
+          state.water.current = Math.min(state.water.current + wholeWater, state.water.max);
+          var hoursUsed = wholeWater / productionRate;
+          state.well.lastUpdate += hoursUsed * 3600000;
+        } else {
+          state.well.lastUpdate = nowMs;
+        }
+      }
+      state.water.current = Math.floor(state.water.current);
+    }
+
+    // ── REVIVE ──
+    function reviveAllCrops() {
+      checkTutorialAction("revive", null);
+      var revived = 0;
+      for (var i = 0; i < state.tiles.length; i++) {
+        var tile = state.tiles[i];
+        if (tile.cropId && tile.dead === true) {
+          var crop = cropById(tile.cropId);
+          if (crop) {
+            tile.dead = false;
+            tile.watered = true;
+            tile.plantedAt = now() - crop.growSeconds - 1;
+            revived++;
+          }
+        }
+      }
+      setMessage("✨ " + revived + " revived!");
+      save();
+      render();
+    }
+
+    function reviveAllWithAd() {
+      var frame = document.getElementById("rewardedFrame");
+      frame.style.display = "block";
+      setMessage("📺 Watch ad...");
+      setTimeout(function() {
+        frame.style.display = "none";
+        reviveAllCrops();
+      }, 8000);
+    }
+
+    // ── RENDER ──
+    function renderUI() {
+      coinsEl.textContent = Math.floor(state.coins);
+      levelEl.textContent = state.level;
+      xpEl.textContent = state.xp;
+      xpNextEl.textContent = xpForLevel(state.level);
+
+      seasonDisplay.innerHTML = seasonEmojis[currentSeason()] + " " + currentSeason() + " Day " + state.day + "<br>" + weatherEmojis[currentWeather()] + " Weather: " + currentWeather();
+
+      siloUsageText.textContent = "📦 " + siloUsed() + "/" + state.silo.capacity;
+      wellLevelText.textContent = "🚰 Lv" + state.well.level;
+      waterTankText.textContent = "💧 " + Math.floor(state.water.current) + "/" + state.water.max;
+      townStatsText.textContent = "🏘️ " + state.town.population;
+
+      if (state.unlockedSize >= GRID_SIZE) {
+        expandBtn.textContent = "🚜 Max Size (12×12)";
+        expandBtn.style.opacity = "0.6";
+      } else {
+        expandBtn.textContent = "🚜 Expand (" + (state.unlockedSize * 1000) + ")";
+        expandBtn.style.opacity = "1";
+      }
+    }
+
+    function render() {
+      updateWellWater();
+      renderTiles();
+      renderUI();
+    }
+
+    function tick() {
+      updateWellWater();
+      var elapsed = now() - state.lastDayTick;
+      if (elapsed >= DAY_LENGTH_SECONDS) {
+        var skipped = Math.floor(elapsed / DAY_LENGTH_SECONDS);
+        for (var i = 0; i < skipped; i++) advanceDay();
+        state.lastDayTick = now();
+        save();
+      }
+      renderTiles();
+    }
+
+    function initSeedSelect() {
+      seedSelectEl.innerHTML = "";
+      CROPS.filter(function(crop) { return state.level >= crop.levelRequired; }).forEach(function(crop) {
+        var opt = document.createElement("option");
+        opt.value = crop.id;
+        opt.textContent = crop.emoji + " " + crop.name + " (" + crop.baseCost + ")";
+        seedSelectEl.appendChild(opt);
+      });
+    }
+
+    expandBtn.addEventListener("click", function() {
+      var cost = state.unlockedSize * 1000;
+      if (state.coins < cost) {
+        setMessage("❌ Need " + cost);
+        expandBtn.style.backgroundColor = '#8b3a2a';
+        setTimeout(function() { expandBtn.style.backgroundColor = ''; }, 500);
+        return;
+      }
+      if (state.unlockedSize >= GRID_SIZE) {
+        setMessage("❌ Max size!");
+        return;
+      }
+      state.coins -= cost;
+      state.unlockedSize++;
+      expandBtn.textContent = "🚜 Expand (" + (state.unlockedSize * 1000) + ")";
+      setMessage("✅ " + state.unlockedSize + "×" + state.unlockedSize);
+      expandBtn.style.backgroundColor = '#2a7c4a';
+      setTimeout(function() { expandBtn.style.backgroundColor = ''; }, 500);
+      save();
+      render();
+    });
+
+    resetBtn.addEventListener("click", function() {
+      if (confirm("Reset all?")) {
+        localStorage.removeItem(SAVE_KEY);
+        location.reload();
+      }
+    });
+
+    // ── MASTER FARMER ──
+    var masterFarmerActive = false;
+    var masterFarmerInterval = null;
+    var farmerStartTime = null;
+    var farmerEndTime = null;
+    var farmerPaused = false;
+    var farmerPauseReason = "";
+
+    function hireMasterFarmer() {
+      var cost = 100;
+      if (state.coins < cost) {
+        showModalMessage("townModalMessage", "❌ Need " + cost + " coins to hire the Master Farmer!", true);
+        return;
+      }
+      if (masterFarmerActive) {
+        showModalMessage("townModalMessage", "⚠️ Master Farmer is already working! Let him finish his day.", true);
+        return;
+      }
+      state.coins -= cost;
+      startMasterFarmer();
+      var dayLengthHours = DAY_LENGTH_SECONDS / 3600;
+      showModalMessage("townModalMessage", "✅ Master Farmer hired for " + dayLengthHours + " hours! He will continuously tend to your crops!", false);
+      save();
+      render();
+      openTownModal();
+    }
+
+    function startMasterFarmer() {
+      masterFarmerActive = true;
+      farmerPaused = false;
+      farmerPauseReason = "";
+      farmerStartTime = Date.now();
+      farmerEndTime = farmerStartTime + (DAY_LENGTH_SECONDS * 1000);
+      updateFarmerStatus("👨‍🌾 Master Farmer started! He will work for " + (DAY_LENGTH_SECONDS / 3600) + " hours!");
+      if (masterFarmerInterval) clearInterval(masterFarmerInterval);
+      masterFarmerInterval = setInterval(doMasterFarmerWork, 200);
+    }
+
+    function doMasterFarmerWork() {
+      if (!masterFarmerActive) {
+        if (masterFarmerInterval) clearInterval(masterFarmerInterval);
+        return;
+      }
+      var currentTime = Date.now();
+      if (currentTime >= farmerEndTime) {
+        updateFarmerStatus("✅ Master Farmer's shift is over! He worked a full day! Hire him again tomorrow!");
+        stopMasterFarmer();
+        return;
+      }
+      var timeRemaining = farmerEndTime - currentTime;
+      var hoursRemaining = (timeRemaining / 3600000).toFixed(1);
+      var workDone = false;
+
+      for (var i = 0; i < state.tiles.length && !workDone; i++) {
+        if (!isLocked(i)) {
+          var tile = state.tiles[i];
+          var info = getTileState(tile);
+          if (info.stage === "ready" && siloFree() > 0) {
+            var crop = info.crop;
+            addToSilo(crop.id, 1);
+            var xpGain = crop.xp;
+            if (tile.quality === "good") xpGain = Math.round(xpGain * 1.2);
+            if (tile.quality === "excellent") xpGain = Math.round(xpGain * 1.5);
+            if (tile.quality === "golden") xpGain = Math.round(xpGain * 2.5);
+            state.xp += xpGain;
+            while (state.level < 99 && state.xp >= xpForLevel(state.level)) {
+              state.xp -= xpForLevel(state.level);
+              state.level++;
+              showLevelPopup(state.level);
+              initSeedSelect();
+            }
+            tile.cropId = null;
+            tile.plantedAt = 0;
+            tile.watered = false;
+            if (farmerPaused) {
+              farmerPaused = false;
+              farmerPauseReason = "";
+              updateFarmerStatus("🌾 Harvested " + crop.name + "! Farmer resumed work! " + hoursRemaining + "h left");
+            } else {
+              updateFarmerStatus("🌾 Harvested " + crop.name + " (" + tile.quality + ")! " + hoursRemaining + "h left");
+            }
+            workDone = true;
+            save();
+            render();
+            updateSiloModal();
+            break;
+          }
+        }
+      }
+
+      if (workDone) {
+        updateWorkerButtonStatus();
+        return;
+      }
+
+      if (farmerPaused) {
+        checkAndResumeFarmer();
+        return;
+      }
+
+      if (!workDone) {
+        var currentWater = Math.floor(state.water.current);
+        if (currentWater <= 0) {
+          farmerPaused = true;
+          farmerPauseReason = "out of water";
+          updateFarmerStatus("⏸️ Master Farmer paused - OUT OF WATER! Harvest crops to get coins for well upgrades, or wait for rain. 💧 (" + hoursRemaining + "h left)");
+          updateWorkerButtonStatus();
+          return;
+        }
+        for (var j = 0; j < state.tiles.length && !workDone; j++) {
+          if (!isLocked(j)) {
+            var t = state.tiles[j];
+            if (t.cropId && !t.watered && !t.dead) {
+              if (state.water.current > 0) {
+                state.water.current--;
+                t.watered = true;
+                updateFarmerStatus("💧 Watered tile " + (j + 1) + "! " + hoursRemaining + "h left");
+                workDone = true;
+                save();
+                render();
+                break;
+              } else {
+                farmerPaused = true;
+                farmerPauseReason = "out of water";
+                updateFarmerStatus("⏸️ Master Farmer paused - OUT OF WATER! Get water from well or rain to resume. 💧");
+                updateWorkerButtonStatus();
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      if (!workDone) {
+        for (var k = 0; k < state.tiles.length && !workDone; k++) {
+          if (!isLocked(k)) {
+            var tile2 = state.tiles[k];
+            if (tile2.dead === true && tile2.cropId) {
+              var crop2 = cropById(tile2.cropId);
+              if (crop2) {
+                tile2.dead = false;
+                tile2.watered = true;
+                tile2.plantedAt = currentTime / 1000 - crop2.growSeconds + 5;
+                updateFarmerStatus("💀✨ Revived " + crop2.name + " on tile " + (k + 1) + "! " + hoursRemaining + "h left");
+                workDone = true;
+                save();
+                render();
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if (!workDone) {
+        var crop3 = cropById(seedSelectEl.value);
+        if (state.coins < crop3.baseCost) {
+          farmerPaused = true;
+          farmerPauseReason = "out of coins";
+          updateFarmerStatus("⏸️ Master Farmer paused - OUT OF COINS! Harvest ready crops to get coins, then he'll resume. 💰 (" + hoursRemaining + "h left)");
+          updateWorkerButtonStatus();
+          return;
+        }
+        for (var l = 0; l < state.tiles.length && !workDone; l++) {
+          if (!isLocked(l)) {
+            var tile3 = state.tiles[l];
+            var info3 = getTileState(tile3);
+            if (info3.stage === "empty") {
+              if (state.coins >= crop3.baseCost) {
+                state.coins -= crop3.baseCost;
+                tile3.cropId = crop3.id;
+                tile3.plantedAt = currentTime / 1000;
+                tile3.dead = false;
+                tile3.quality = qualityRoll();
+                tile3.watered = false;
+                updateFarmerStatus("🌱 Planted " + crop3.name + " on tile " + (l + 1) + "! " + hoursRemaining + "h left");
+                workDone = true;
+                save();
+                render();
+                break;
+              } else {
+                farmerPaused = true;
+                farmerPauseReason = "out of coins";
+                updateFarmerStatus("⏸️ Master Farmer paused - OUT OF COINS! Need " + crop3.baseCost + " coins to plant. Harvest crops to resume. 💰");
+                updateWorkerButtonStatus();
+                return;
+              }
+            }
+          }
+        }
+      }
+
+      updateWorkerButtonStatus();
+    }
+
+    function checkAndResumeFarmer() {
+      if (!farmerPaused) return;
+      var currentTime = Date.now();
+      if (currentTime >= farmerEndTime) {
+        stopMasterFarmer();
+        return;
+      }
+      var timeRemaining = farmerEndTime - currentTime;
+      var hoursRemaining = (timeRemaining / 3600000).toFixed(1);
+      var canResume = false;
+      if (farmerPauseReason === "out of water") {
+        var currentWater = Math.floor(state.water.current);
+        if (currentWater > 0) canResume = true;
+      } else if (farmerPauseReason === "out of coins") {
+        var crop = cropById(seedSelectEl.value);
+        if (state.coins >= crop.baseCost) canResume = true;
+      }
+      if (canResume) {
+        farmerPaused = false;
+        farmerPauseReason = "";
+        updateFarmerStatus("▶️ Master Farmer resumed work! " + hoursRemaining + "h left in his shift.");
+        updateWorkerButtonStatus();
+      }
+    }
+
+    function updateWorkerButtonStatus() {
+      var hireBtn = document.getElementById("hireWorkerBtn");
+      if (hireBtn && masterFarmerActive) {
+        if (farmerPaused) {
+          hireBtn.disabled = false;
+          hireBtn.textContent = "⏸️ Paused - " + farmerPauseReason;
+          hireBtn.style.opacity = "0.7";
+        } else {
+          var hoursLeft = ((farmerEndTime - Date.now()) / 3600000).toFixed(1);
+          hireBtn.disabled = true;
+          hireBtn.textContent = "👨‍🌾 Working... (" + hoursLeft + "h left)";
+          hireBtn.style.opacity = "0.6";
+        }
+      }
+    }
+
+    function stopMasterFarmer() {
+      masterFarmerActive = false;
+      farmerPaused = false;
+      if (masterFarmerInterval) {
+        clearInterval(masterFarmerInterval);
+        masterFarmerInterval = null;
+      }
+      farmerStartTime = null;
+      farmerEndTime = null;
+      var hireBtn = document.getElementById("hireWorkerBtn");
+      if (hireBtn) {
         hireBtn.disabled = false;
         hireBtn.textContent = "Hire Master Farmer (100💰)";
+        hireBtn.style.opacity = "1";
       }
     }
-    
-    const statusDiv = document.getElementById("workerStatus");
-    if (statusDiv && !masterFarmerActive) {
-      statusDiv.innerHTML = "<span style='color:#88ffcc'>✨ Hire the Master Farmer to work for a full day (6 hours)!</span>";
-    }
-    
-    const timeSinceLastTax = now() - state.town.lastTaxCollect;
-    const secondsUntilNextTax = Math.max(0, DAY_LENGTH_SECONDS - timeSinceLastTax);
-    const taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
-    
-    const collectBtn = document.getElementById("collectTaxesBtn");
-    const cooldownSpan = document.getElementById("taxCooldown");
-    
-    if (secondsUntilNextTax > 0) {
-      collectBtn.disabled = true;
-      collectBtn.textContent = `⏰ ${formatTime(secondsUntilNextTax)}`;
-      collectBtn.style.opacity = "0.5";
-      cooldownSpan.textContent = formatTime(secondsUntilNextTax);
-      cooldownSpan.style.color = "#ff8866";
-      
-      if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
-      window.taxCountdownInterval = setInterval(() => {
-        const newTimeSince = now() - state.town.lastTaxCollect;
-        const newSecondsLeft = Math.max(0, DAY_LENGTH_SECONDS - newTimeSince);
-        if (newSecondsLeft <= 0) {
-          if (collectBtn) {
-            collectBtn.disabled = false;
-            collectBtn.textContent = `💰 ${taxAmount}`;
-            collectBtn.style.opacity = "1";
-            cooldownSpan.textContent = "✅";
-            cooldownSpan.style.color = "#66ff66";
-          }
-          if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
-        } else {
-          if (collectBtn) collectBtn.textContent = `⏰ ${formatTime(newSecondsLeft)}`;
-          cooldownSpan.textContent = formatTime(newSecondsLeft);
-        }
-      }, 1000);
-    } else {
-      collectBtn.disabled = false;
-      collectBtn.textContent = `💰 ${taxAmount}`;
-      collectBtn.style.opacity = "1";
-      cooldownSpan.textContent = "✅";
-      cooldownSpan.style.color = "#66ff66";
-      if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
-    }
-  }
 
-  function closeTownModal() { 
-    document.getElementById("townModal").classList.add("hidden");
-    if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
-  }
-
-  function collectTaxes() {
-    const timeSinceLastTax = now() - state.town.lastTaxCollect;
-    if (timeSinceLastTax < DAY_LENGTH_SECONDS) {
-      const remaining = DAY_LENGTH_SECONDS - timeSinceLastTax;
-      showModalMessage("townModalMessage", `⏰ ${formatTime(remaining)}`, true);
-      return;
-    }
-    
-    const taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
-    state.coins += taxAmount;
-    state.town.lastTaxCollect = now();
-    
-    showModalMessage("townModalMessage", `💰 +${taxAmount}`, false);
-    save();
-    render();
-    openTownModal();
-  }
-
-  function investInTown() {
-    const cost = Math.floor(state.town.prosperity * 500);
-    if (state.coins < cost) {
-      showModalMessage("townModalMessage", `❌ Need ${cost}`, true);
-      return;
-    }
-    state.coins -= cost;
-    state.town.prosperity += 0.5;
-    const popGrowth = Math.floor(Math.random() * 5) + 1;
-    state.town.population += popGrowth;
-    showModalMessage("townModalMessage", `✅ ${cost} → 📈${state.town.prosperity.toFixed(1)} 👥+${popGrowth}`, false);
-    save();
-    render();
-    openTownModal();
-  }
-
-  // ===============================
-  // WELL WATER UPDATE
-  // ===============================
-
-  function updateWellWater() {
-    if (!state.well || state.well.level === 0) return;
-    
-    const nowMs = Date.now();
-    const hoursPassed = (nowMs - (state.well.lastUpdate || nowMs)) / 3600000;
-    const productionRate = getWellProduction(state.well.level);
-    let produced = hoursPassed * productionRate;
-    
-    if (produced >= 0.01) {
-      const wholeWater = Math.floor(produced);
-      if (wholeWater > 0) {
-        state.water.current = Math.min(state.water.current + wholeWater, state.water.max);
-        const hoursUsed = wholeWater / productionRate;
-        state.well.lastUpdate += hoursUsed * 3600000;
-      } else {
-        state.well.lastUpdate = nowMs;
+    function updateFarmerStatus(message) {
+      var statusDiv = document.getElementById("workerStatus");
+      if (statusDiv) {
+        statusDiv.innerHTML = message;
       }
+      setMessage(message);
     }
-    
-    state.water.current = Math.floor(state.water.current);
-  }
 
-  function reviveAllCrops() {
-    checkTutorialAction("revive", null);
-    
-    let revived = 0;
-    for (const tile of state.tiles) {
-      if (tile.cropId && tile.dead === true) {
-        const crop = cropById(tile.cropId);
-        if (crop) {
-          tile.dead = false;
-          tile.watered = true;
-          tile.plantedAt = now() - crop.growSeconds - 1;
-          revived++;
-        }
-      }
-    }
-    setMessage(`✨ ${revived} revived!`);
-    save();
+    // ── Initialize ──
+
+    load();
+    initWell(state);
+    initTiles();
+    createFarm();
+    initSeedSelect();
+    updateWeather();
+    updateMarket();
     render();
-  }
+    expandBtn.textContent = "🚜 Expand (" + (state.unlockedSize * 1000) + ")";
+    setMessage("🌾 Welcome! Click buildings below!");
+    setInterval(tick, 1000);
 
-  function reviveAllWithAd() {
-    const frame = document.getElementById("rewardedFrame");
-    frame.style.display = "block";
-    setMessage("📺 Watch ad...");
-    setTimeout(() => {
-      frame.style.display = "none";
-      reviveAllCrops();
-    }, 8000);
-  }
+    checkFirstTimeUser();
 
-  function renderUI() {
-    coinsEl.textContent = Math.floor(state.coins);
-    levelEl.textContent = state.level;
-    xpEl.textContent = state.xp;
-    xpNextEl.textContent = xpForLevel(state.level);
-    
-    seasonDisplay.innerHTML = `${seasonEmojis[currentSeason()]} ${currentSeason()} Day ${state.day}<br>${weatherEmojis[currentWeather()]} Weather: ${currentWeather()}`;
-    
-    siloUsageText.textContent = `📦 ${siloUsed()}/${state.silo.capacity}`;
-    wellLevelText.textContent = `🚰 Lv${state.well.level}`;
-    waterTankText.textContent = `💧 ${Math.floor(state.water.current)}/${state.water.max}`;
-    townStatsText.textContent = `🏘️ ${state.town.population}`;
-  }
-
-  function render() {
-    updateWellWater();
-    renderTiles();
-    renderUI();
-  }
-
-  function tick() {
-    updateWellWater();
-    const elapsed = now() - state.lastDayTick;
-    if (elapsed >= DAY_LENGTH_SECONDS) {
-      const skipped = Math.floor(elapsed / DAY_LENGTH_SECONDS);
-      for (let i = 0; i < skipped; i++) advanceDay();
-      state.lastDayTick = now();
-      save();
+    var params = new URLSearchParams(window.location.search);
+    var userId = params.get("uid");
+    var faucetFrame = document.getElementById("faucetFrame");
+    if (userId) {
+      faucetFrame.style.display = "block";
+      faucetFrame.src = "faucet.html?uid=" + encodeURIComponent(userId);
     }
-    renderTiles();
-  }
-
-  function initSeedSelect() {
-    seedSelectEl.innerHTML = "";
-    CROPS.filter(crop => state.level >= crop.levelRequired).forEach(crop => {
-      const opt = document.createElement("option");
-      opt.value = crop.id;
-      opt.textContent = `${crop.emoji} ${crop.name} (${crop.baseCost})`;
-      seedSelectEl.appendChild(opt);
-    });
-  }
-
-  expandBtn.addEventListener("click", () => {
-    const cost = state.unlockedSize * 1000;
-    if (state.coins < cost) {
-      setMessage(`❌ Need ${cost}`);
-      expandBtn.style.backgroundColor = '#8b3a2a';
-      setTimeout(() => expandBtn.style.backgroundColor = '', 500);
-      return;
-    }
-    if (state.unlockedSize >= GRID_SIZE) {
-      setMessage(`❌ Max size!`);
-      return;
-    }
-    state.coins -= cost;
-    state.unlockedSize++;
-    expandBtn.textContent = `🚜 Expand (${state.unlockedSize * 1000})`;
-    setMessage(`✅ ${state.unlockedSize}×${state.unlockedSize}`);
-    expandBtn.style.backgroundColor = '#2a7c4a';
-    setTimeout(() => expandBtn.style.backgroundColor = '', 500);
-    save();
-    render();
-  });
-
-  resetBtn.addEventListener("click", () => {
-    if (confirm("Reset all?")) {
-      localStorage.removeItem(SAVE_KEY);
-      location.reload();
-    }
-  });
-
-  // Initialize
-  load();
-  initWell(state);
-  initTiles();
-  createFarm();
-  initSeedSelect();
-  updateWeather();
-  updateMarket();
-  render();
-  expandBtn.textContent = `🚜 Expand (${state.unlockedSize * 1000})`;
-  setMessage("🌾 Welcome! Click buildings below!");
-  setInterval(tick, 1000);
-  
-  checkFirstTimeUser();
-
-  const params = new URLSearchParams(window.location.search);
-  const userId = params.get("uid");
-  const faucetFrame = document.getElementById("faucetFrame");
-  if (userId) {
-    faucetFrame.style.display = "block";
-    faucetFrame.src = "faucet.html?uid=" + encodeURIComponent(userId);
-  }
-  window.addEventListener("message", (event) => {
-      if (event.data?.type === "faucet-complete") {
+    window.addEventListener("message", function(event) {
+      if (event.data && event.data.type === "faucet-complete") {
         document.getElementById("faucetFrame").style.display = "none";
-        
         state.coins += 100;
         state.water.current = Math.min(state.water.current + 20, state.water.max);
-        
         save();
         render();
-        
-        // Show message first
         setMessage("🎁 +100 coins! 💧 +20 water!");
-        
-        // Redirect after 3 seconds so user can see the message
-        setTimeout(() => {
+        setTimeout(function() {
           window.location.href = "https://kryptonlegend.fun";
         }, 3000);
       }
-  });
+    });
 
-  // ===============================
-  // ===============================
-  // MASTER FARMER WORKER SYSTEM (PRIORITIZES HARVESTING EVEN WHEN PAUSED)
-  // ===============================
+    // Restore theme
+    var savedTheme = localStorage.getItem('theme');
+    if (savedTheme) applyTheme(savedTheme);
 
-  let masterFarmerActive = false;
-  let masterFarmerInterval = null;
-  let farmerStartTime = null;
-  let farmerEndTime = null;
-  let farmerPaused = false;
-  let farmerPauseReason = "";
-
-  function hireMasterFarmer() {
-    const cost = 100;
-    
-    if (state.coins < cost) {
-      showModalMessage("townModalMessage", `❌ Need ${cost} coins to hire the Master Farmer!`, true);
-      return;
-    }
-    
-    if (masterFarmerActive) {
-      showModalMessage("townModalMessage", `⚠️ Master Farmer is already working! Let him finish his day.`, true);
-      return;
-    }
-    
-    state.coins -= cost;
-    startMasterFarmer();
-    
-    const dayLengthHours = DAY_LENGTH_SECONDS / 3600;
-    showModalMessage("townModalMessage", `✅ Master Farmer hired for ${dayLengthHours} hours! He will continuously tend to your crops!`, false);
-    save();
-    render();
-    openTownModal();
-  }
-
-  function startMasterFarmer() {
-    masterFarmerActive = true;
-    farmerPaused = false;
-    farmerPauseReason = "";
-    farmerStartTime = Date.now();
-    farmerEndTime = farmerStartTime + (DAY_LENGTH_SECONDS * 1000);
-    
-    updateFarmerStatus(`👨‍🌾 Master Farmer started! He will work for ${DAY_LENGTH_SECONDS / 3600} hours!`);
-    if (masterFarmerInterval) clearInterval(masterFarmerInterval);
-    masterFarmerInterval = setInterval(doMasterFarmerWork, 200);
-  }
-
-  function doMasterFarmerWork() {
-    if (!masterFarmerActive) {
-      if (masterFarmerInterval) clearInterval(masterFarmerInterval);
-      return;
-    }
-    
-    const currentTime = Date.now();
-    if (currentTime >= farmerEndTime) {
-      updateFarmerStatus(`✅ Master Farmer's shift is over! He worked a full day! Hire him again tomorrow!`);
-      stopMasterFarmer();
-      return;
-    }
-    
-    const timeRemaining = farmerEndTime - currentTime;
-    const hoursRemaining = (timeRemaining / 3600000).toFixed(1);
-    
-    let workDone = false;
-    
-    // PRIORITY 1: ALWAYS CHECK FOR HARVEST FIRST (even when paused!)
-    // Harvesting gives coins and is FREE
-    for (let i = 0; i < state.tiles.length && !workDone; i++) {
-      if (!isLocked(i)) {
-        const tile = state.tiles[i];
-        const info = getTileState(tile);
-        
-        if (info.stage === "ready" && siloFree() > 0) {
-          const crop = info.crop;
-          addToSilo(crop.id, 1);
-          let xpGain = crop.xp;
-          if (tile.quality === "good") xpGain = Math.round(xpGain * 1.2);
-          if (tile.quality === "excellent") xpGain = Math.round(xpGain * 1.5);
-          if (tile.quality === "golden") xpGain = Math.round(xpGain * 2.5);
-          state.xp += xpGain;
-          
-          while (state.level < 99 && state.xp >= xpForLevel(state.level)) {
-            state.xp -= xpForLevel(state.level);
-            state.level++;
-            showLevelPopup(state.level);
-            initSeedSelect();
-          }
-          
-          tile.cropId = null;
-          tile.plantedAt = 0;
-          tile.watered = false;
-          
-          // If we were paused, show that we're resuming to harvest
-          if (farmerPaused) {
-            farmerPaused = false;
-            farmerPauseReason = "";
-            updateFarmerStatus(`🌾 Harvested ${crop.name}! Farmer resumed work! ${hoursRemaining}h left`);
-          } else {
-            updateFarmerStatus(`🌾 Harvested ${crop.name} (${tile.quality})! ${hoursRemaining}h left`);
-          }
-          workDone = true;
-          save();
-          render();
-          updateSiloModal();
-          break;
-        }
-      }
-    }
-    
-    // If we harvested something, update button and continue
-    if (workDone) {
-      updateWorkerButtonStatus();
-      return;
-    }
-    
-    // If we're paused and no harvest available, stay paused
-    if (farmerPaused) {
-      // Still check if resources became available while paused
-      checkAndResumeFarmer();
-      return;
-    }
-    
-    // Second: Water unwatered crops (COSTS WATER - pause if out)
-    if (!workDone) {
-      const currentWater = Math.floor(state.water.current);
-      if (currentWater <= 0) {
-        farmerPaused = true;
-        farmerPauseReason = "out of water";
-        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Harvest crops to get coins for well upgrades, or wait for rain. 💧 (${hoursRemaining}h left)`);
-        updateWorkerButtonStatus();
-        return;
-      }
-      
-      for (let i = 0; i < state.tiles.length && !workDone; i++) {
-        if (!isLocked(i)) {
-          const tile = state.tiles[i];
-          if (tile.cropId && !tile.watered && !tile.dead) {
-            if (state.water.current > 0) {
-              state.water.current--;
-              tile.watered = true;
-              updateFarmerStatus(`💧 Watered tile ${i + 1}! ${hoursRemaining}h left`);
-              workDone = true;
-              save();
-              render();
-              break;
-            } else {
-              farmerPaused = true;
-              farmerPauseReason = "out of water";
-              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF WATER! Get water from well or rain to resume. 💧`);
-              updateWorkerButtonStatus();
-              return;
-            }
-          }
-        }
-      }
-    }
-    
-    // Third: Revive dead crops (FREE - doesn't cost anything)
-    if (!workDone) {
-      for (let i = 0; i < state.tiles.length && !workDone; i++) {
-        if (!isLocked(i)) {
-          const tile = state.tiles[i];
-          if (tile.dead === true && tile.cropId) {
-            const crop = cropById(tile.cropId);
-            if (crop) {
-              tile.dead = false;
-              tile.watered = true;
-              tile.plantedAt = currentTime / 1000 - crop.growSeconds + 5;
-              updateFarmerStatus(`💀✨ Revived ${crop.name} on tile ${i + 1}! ${hoursRemaining}h left`);
-              workDone = true;
-              save();
-              render();
-              break;
-            }
-          }
-        }
-      }
-    }
-    
-    // Fourth: Plant new crops (COSTS COINS - pause if out)
-    if (!workDone) {
-      const crop = cropById(seedSelectEl.value);
-      if (state.coins < crop.baseCost) {
-        farmerPaused = true;
-        farmerPauseReason = "out of coins";
-        updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Harvest ready crops to get coins, then he'll resume. 💰 (${hoursRemaining}h left)`);
-        updateWorkerButtonStatus();
-        return;
-      }
-      
-      for (let i = 0; i < state.tiles.length && !workDone; i++) {
-        if (!isLocked(i)) {
-          const tile = state.tiles[i];
-          const info = getTileState(tile);
-          if (info.stage === "empty") {
-            if (state.coins >= crop.baseCost) {
-              state.coins -= crop.baseCost;
-              tile.cropId = crop.id;
-              tile.plantedAt = currentTime / 1000;
-              tile.dead = false;
-              tile.quality = qualityRoll();
-              tile.watered = false;
-              updateFarmerStatus(`🌱 Planted ${crop.name} on tile ${i + 1}! ${hoursRemaining}h left`);
-              workDone = true;
-              save();
-              render();
-              break;
-            } else {
-              farmerPaused = true;
-              farmerPauseReason = "out of coins";
-              updateFarmerStatus(`⏸️ Master Farmer paused - OUT OF COINS! Need ${crop.baseCost} coins to plant. Harvest crops to resume. 💰`);
-              updateWorkerButtonStatus();
-              return;
-            }
-          }
-        }
-      }
-    }
-    
-    // Update button text
-    updateWorkerButtonStatus();
-  }
-
-  function checkAndResumeFarmer() {
-    if (!farmerPaused) return;
-    
-    const currentTime = Date.now();
-    if (currentTime >= farmerEndTime) {
-      stopMasterFarmer();
-      return;
-    }
-    
-    const timeRemaining = farmerEndTime - currentTime;
-    const hoursRemaining = (timeRemaining / 3600000).toFixed(1);
-    let canResume = false;
-    
-    if (farmerPauseReason === "out of water") {
-      const currentWater = Math.floor(state.water.current);
-      if (currentWater > 0) {
-        canResume = true;
-      }
-    } else if (farmerPauseReason === "out of coins") {
-      const crop = cropById(seedSelectEl.value);
-      if (state.coins >= crop.baseCost) {
-        canResume = true;
-      }
-    }
-    
-    if (canResume) {
-      farmerPaused = false;
-      farmerPauseReason = "";
-      updateFarmerStatus(`▶️ Master Farmer resumed work! ${hoursRemaining}h left in his shift.`);
-      updateWorkerButtonStatus();
-    }
-  }
-
-  function updateWorkerButtonStatus() {
-    const hireBtn = document.getElementById("hireWorkerBtn");
-    if (hireBtn && masterFarmerActive) {
-      if (farmerPaused) {
-        hireBtn.disabled = false;
-        hireBtn.textContent = `⏸️ Paused - ${farmerPauseReason}`;
-        hireBtn.style.opacity = "0.7";
-      } else {
-        const hoursLeft = ((farmerEndTime - Date.now()) / 3600000).toFixed(1);
-        hireBtn.disabled = true;
-        hireBtn.textContent = `👨‍🌾 Working... (${hoursLeft}h left)`;
-        hireBtn.style.opacity = "0.6";
-      }
-    }
-  }
-
-  function stopMasterFarmer() {
-    masterFarmerActive = false;
-    farmerPaused = false;
-    if (masterFarmerInterval) {
-      clearInterval(masterFarmerInterval);
-      masterFarmerInterval = null;
-    }
-    farmerStartTime = null;
-    farmerEndTime = null;
-    
-    const hireBtn = document.getElementById("hireWorkerBtn");
-    if (hireBtn) {
-      hireBtn.disabled = false;
-      hireBtn.textContent = "Hire Master Farmer (100💰)";
-      hireBtn.style.opacity = "1";
-    }
-  }
-
-  function updateFarmerStatus(message) {
-    const statusDiv = document.getElementById("workerStatus");
-    if (statusDiv) {
-      statusDiv.innerHTML = message;
-    }
-    setMessage(message);
-  }
-</script>
-
+    // Navigate to home
+    navigate('home');
+  </script>
 </body>
 </html>
