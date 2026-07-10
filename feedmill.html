@@ -4,23 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🏭 Feed Mill</title>
+  <link rel="stylesheet" href="farm.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
-      background: #0a0a1a; 
+      background: transparent;
       color: #eee; 
       font-family: Arial, sans-serif; 
-      padding: 20px;
-      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+      min-height: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .container {
       max-width: 800px;
-      margin: 0 auto;
+      width: 100%;
+      margin: 0;
       background: linear-gradient(145deg, #1a1a2a, #2a2a3d);
       border: 2px solid #4a4a6a;
       border-radius: 16px;
       padding: 30px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      box-shadow: none;
     }
     h1 { color: #66ddff; text-align: center; }
     .header p { color: #8888aa; text-align: center; margin: 8px 0 20px 0; }
@@ -47,8 +53,85 @@
     .btn.send:hover { background: linear-gradient(145deg, #3a9c5a, #2a7c4a); }
     .btn.upgrade { background: linear-gradient(145deg, #7c6a2a, #5a4a1a); color: #ffdd66; }
     .btn.upgrade:hover { background: linear-gradient(145deg, #9c8a3a, #7c6a2a); }
-    .message { margin-top: 20px; padding: 12px; background: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; border-radius: 8px; text-align: center; color: #ffd700; display: none; }
-    .message.show { display: block; }
+    
+    /* Popup overlay */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .popup-overlay.show {
+      display: flex;
+    }
+    .popup-box {
+      background: linear-gradient(145deg, #1a1a2a, #2a2a3d);
+      border: 2px solid #4a4a6a;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+      animation: popIn 0.3s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .popup-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 15px;
+    }
+    .popup-message {
+      color: #eee;
+      font-size: 18px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .popup-btn {
+      background: linear-gradient(145deg, #2a4a7c, #1a3a5a);
+      color: #66ddff;
+      border: none;
+      padding: 10px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .popup-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(102, 221, 255, 0.3);
+    }
+    .popup-btn.error {
+      background: linear-gradient(145deg, #7c2a2a, #5a1a1a);
+      color: #ff6666;
+    }
+    .popup-btn.error:hover {
+      box-shadow: 0 4px 15px rgba(255, 102, 102, 0.3);
+    }
+    .popup-btn.success {
+      background: linear-gradient(145deg, #2a7c4a, #1a5a3a);
+      color: #66ff66;
+    }
+    .popup-btn.success:hover {
+      box-shadow: 0 4px 15px rgba(102, 255, 102, 0.3);
+    }
+    .popup-btn.info {
+      background: linear-gradient(145deg, #2a4a7c, #1a3a5a);
+      color: #66ddff;
+    }
+    .popup-btn.info:hover {
+      box-shadow: 0 4px 15px rgba(102, 221, 255, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -109,32 +192,178 @@
       <button class="btn send" onclick="sendToBarn()">📦 Send Feed to Barn</button>
       <button class="btn upgrade" onclick="upgradeMill()">⬆️ Upgrade Mill</button>
     </div>
-    
-    <div class="message" id="millMessage"></div>
+  </div>
+
+  <!-- Popup -->
+  <div class="popup-overlay" id="popupOverlay">
+    <div class="popup-box">
+      <span class="popup-icon" id="popupIcon">🏭</span>
+      <div class="popup-message" id="popupMessage">Hello!</div>
+      <button class="popup-btn" id="popupBtn" onclick="closePopup()">OK</button>
+    </div>
   </div>
   
   <script>
-    // Silo crops (from parent game)
-    let silo = { wheat: 0, corn: 0 };
+    // ==================== USE SAME SAVE KEY AS INDEX ====================
+    const SAVE_KEY = "krypton_simfarm_ultimate";
     
-    // Feed stock
-    let feed = { hay: 0, grain: 0, mixed: 0, pellets: 0 };
-    
-    let level = 1;
-    
-    // Update UI
-    function updateUI() {
-      document.getElementById('wheatStock').textContent = silo.wheat;
-      document.getElementById('cornStock').textContent = silo.corn;
-      document.getElementById('millLevel').textContent = 'Lv ' + level;
+    // ==================== STATE MANAGEMENT ====================
+    let state = {
+      coins: 0,
+      feedmill: {
+        level: 1,
+        feed: { hay: 0, grain: 0, mixed: 0, pellets: 0 }
+        // NO silo here - it's shared from the main game!
+      }
+    };
+
+    // Silo data from the main game (shared)
+    let sharedSilo = { wheat: 0, corn: 0 };
+
+    // Save function - uses SAME key as index
+    function save() {
+      try {
+        let mainData = {};
+        try {
+          const raw = localStorage.getItem(SAVE_KEY);
+          if (raw) mainData = JSON.parse(raw);
+        } catch(e) {}
+        
+        // Update coins at top level
+        mainData.coins = state.coins;
+        
+        // Store feedmill data under 'feedmill' key
+        mainData.feedmill = {
+          level: state.feedmill.level || 1,
+          feed: {
+            hay: state.feedmill.feed.hay || 0,
+            grain: state.feedmill.feed.grain || 0,
+            mixed: state.feedmill.feed.mixed || 0,
+            pellets: state.feedmill.feed.pellets || 0
+          }
+        };
+        
+        localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
+        console.log('💾 Feedmill saved! Coins:', state.coins);
+      } catch (e) {
+        console.log('Save failed:', e);
+      }
+    }
+
+    // Load function - uses SAME key as index
+    function load() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) {
+          state.coins = 100;
+          state.feedmill = {
+            level: 1,
+            feed: { hay: 0, grain: 0, mixed: 0, pellets: 0 }
+          };
+          return;
+        }
+        
+        const data = JSON.parse(raw);
+        state.coins = data.coins || 100;
+        
+        if (data.feedmill) {
+          state.feedmill.level = data.feedmill.level || 1;
+          state.feedmill.feed = {
+            hay: data.feedmill.feed?.hay || 0,
+            grain: data.feedmill.feed?.grain || 0,
+            mixed: data.feedmill.feed?.mixed || 0,
+            pellets: data.feedmill.feed?.pellets || 0
+          };
+        }
+        
+        // Load silo data from the main game (shared)
+        if (data.silo) {
+          sharedSilo.wheat = data.silo.stored?.wheat || 0;
+          sharedSilo.corn = data.silo.stored?.corn || 0;
+        } else {
+          // If no silo data found, try to get it from farm
+          if (data.farm && data.farm.silo) {
+            sharedSilo.wheat = data.farm.silo.stored?.wheat || 0;
+            sharedSilo.corn = data.farm.silo.stored?.corn || 0;
+          }
+        }
+        
+        console.log('💾 Feedmill loaded! Coins:', state.coins);
+        console.log('🌾 Shared Silo - Wheat:', sharedSilo.wheat, 'Corn:', sharedSilo.corn);
+      } catch (e) {
+        console.log('Load failed:', e);
+        state.coins = 100;
+        state.feedmill = {
+          level: 1,
+          feed: { hay: 0, grain: 0, mixed: 0, pellets: 0 }
+        };
+      }
+    }
+
+    // Sync coins to parent
+    function syncCoinsToParent() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ 
+          type: 'coin-update', 
+          coins: state.coins 
+        }, '*');
+        console.log('💰 Feedmill synced coins to parent:', state.coins);
+      }
+    }
+
+    // Popup functions
+    function showPopup(message, icon = '🏭', btnType = 'success') {
+      const overlay = document.getElementById('popupOverlay');
+      const msgEl = document.getElementById('popupMessage');
+      const iconEl = document.getElementById('popupIcon');
+      const btnEl = document.getElementById('popupBtn');
       
-      document.getElementById('hayStock').textContent = feed.hay;
-      document.getElementById('grainStock').textContent = feed.grain;
-      document.getElementById('mixedStock').textContent = feed.mixed;
-      document.getElementById('pelletsStock').textContent = feed.pellets;
+      msgEl.textContent = message;
+      iconEl.textContent = icon;
+      
+      btnEl.className = 'popup-btn';
+      if (btnType === 'error') {
+        btnEl.classList.add('error');
+      } else if (btnType === 'info') {
+        btnEl.classList.add('info');
+      } else {
+        btnEl.classList.add('success');
+      }
+      
+      overlay.classList.add('show');
     }
     
-    // Process feed from silo crops
+    function closePopup() {
+      document.getElementById('popupOverlay').classList.remove('show');
+    }
+
+    // Update UI
+    function render() {
+      // Show shared silo data
+      document.getElementById('wheatStock').textContent = sharedSilo.wheat || 0;
+      document.getElementById('cornStock').textContent = sharedSilo.corn || 0;
+      document.getElementById('millLevel').textContent = 'Lv ' + (state.feedmill.level || 1);
+      
+      document.getElementById('hayStock').textContent = state.feedmill.feed.hay || 0;
+      document.getElementById('grainStock').textContent = state.feedmill.feed.grain || 0;
+      document.getElementById('mixedStock').textContent = state.feedmill.feed.mixed || 0;
+      document.getElementById('pelletsStock').textContent = state.feedmill.feed.pellets || 0;
+      
+      setTimeout(resizeIframe, 100);
+    }
+    
+    // Auto-resize iframe
+    function resizeIframe() {
+      if (window.parent && window.parent !== window) {
+        const height = document.documentElement.scrollHeight;
+        window.parent.postMessage({ 
+          type: 'resize-iframe', 
+          height: height 
+        }, '*');
+      }
+    }
+    
+    // Process feed from shared silo crops
     function processFeed(type) {
       const recipes = {
         hay: { requires: { wheat: 5 }, produces: { hay: 10 } },
@@ -146,95 +375,164 @@
       const recipe = recipes[type];
       if (!recipe) return;
       
-      // Check silo for required crops
+      // Check shared silo for required crops
       for (const [crop, amount] of Object.entries(recipe.requires)) {
-        const stored = silo[crop] || 0;
+        const stored = sharedSilo[crop] || 0;
         if (stored < amount) {
-          showMessage('❌ Not enough ' + crop + ' in silo! Need ' + amount + ', have ' + stored + '.');
+          showPopup('❌ Not enough ' + crop + ' in silo! Need ' + amount + ', have ' + stored + '.', '❌', 'error');
           return;
         }
       }
       
-      // Remove from silo
+      // Remove from shared silo
       for (const [crop, amount] of Object.entries(recipe.requires)) {
-        silo[crop] = (silo[crop] || 0) - amount;
+        sharedSilo[crop] = (sharedSilo[crop] || 0) - amount;
+      }
+      
+      // Notify parent about silo change
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'silo-use',
+          wheat: sharedSilo.wheat || 0,
+          corn: sharedSilo.corn || 0
+        }, '*');
       }
       
       // Add to feed
       for (const [feedType, amount] of Object.entries(recipe.produces)) {
-        feed[feedType] = (feed[feedType] || 0) + amount;
+        state.feedmill.feed[feedType] = (state.feedmill.feed[feedType] || 0) + amount;
       }
       
-      showMessage('✅ Processed ' + type + '! Produced ' + Object.values(recipe.produces)[0] + ' ' + type + '.');
-      updateUI();
+      const produced = Object.values(recipe.produces)[0];
+      showPopup('✅ Processed ' + type + '! Produced ' + produced + ' ' + type + '.', '✅', 'success');
+      save();
+      render();
     }
     
     // Send feed to barn
     function sendToBarn() {
-      const total = Object.values(feed).reduce((a, b) => a + b, 0);
+      const total = Object.values(state.feedmill.feed).reduce((a, b) => a + b, 0);
       if (total === 0) {
-        showMessage('❌ No feed to send! Process some first.');
+        showPopup('❌ No feed to send! Process some first.', '❌', 'error');
         return;
       }
       
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({
           type: 'feed-update',
-          hay: feed.hay || 0,
-          grain: feed.grain || 0,
-          mixed: feed.mixed || 0,
-          pellets: feed.pellets || 0
+          hay: state.feedmill.feed.hay || 0,
+          grain: state.feedmill.feed.grain || 0,
+          mixed: state.feedmill.feed.mixed || 0,
+          pellets: state.feedmill.feed.pellets || 0
         }, '*');
       }
       
-      showMessage('📦 Sent ' + total + ' feed to the Barn!');
+      showPopup('📦 Sent ' + total + ' feed to the Barn!', '📦', 'success');
       
       // Reset feed stock after sending
-      feed = { hay: 0, grain: 0, mixed: 0, pellets: 0 };
-      updateUI();
+      state.feedmill.feed = { hay: 0, grain: 0, mixed: 0, pellets: 0 };
+      save();
+      render();
     }
     
     // Upgrade mill
     function upgradeMill() {
-      const cost = level * 500;
-      showMessage('⬆️ Upgrade to Lv ' + (level + 1) + ' costs ' + cost + ' coins.');
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'mill-upgrade', cost: cost }, '*');
-      }
-    }
-    
-    // Show message
-    function showMessage(msg) {
-      const el = document.getElementById('millMessage');
-      el.textContent = msg;
-      el.classList.add('show');
-      setTimeout(() => el.classList.remove('show'), 3000);
-    }
-    
-    // Listen for silo data from parent
-    window.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'silo-data') {
-        if (event.data.wheat) silo.wheat += event.data.wheat;
-        if (event.data.corn) silo.corn += event.data.corn;
-        showMessage('🌾 Crops received from silo!');
-        updateUI();
+      const cost = (state.feedmill.level || 1) * 500;
+      
+      if (state.coins < cost) {
+        showPopup('❌ Not enough coins! Need ' + cost + ' coins to upgrade to Lv ' + (state.feedmill.level + 1) + '. You have ' + state.coins + '.', '❌', 'error');
+        return;
       }
       
-      if (event.data && event.data.type === 'mill-confirm') {
-        if (event.data.success && event.data.upgrade) {
-          level++;
-          showMessage('⬆️ Mill upgraded to Lv ' + level + '!');
-          updateUI();
-        } else if (event.data.success) {
-          showMessage('✅ Purchase confirmed!');
-        } else {
-          showMessage('❌ Not enough coins!');
+      state.coins -= cost;
+      state.feedmill.level = (state.feedmill.level || 1) + 1;
+      
+      showPopup('⬆️ Mill upgraded to Lv ' + state.feedmill.level + '!', '⬆️', 'success');
+      syncCoinsToParent();
+      save();
+      render();
+    }
+    
+    // Listen for messages from parent
+    window.addEventListener('message', function(event) {
+      console.log('🏭 Feedmill received message:', event.data);
+      
+      // Handle coin updates from parent
+      if (event.data && event.data.type === 'coin-update') {
+        if (event.data.coins !== undefined) {
+          state.coins = event.data.coins;
+          save();
+          render();
+          console.log('💰 Feedmill coins updated from parent:', state.coins);
         }
+      }
+      
+      // Handle silo update from parent (shared silo)
+      if (event.data && event.data.type === 'silo-update') {
+        if (event.data.wheat !== undefined) {
+          sharedSilo.wheat = event.data.wheat;
+        }
+        if (event.data.corn !== undefined) {
+          sharedSilo.corn = event.data.corn;
+        }
+        render();
+        console.log('🌾 Shared Silo updated - Wheat:', sharedSilo.wheat, 'Corn:', sharedSilo.corn);
+      }
+      
+      // Handle silo data from parent (for manual send)
+      if (event.data && event.data.type === 'silo-data') {
+        if (event.data.wheat !== undefined) {
+          sharedSilo.wheat += event.data.wheat;
+        }
+        if (event.data.corn !== undefined) {
+          sharedSilo.corn += event.data.corn;
+        }
+        showPopup('🌾 Received crops from Silo! Wheat: ' + (event.data.wheat || 0) + ', Corn: ' + (event.data.corn || 0), '🌾', 'success');
+        save();
+        render();
+        console.log('🌾 Silo received - Wheat:', sharedSilo.wheat, 'Corn:', sharedSilo.corn);
+      }
+      
+      // Handle reset game
+      if (event.data && event.data.type === 'reset-game') {
+        localStorage.removeItem(SAVE_KEY);
+        location.reload();
       }
     });
     
+    // Make state accessible for console
+    window.state = state;
+    window.save = save;
+    window.load = load;
+    window.render = render;
+    window.syncCoinsToParent = syncCoinsToParent;
+    window.sharedSilo = sharedSilo;
+    
     // Initialize
-    updateUI();
+    load();
+    render();
+    resizeIframe();
+    
+    // Request silo data from parent
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'request-silo' }, '*');
+    }
+    
+    // Sync coins to parent after loading
+    setTimeout(function() {
+      syncCoinsToParent();
+      console.log('🏭 Feedmill initialized with coins:', state.coins);
+      console.log('🌾 Shared Silo has - Wheat:', sharedSilo.wheat, 'Corn:', sharedSilo.corn);
+    }, 500);
+    
+    // Auto-save every 30 seconds
+    setInterval(save, 30000);
+    
+    // Observe DOM changes for resize
+    if (window.ResizeObserver) {
+      const observer = new ResizeObserver(resizeIframe);
+      observer.observe(document.body);
+    }
   </script>
 </body>
 </html>

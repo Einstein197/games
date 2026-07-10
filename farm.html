@@ -7,6 +7,319 @@
   <link rel="stylesheet" href="farm.css">
   <script src="js/crops.js"></script>
   <script src="js/well.js"></script>
+  <style>
+    /* ── Building Styles ── */
+    .buildings-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 20px auto;
+      flex-wrap: wrap;
+      padding: 15px 20px;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(28px);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 30px;
+      max-width: 900px;
+    }
+
+    .silo-building, .well-building, .water-building, .town-building {
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      background: linear-gradient(145deg, #1a1a2a, #0a0a1a);
+      padding: 16px 14px 12px 14px;
+      border-radius: 20px;
+      border: 2px solid;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      min-width: 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    .silo-building::before, .well-building::before, .water-building::before, .town-building::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .silo-building:hover::before, .well-building:hover::before, 
+    .water-building:hover::before, .town-building:hover::before {
+      opacity: 1;
+    }
+
+    .silo-building { border-color: #8b5a2b; background: linear-gradient(145deg, #2a2418, #1a1a0a); }
+    .well-building { border-color: #4488aa; background: linear-gradient(145deg, #1a2a3a, #0a1a2a); }
+    .water-building { border-color: #66ffcc; background: linear-gradient(145deg, #1a3a3a, #0a2a2a); }
+    .town-building { border-color: #ffaa66; background: linear-gradient(145deg, #2a2a3a, #1a1a2a); }
+
+    .silo-building:hover, .well-building:hover, .water-building:hover, .town-building:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    }
+
+    .silo-building:hover { border-color: #ffd700; box-shadow: 0 8px 25px rgba(255, 215, 0, 0.2); }
+    .well-building:hover { border-color: #88ccff; box-shadow: 0 8px 25px rgba(136, 204, 255, 0.2); }
+    .water-building:hover { border-color: #66ffcc; box-shadow: 0 8px 25px rgba(102, 255, 204, 0.2); }
+    .town-building:hover { border-color: #ffd700; box-shadow: 0 8px 25px rgba(255, 170, 102, 0.2); }
+
+    .building-image {
+      width: 70px;
+      height: 70px;
+      display: block;
+      margin: 0 auto;
+      object-fit: contain;
+      filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+      border-radius: 12px;
+      transition: transform 0.3s ease;
+    }
+    .silo-building:hover .building-image,
+    .well-building:hover .building-image,
+    .water-building:hover .building-image,
+    .town-building:hover .building-image {
+      transform: scale(1.05) rotate(-2deg);
+    }
+
+    .building-icon-label {
+      font-size: 24px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .usage-text, .well-text, .water-text, .town-text {
+      font-size: 11px;
+      margin-top: 8px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.6);
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-align: center;
+      font-family: monospace;
+    }
+    .silo-building .usage-text { color: #ffd966; }
+    .well-building .well-text { color: #88ccff; }
+    .water-building .water-text { color: #66ffcc; }
+    .town-building .town-text { color: #ffaa66; }
+
+    .building-progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(0,0,0,0.5);
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .building-progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s ease;
+      width: 0%;
+    }
+    .silo-building .building-progress-fill { background: linear-gradient(90deg, #8b5a2b, #ffd700); }
+    .well-building .building-progress-fill { background: linear-gradient(90deg, #4488aa, #88ccff); }
+    .water-building .building-progress-fill { background: linear-gradient(90deg, #4488aa, #66ffcc); }
+    .town-building .building-progress-fill { background: linear-gradient(90deg, #ffaa66, #ffd700); }
+
+    .building-label {
+      font-size: 10px;
+      color: #aaa;
+      margin-top: 6px;
+      letter-spacing: 1px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* ── Town Modal ── */
+    #townModal .collect-btn {
+      background: linear-gradient(145deg, #ffaa44, #ff8800);
+      color: #1a1a1a;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 5px;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      width: 100%;
+      max-width: 220px;
+      box-shadow: 0 4px 15px rgba(255, 170, 68, 0.3);
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    #townModal .collect-btn:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: 0 6px 25px rgba(255, 170, 68, 0.5);
+    }
+    #townModal .collect-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      background: linear-gradient(145deg, #444, #222);
+      color: #888;
+      box-shadow: none;
+      border: 1px solid #333;
+    }
+    #townModal .collect-btn .timer-text {
+      font-size: 14px;
+      color: #ff8866;
+      font-weight: normal;
+      min-width: 60px;
+    }
+    #townModal .collect-btn:disabled .timer-text {
+      color: #666;
+    }
+    #townModal .invest-btn {
+      background: linear-gradient(145deg, #4a7c2a, #2a5a1a);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      width: 100%;
+      max-width: 220px;
+      box-shadow: 0 4px 15px rgba(74, 124, 42, 0.3);
+    }
+    #townModal .invest-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 25px rgba(74, 124, 42, 0.5);
+    }
+    #townModal .close-town {
+      background: linear-gradient(145deg, #8b3a2a, #5a1a1a);
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    #townModal .close-town:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(139, 58, 42, 0.4);
+    }
+
+    .town-content .button-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .modal-message {
+      background: #0a1a2a;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px;
+      font-size: 12px;
+      color: #ffcc66;
+      text-align: center;
+      display: none;
+    }
+
+    /* ── Town Popup ── */
+    .town-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(145deg, #1a1a2a, #2a2a3d);
+      border: 2px solid #ffaa44;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      z-index: 2000;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+      animation: popIn 0.3s ease;
+      display: none;
+    }
+    .town-popup.show {
+      display: block;
+    }
+    .town-popup .popup-icon {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 15px;
+    }
+    .town-popup .popup-message {
+      color: #eee;
+      font-size: 18px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .town-popup .popup-btn {
+      background: linear-gradient(145deg, #4a7c2a, #2a5a1a);
+      color: white;
+      border: none;
+      padding: 10px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .town-popup .popup-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(74, 124, 42, 0.3);
+    }
+    .town-popup .popup-btn.error {
+      background: linear-gradient(145deg, #8b3a2a, #5a1a1a);
+    }
+    .town-popup .popup-btn.error:hover {
+      box-shadow: 0 4px 15px rgba(255, 102, 102, 0.3);
+    }
+    .town-popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 1999;
+      display: none;
+    }
+    .town-popup-overlay.show {
+      display: block;
+    }
+
+    @keyframes popIn {
+      from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 767px) {
+      .buildings-container { gap: 10px; padding: 10px; }
+      .silo-building, .well-building, .water-building, .town-building { min-width: 70px; padding: 10px 8px 8px 8px; }
+      .building-image { width: 50px; height: 50px; }
+      .building-icon-label { font-size: 20px; }
+      #townModal .collect-btn, #townModal .invest-btn { max-width: 100%; font-size: 14px; padding: 10px 16px; min-height: 44px; }
+    }
+    @media (max-width: 480px) {
+      .buildings-container { gap: 6px; padding: 6px; }
+      .silo-building, .well-building, .water-building, .town-building { min-width: 55px; padding: 6px 4px 4px 4px; }
+      .building-image { width: 40px; height: 40px; }
+      .building-icon-label { font-size: 16px; }
+      .usage-text, .well-text, .water-text, .town-text { font-size: 9px; padding: 2px 6px; }
+      .building-label { font-size: 8px; }
+      #townModal .collect-btn, #townModal .invest-btn { font-size: 12px; padding: 8px 12px; min-height: 38px; }
+      #townModal .collect-btn .timer-text { font-size: 11px; min-width: 40px; }
+      .town-popup { padding: 20px; }
+      .town-popup .popup-message { font-size: 15px; }
+    }
+  </style>
 </head>
 <body>
 
@@ -14,33 +327,76 @@
   <div class="farm-container">
     <div id="farm"></div>
     <div id="msg"></div>
+
+    <!-- Tutorial -->
+    <div id="tutorialMini" class="tutorial-mini hidden">
+      <div class="tutorial-mini-header">
+        <span class="tutorial-mini-step" id="tutorialStepBadge">Step 1/7</span>
+        <button class="tutorial-mini-exit" onclick="exitTutorial()">✖</button>
+      </div>
+      <div class="tutorial-mini-body">
+        <div class="tutorial-mini-emoji" id="tutorialEmoji">🌱</div>
+        <div class="tutorial-mini-title" id="tutorialTitle">Plant Your First Crop</div>
+        <div class="tutorial-mini-message" id="tutorialMessage">Click an empty brown tile to plant Wheat!</div>
+        <div class="tutorial-mini-progress">
+          <div class="tutorial-mini-progress-fill" id="tutorialProgressFill" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="tutorial-mini-footer">
+        <button class="tutorial-mini-skip" onclick="exitTutorial()">Skip</button>
+        <button class="tutorial-mini-next" id="tutorialNextBtn" onclick="tutorialNext()" style="display:none;">Next →</button>
+      </div>
+    </div>
+
+    <!-- Tutorial Cursor -->
+    <div id="tutorialCursor" class="tutorial-cursor hidden">Click here!</div>
   </div>
 
   <!-- Bottom Buildings -->
   <div class="buildings-container" id="bottomBuildings">
     <div class="silo-building" onclick="openSiloModal()">
-      <img src="silo.png" alt="Silo" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 120%22%3E%3Crect width=%22100%22 height=%22120%22 fill=%22%238b5a2b%22/%3E%3Crect x=%2220%22 y=%2210%22 width=%2260%22 height=%2280%22 fill=%22%23a07030%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%236b3a1a%22/%3E%3Crect x=%2235%22 y=%2260%22 width=%2230%22 height=%2240%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
+      <span class="building-icon-label">🌾</span>
+      <img src="silo.png" alt="Silo" class="building-image" 
+           onerror="this.style.display='none'">
       <div class="usage-text" id="siloUsageText">📦 0/100</div>
+      <div class="building-progress-bar"><div class="building-progress-fill" id="siloProgressFill" style="width:0%"></div></div>
       <div class="building-label">SILO</div>
     </div>
     
     <div class="well-building" onclick="openWellModal()">
-      <img src="well.png" alt="Well" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 100%22%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2220%22 fill=%22%23446688%22/%3E%3Crect x=%2235%22 y=%2230%22 width=%2210%22 height=%2240%22 fill=%22%23886644%22/%3E%3C/svg%3E'">
-      <div class="well-text" id="wellLevelText">🚰 Lv0</div>
+      <span class="building-icon-label">🚰</span>
+      <img src="well.png" alt="Well" class="building-image" 
+           onerror="this.style.display='none'">
+      <div class="well-text" id="wellLevelText">Lv0</div>
+      <div class="building-progress-bar"><div class="building-progress-fill" id="wellProgressFill" style="width:0%"></div></div>
       <div class="building-label">WELL</div>
     </div>
     
     <div class="water-building" onclick="openWaterModal()">
-      <img src="water.png" alt="Water Tank" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 70 100%22%3E%3Crect x=%2215%22 y=%2220%22 width=%2240%22 height=%2250%22 fill=%22%234488aa%22/%3E%3Crect x=%2210%22 y=%2215%22 width=%2250%22 height=%2210%22 fill=%22%2366aacc%22/%3E%3C/svg%3E'">
-      <div class="water-text" id="waterTankText">💧 20/20</div>
+      <span class="building-icon-label">💧</span>
+      <img src="water.png" alt="Water Tank" class="building-image" 
+           onerror="this.style.display='none'">
+      <div class="water-text" id="waterTankText">20/20</div>
+      <div class="building-progress-bar"><div class="building-progress-fill" id="waterProgressFill" style="width:0%"></div></div>
       <div class="building-label">WATER</div>
     </div>
     
     <div class="town-building" onclick="openTownModal()">
-      <img src="town.png" alt="Town" class="building-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect x=%220%22 y=%2230%22 width=%22100%22 height=%2250%22 fill=%22%238B7355%22/%3E%3Cpolygon points=%2250,0 0,30 100,30%22 fill=%22%238B4513%22/%3E%3Crect x=%2235%22 y=%2255%22 width=%2230%22 height=%4025%22 fill=%22%234a2a0a%22/%3E%3C/svg%3E'">
-      <div class="town-text" id="townStatsText">🏘️ 10</div>
+      <span class="building-icon-label">🏘️</span>
+      <img src="town.png" alt="Town" class="building-image" 
+           onerror="this.style.display='none'">
+      <div class="town-text" id="townStatsText">10</div>
+      <div class="building-progress-bar"><div class="building-progress-fill" id="townProgressFill" style="width:0%"></div></div>
       <div class="building-label">TOWN</div>
     </div>
+  </div>
+
+  <!-- Town Popup -->
+  <div id="townPopupOverlay" class="town-popup-overlay"></div>
+  <div id="townPopup" class="town-popup">
+    <span class="popup-icon" id="townPopupIcon">💰</span>
+    <div class="popup-message" id="townPopupMessage">Hello!</div>
+    <button class="popup-btn" id="townPopupBtn" onclick="closeTownPopup()">OK</button>
   </div>
 
   <!-- Level Popup -->
@@ -113,20 +469,21 @@
       </div>
       <div class="workers-section">
         <h3>👨‍🌾 HIRE FARM HAND</h3>
-        <div class="worker-cards">
-          <div class="worker-card">
-            <div class="worker-emoji">👨‍🌾</div>
-            <div class="worker-name">Master Farmer</div>
-            <div class="worker-desc">Works 6 hours. Harvests, Waters, Revives, Plants!</div>
-            <div class="worker-cost">💰 100 coins/day</div>
-            <button id="hireWorkerBtn" onclick="hireMasterFarmer()">Hire (100💰)</button>
-          </div>
+        <div class="worker-card-single">
+          <div class="worker-emoji">👨‍🌾</div>
+          <div class="worker-name">Master Farmer</div>
+          <div class="worker-desc">Works for 1 full day (6 hours). Harvests, Waters, Revives, and Plants!</div>
+          <div class="worker-cost">💰 100 coins per day</div>
+          <button id="hireWorkerBtn" onclick="hireMasterFarmer()">Hire Master Farmer (100💰)</button>
         </div>
         <div id="workerStatus" class="worker-status">✨ Hire the Master Farmer to work for a full day (6 hours)!</div>
       </div>
-      <button id="collectTaxesBtn" onclick="collectTaxes()" style="background:#ffaa44;color:#1a1a1a;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;margin:5px;font-weight:bold;">💰 Collect</button>
-      <button onclick="investInTown()" style="background:#4a7c2a;color:white;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;margin:5px;">📈 Invest (<span id="investCost">500</span>)</button>
-      <div style="text-align:center;margin-top:10px;">
+      <div class="button-group">
+        <button id="collectTaxesBtn" class="collect-btn" onclick="collectTaxes()">
+          <span id="collectBtnText">💰 Collect Taxes</span>
+          <span id="collectTimerText" class="timer-text"></span>
+        </button>
+        <button class="invest-btn" onclick="investInTown()">📈 Invest (<span id="investCost">500</span>)</button>
         <button class="close-town" onclick="closeTownModal()">❌ Close</button>
       </div>
     </div>
@@ -134,7 +491,7 @@
 
   <script>
     // ──────────────────────────────────────────────────────────────────────────────
-    // FARM GAME - Uses farm.css for styles
+    // FARM GAME - Complete with Countdown on Collect Taxes Button
     // ──────────────────────────────────────────────────────────────────────────────
 
     const SAVE_KEY = "krypton_simfarm_ultimate";
@@ -167,25 +524,32 @@
     let farmerPaused = false;
     let farmerPauseReason = "";
     let selectedSeed = 'wheat';
+    let taxCountdownInterval = null;
 
     let state = {
-      coins: 0,
-      xp: 0,
-      level: 1,
-      unlockedSize: 3,
-      day: 1,
-      seasonIndex: 0,
-      weatherIndex: 0,
-      lastDayTick: now(),
-      tiles: [],
-      soil: [],
-      machinery: { tractor: 0, harvester: 0 },
-      market: { prices: {}, demand: {} },
-      town: { population: 10, prosperity: 1, lastTaxCollect: now() },
-      water: { current: 20, max: 20 },
-      silo: { capacity: 100, stored: {} },
-      well: { level: 0, lastUpdate: Date.now() }
-    };
+        coins: 100,
+        xp: 0,
+        level: 1,
+        unlockedSize: 3,
+        day: 1,
+        seasonIndex: 0,
+        weatherIndex: 0,
+        lastDayTick: now(),
+        tiles: [],
+        soil: [],
+        machinery: { tractor: 0, harvester: 0 },
+        market: { prices: {}, demand: {} },
+        town: { population: 10, prosperity: 1, lastTaxCollect: now() },
+        water: { current: 20, max: 20 },
+        silo: { capacity: 100, stored: {} },
+        well: { level: 0, lastUpdate: Date.now() },
+        farmer: { 
+            active: false, 
+            endTime: 0, 
+            paused: false, 
+            pauseReason: "" 
+        }
+        };
 
     function now() { return Math.floor(Date.now() / 1000); }
     function xpForLevel(level) { return level * 10000; }
@@ -224,75 +588,165 @@
 
     popupBtn.addEventListener("click", function() { levelPopup.classList.add("hidden"); });
 
-    // ── Save/Load ──
-    function save() { 
-      localStorage.setItem(SAVE_KEY, JSON.stringify(state)); 
+    // ── Town Popup ──
+    function showTownPopup(message, icon = '💰', isError = false) {
+      const overlay = document.getElementById('townPopupOverlay');
+      const popup = document.getElementById('townPopup');
+      const msgEl = document.getElementById('townPopupMessage');
+      const iconEl = document.getElementById('townPopupIcon');
+      const btnEl = document.getElementById('townPopupBtn');
+      
+      msgEl.textContent = message;
+      iconEl.textContent = icon;
+      
+      btnEl.className = 'popup-btn';
+      if (isError) {
+        btnEl.classList.add('error');
+      }
+      
+      overlay.classList.add('show');
+      popup.classList.add('show');
     }
 
-    function load() {
-      var raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return;
-      try {
-        var data = JSON.parse(raw);
-        state = Object.assign(state, data);
-        for (var i = 0; i < state.tiles.length; i++) {
-          var tile = state.tiles[i];
-          if (tile.watered === undefined) tile.watered = false;
-          if (tile.dead === undefined) tile.dead = false;
-          if (tile.quality === undefined) tile.quality = "normal";
-          if (tile.lastCropId === undefined) tile.lastCropId = null;
+    function closeTownPopup() {
+      document.getElementById('townPopupOverlay').classList.remove('show');
+      document.getElementById('townPopup').classList.remove('show');
+    }
+
+    // ── Load from parent ──
+    function loadFromParent() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'farm-request-state' }, '*');
+        console.log('📤 Farm requesting state from parent');
+      }
+    }
+
+    function saveToParent() {
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+            type: 'farm-save-state',
+            state: {
+                coins: state.coins,
+                xp: state.xp,
+                level: state.level,
+                unlockedSize: state.unlockedSize,
+                day: state.day,
+                seasonIndex: state.seasonIndex,
+                weatherIndex: state.weatherIndex,
+                lastDayTick: state.lastDayTick,
+                tiles: state.tiles,
+                soil: state.soil,
+                machinery: state.machinery,
+                market: state.market,
+                town: state.town,
+                water: state.water,
+                silo: state.silo,
+                well: state.well,
+                farmer: state.farmer  // <-- ADD THIS LINE
+            }
+            }, '*');
+            console.log('📤 Farm saved state to parent');
         }
-        if (!state.well) state.well = { level: 0, lastUpdate: Date.now() };
-        if (!state.well.lastUpdate) state.well.lastUpdate = Date.now();
-        if (!state.water) state.water = { current: 20, max: 20 };
-        if (!state.town.lastTaxCollect) state.town.lastTaxCollect = now();
-      } catch (e) { console.error("Load error:", e); }
-    }
+        }
 
-    // ── Sync coins to parent ──
-    function syncCoinsToParent() {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ 
-          type: 'coin-update', 
-          coins: state.coins 
-        }, '*');
-      }
-    }
-
-    // ── Sync level to parent ──
-    function syncLevelToParent() {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ 
-          type: 'level-up', 
-          level: state.level,
-          xp: state.xp
-        }, '*');
-      }
-    }
-
-    // ── Listen for messages from parent ──
+    // ── Listen for messages ──
     window.addEventListener('message', function(event) {
+      console.log('🌾 Farm received message:', event.data);
+      
+      if (event.data && event.data.type === 'farm-load-state') {
+        if (event.data.state) {
+          const loaded = event.data.state;
+          state.coins = loaded.coins || 100;
+          state.xp = loaded.xp || 0;
+          state.level = loaded.level || 1;
+          state.unlockedSize = loaded.unlockedSize || 3;
+          state.day = loaded.day || 1;
+          state.seasonIndex = loaded.seasonIndex || 0;
+          state.weatherIndex = loaded.weatherIndex || 0;
+          state.lastDayTick = loaded.lastDayTick || now();
+          state.tiles = loaded.tiles || [];
+          state.soil = loaded.soil || [];
+          state.machinery = loaded.machinery || { tractor: 0, harvester: 0 };
+          state.market = loaded.market || { prices: {}, demand: {} };
+          state.town = loaded.town || { population: 10, prosperity: 1, lastTaxCollect: now() };
+          state.water = loaded.water || { current: 20, max: 20 };
+          state.silo = loaded.silo || { capacity: 100, stored: {} };
+          state.well = loaded.well || { level: 0, lastUpdate: Date.now() };
+          
+          for (var i = 0; i < state.tiles.length; i++) {
+            var tile = state.tiles[i];
+            if (tile.watered === undefined) tile.watered = false;
+            if (tile.dead === undefined) tile.dead = false;
+            if (tile.quality === undefined) tile.quality = "normal";
+            if (tile.lastCropId === undefined) tile.lastCropId = null;
+          }
+          
+          console.log('🌾 Farm loaded from parent! Coins:', state.coins);
+          render();
+          initTiles();
+          createFarm();
+          updateWeather();
+          updateMarket();
+          render();
+        }
+      }
+      
       if (event.data && event.data.type === 'coin-update') {
         if (event.data.coins !== undefined) {
           state.coins = event.data.coins;
-          save();
+          saveToParent();
           render();
           console.log('💰 Farm coins updated from parent:', state.coins);
         }
       }
-      if (event.data && event.data.type === 'revive-crops') {
-        reviveAllCrops();
-      }
-      if (event.data && event.data.type === 'reset-tutorial') {
-        resetTutorial();
-      }
+      
       if (event.data && event.data.type === 'seed-update') {
         selectedSeed = event.data.seed || 'wheat';
         console.log('🌱 Farm seed updated:', selectedSeed);
       }
+      
+      if (event.data && event.data.type === 'revive-crops') {
+        reviveAllCrops();
+      }
+      
+      if (event.data && event.data.type === 'reset-tutorial') {
+        resetTutorial();
+      }
+      
       if (event.data && event.data.type === 'reset-game') {
         localStorage.removeItem(SAVE_KEY);
         location.reload();
+      }
+      
+      if (event.data && event.data.type === 'faucet-water') {
+        if (event.data.water !== undefined) {
+          state.water.current = Math.min(state.water.current + event.data.water, state.water.max);
+          saveToParent();
+          render();
+          console.log('💧 Farm water updated from faucet:', state.water.current);
+        }
+      }
+      
+      if (event.data && event.data.type === 'request-silo') {
+        const iframe = event.source;
+        if (iframe) {
+          iframe.postMessage({
+            type: 'silo-update',
+            wheat: state.silo.stored.wheat || 0,
+            corn: state.silo.stored.corn || 0
+          }, '*');
+        }
+      }
+      
+      if (event.data && event.data.type === 'silo-use') {
+        state.silo.stored.wheat = event.data.wheat;
+        state.silo.stored.corn = event.data.corn;
+        saveToParent();
+        render();
+        const siloModal = document.getElementById('siloModal');
+        if (!siloModal.classList.contains('hidden')) {
+          updateSiloModal();
+        }
       }
     });
 
@@ -327,13 +781,16 @@
       tutorialActive = true;
       tutorialStep = 1;
       tutorialPlantedTile = null;
-      updateTutorialUI();
-      setMessage("🌱 Tutorial started! Follow the steps!");
+      document.getElementById("tutorialMini").classList.remove("hidden");
+      setTimeout(function() { updateTutorialUI(); }, 100);
     }
 
     function exitTutorial() {
       tutorialActive = false;
+      document.getElementById("tutorialMini").classList.add("hidden");
+      document.getElementById("tutorialCursor").classList.add("hidden");
       removeTileHighlights();
+      removeBuildingHighlights();
       tutorialSeen = "true";
       localStorage.setItem(TUTORIAL_SEEN_KEY, "true");
       setMessage("🌾 Tutorial skipped!");
@@ -342,12 +799,28 @@
     function updateTutorialUI() {
       var step = tutorialSteps[tutorialStep];
       if (!step) { completeTutorial(); return; }
-      setMessage("📖 " + step.emoji + " " + step.title + " - " + step.message);
+      document.getElementById("tutorialStepBadge").textContent = "Step " + tutorialStep + "/7";
+      document.getElementById("tutorialEmoji").textContent = step.emoji;
+      document.getElementById("tutorialTitle").textContent = step.title;
+      document.getElementById("tutorialMessage").textContent = step.message;
+      var progress = (tutorialStep / 7) * 100;
+      document.getElementById("tutorialProgressFill").style.width = progress + "%";
+      var nextBtn = document.getElementById("tutorialNextBtn");
+      if (step.action === "wait") {
+        nextBtn.style.display = "block";
+        nextBtn.textContent = "Ready →";
+      } else {
+        nextBtn.style.display = "none";
+      }
       highlightTutorialTarget(step.target);
     }
 
     function highlightTutorialTarget(target) {
       removeTileHighlights();
+      removeBuildingHighlights();
+      var cursor = document.getElementById("tutorialCursor");
+      if (!cursor) return;
+      
       if (target === "tile") {
         var step = tutorialSteps[tutorialStep];
         var tileIndex = -1;
@@ -368,9 +841,42 @@
           }
         }
         if (tileIndex !== -1 && tileElements && tileElements[tileIndex]) {
-          tileElements[tileIndex].style.boxShadow = "0 0 20px #ffd700";
-          tileElements[tileIndex].style.border = "2px solid #ffd700";
+          var tileRect = tileElements[tileIndex].getBoundingClientRect();
+          if (tileRect) {
+            cursor.style.left = (tileRect.left + tileRect.width / 2 - 30) + "px";
+            cursor.style.top = (tileRect.top - 25) + "px";
+            cursor.classList.remove("hidden");
+            tileElements[tileIndex].classList.add("tile-highlight");
+            return;
+          }
         }
+        cursor.classList.add("hidden");
+      } else if (target === "silo") {
+        var siloBuilding = document.querySelector(".silo-building");
+        if (siloBuilding) {
+          var siloRect = siloBuilding.getBoundingClientRect();
+          cursor.style.left = (siloRect.left + siloRect.width / 2 - 30) + "px";
+          cursor.style.top = (siloRect.top - 25) + "px";
+          cursor.classList.remove("hidden");
+          siloBuilding.classList.add("building-highlight");
+          return;
+        }
+        cursor.classList.add("hidden");
+      } else if (target === "revive") {
+        cursor.classList.add("hidden");
+      } else if (target === "town") {
+        var townBuilding = document.querySelector(".town-building");
+        if (townBuilding) {
+          var townRect = townBuilding.getBoundingClientRect();
+          cursor.style.left = (townRect.left + townRect.width / 2 - 30) + "px";
+          cursor.style.top = (townRect.top - 25) + "px";
+          cursor.classList.remove("hidden");
+          townBuilding.classList.add("building-highlight");
+          return;
+        }
+        cursor.classList.add("hidden");
+      } else {
+        cursor.classList.add("hidden");
       }
     }
 
@@ -378,23 +884,22 @@
       if (tileElements) {
         tileElements.forEach(function(tile) { 
           if (tile) {
-            tile.style.boxShadow = "";
-            tile.style.border = "";
+            tile.classList.remove("tile-highlight");
           }
         });
       }
     }
 
-    function completeTutorial() {
-      tutorialActive = false;
-      removeTileHighlights();
-      tutorialSeen = "true";
-      localStorage.setItem(TUTORIAL_SEEN_KEY, "true");
-      state.coins += 100;
-      setMessage("🎉 Tutorial complete! +100 bonus coins! Happy farming! 🌾");
-      save();
-      render();
-      syncCoinsToParent();
+    function removeBuildingHighlights() {
+      var buildings = document.querySelectorAll(".silo-building, .town-building");
+      buildings.forEach(function(b) { b.classList.remove("building-highlight"); });
+    }
+
+    function tutorialNext() {
+      if (tutorialSteps[tutorialStep] && tutorialSteps[tutorialStep].action === "wait") {
+        tutorialStep++;
+        updateTutorialUI();
+      }
     }
 
     function checkTutorialAction(action, data) {
@@ -433,8 +938,21 @@
       return false;
     }
 
-    // ── Game Functions ──
+    function completeTutorial() {
+      tutorialActive = false;
+      document.getElementById("tutorialMini").classList.add("hidden");
+      document.getElementById("tutorialCursor").classList.add("hidden");
+      removeTileHighlights();
+      removeBuildingHighlights();
+      tutorialSeen = "true";
+      localStorage.setItem(TUTORIAL_SEEN_KEY, "true");
+      state.coins += 100;
+      setMessage("🎉 Tutorial complete! +100 bonus coins! Happy farming! 🌾");
+      saveToParent();
+      render();
+    }
 
+    // ── Game Functions ──
     function initTiles() {
       if (!state.tiles.length) {
         state.tiles = Array.from({ length: GRID_SIZE * GRID_SIZE }, function() {
@@ -497,8 +1015,6 @@
         if (state.water.current > state.water.max) state.water.current = state.water.max;
       }
       updateMarket();
-      var townModal = document.getElementById("townModal");
-      if (!townModal.classList.contains("hidden")) openTownModal();
     }
 
     function getTileState(tile) {
@@ -532,7 +1048,7 @@
       if (tile.cropId) return;
       var crop = cropById(selectedSeed);
       if (!crop) return setMessage("❌ No crop selected!");
-      if (state.coins < crop.baseCost) return setMessage("❌ Need " + crop.baseCost + " for " + crop.name);
+      if (state.coins < crop.baseCost) return setMessage("❌ Need " + crop.baseCost + " for " + crop.name + " (you have " + state.coins + ")");
       state.coins -= crop.baseCost;
       tile.cropId = crop.id;
       tile.plantedAt = now();
@@ -541,9 +1057,8 @@
       tile.watered = false;
       checkTutorialAction("plant", index);
       setMessage("🌱 " + crop.name + " (" + tile.quality + ")");
-      save();
+      saveToParent();
       render();
-      syncCoinsToParent();
     }
 
     function siloUsed() { return Object.values(state.silo.stored).reduce(function(a, b) { return a + b; }, 0); }
@@ -561,9 +1076,8 @@
       state.silo.stored[cropId]--;
       state.coins += price;
       setMessage("💰 +" + price + " (" + cropById(cropId).name + ")");
-      save();
+      saveToParent();
       render();
-      syncCoinsToParent();
       updateSiloModal();
     }
 
@@ -575,9 +1089,8 @@
       state.silo.stored[cropId] = 0;
       state.coins += total;
       setMessage("💰 +" + total + " (" + qty + " " + cropById(cropId).name + ")");
-      save();
+      saveToParent();
       render();
-      syncCoinsToParent();
       updateSiloModal();
     }
 
@@ -592,9 +1105,8 @@
       state.silo.stored[cropId] -= amount;
       state.coins += total;
       setMessage("💰 +" + total + " (" + amount + " " + cropById(cropId).name + ")");
-      save();
+      saveToParent();
       render();
-      syncCoinsToParent();
       updateSiloModal();
     }
 
@@ -614,16 +1126,14 @@
         state.xp -= xpForLevel(state.level);
         state.level++;
         showLevelPopup(state.level);
-        syncLevelToParent();
       }
       tile.cropId = null;
       tile.plantedAt = 0;
       tile.watered = false;
       checkTutorialAction("harvest", index);
       setMessage("🌾 +" + crop.name + " (" + tile.quality + ") +" + xpGain + "✨");
-      save();
+      saveToParent();
       render();
-      syncCoinsToParent();
       updateSiloModal();
     }
 
@@ -639,7 +1149,7 @@
       tile.watered = true;
       checkTutorialAction("water", index);
       setMessage("💧 Watered! " + Math.floor(state.water.current) + "/" + state.water.max + " left");
-      save();
+      saveToParent();
       render();
     }
 
@@ -648,7 +1158,7 @@
       state.tiles[index].dead = false;
       setMessage("🗑️ Cleared");
       render();
-      save();
+      saveToParent();
     }
 
     function tileClick(index) {
@@ -732,9 +1242,8 @@
       }
       
       setMessage('✅ Farm expanded to ' + state.unlockedSize + '×' + state.unlockedSize + '!');
-      save();
+      saveToParent();
       render();
-      syncCoinsToParent();
     }
 
     function createFarm() {
@@ -780,10 +1289,30 @@
     }
 
     function renderUI() {
-      siloUsageText.textContent = "📦 " + siloUsed() + "/" + state.silo.capacity;
-      wellLevelText.textContent = "🚰 Lv" + state.well.level;
-      waterTankText.textContent = "💧 " + Math.floor(state.water.current) + "/" + state.water.max;
-      townStatsText.textContent = "🏘️ " + state.town.population;
+      const used = siloUsed();
+      const capacity = state.silo.capacity;
+      const siloPercent = capacity > 0 ? Math.min(100, (used / capacity) * 100) : 0;
+      
+      siloUsageText.textContent = "📦 " + used + "/" + capacity;
+      document.getElementById("siloProgressFill").style.width = siloPercent + "%";
+      
+      const wellLevel = state.well.level || 0;
+      const wellMaxLevel = 10;
+      const wellPercent = Math.min(100, (wellLevel / wellMaxLevel) * 100);
+      wellLevelText.textContent = "Lv" + wellLevel;
+      document.getElementById("wellProgressFill").style.width = wellPercent + "%";
+      
+      const waterCurrent = Math.floor(state.water.current);
+      const waterMax = state.water.max;
+      const waterPercent = waterMax > 0 ? Math.min(100, (waterCurrent / waterMax) * 100) : 0;
+      waterTankText.textContent = waterCurrent + "/" + waterMax;
+      document.getElementById("waterProgressFill").style.width = waterPercent + "%";
+      
+      const townPop = state.town.population;
+      const maxPop = 100;
+      const townPercent = Math.min(100, (townPop / maxPop) * 100);
+      townStatsText.textContent = townPop;
+      document.getElementById("townProgressFill").style.width = townPercent + "%";
     }
 
     function render() {
@@ -799,7 +1328,7 @@
         var skipped = Math.floor(elapsed / DAY_LENGTH_SECONDS);
         for (var i = 0; i < skipped; i++) advanceDay();
         state.lastDayTick = now();
-        save();
+        saveToParent();
       }
       renderTiles();
     }
@@ -841,9 +1370,8 @@
       state.coins -= cost;
       state.silo.capacity += 50;
       showModalMessage("siloModalMessage", "✅ " + oldCapacity + " → " + state.silo.capacity, false);
-      save();
+      saveToParent();
       render();
-      syncCoinsToParent();
       updateSiloModal();
     }
 
@@ -874,9 +1402,8 @@
       state.coins -= cost;
       state.well = { level: 1, lastUpdate: Date.now() };
       showModalMessage("wellModalMessage", "✅ Well Lv1 (" + getWellProduction(1) + "💧/hr)", false);
-      save();
+      saveToParent();
       render();
-      syncCoinsToParent();
       openWellModal();
     }
 
@@ -884,9 +1411,8 @@
       var result = window.upgradeWell(state);
       if (result && result.ok) {
         showModalMessage("wellModalMessage", result.msg, false);
-        save();
+        saveToParent();
         render();
-        syncCoinsToParent();
         openWellModal();
       } else if (result) {
         showModalMessage("wellModalMessage", result.msg, true);
@@ -918,17 +1444,17 @@
       state.water.max += 20;
       state.water.current += 20;
       showModalMessage("waterModalMessage", "✅ Water Tank: " + oldMax + " → " + state.water.max + "! Cost: " + cost + " coins. +20 water added! 💧", false);
-      save();
+      saveToParent();
       render();
-      syncCoinsToParent();
       openWaterModal();
     }
 
-    // ── TOWN ──
+    // ── TOWN HALL - WITH COUNTDOWN ON BUTTON ──
     function openTownModal() {
       checkTutorialAction("openTown", null);
       var modal = document.getElementById("townModal");
       modal.classList.remove("hidden");
+      
       document.getElementById("townPopulation").textContent = state.town.population;
       document.getElementById("townProsperity").textContent = state.town.prosperity.toFixed(1);
       document.getElementById("investCost").textContent = Math.floor(state.town.prosperity * 500);
@@ -961,77 +1487,87 @@
       var taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
       var collectBtn = document.getElementById("collectTaxesBtn");
       var cooldownSpan = document.getElementById("taxCooldown");
+      var collectBtnText = document.getElementById("collectBtnText");
+      var timerText = document.getElementById("collectTimerText");
+
+      if (taxCountdownInterval) {
+        clearInterval(taxCountdownInterval);
+        taxCountdownInterval = null;
+      }
+
+      function updateCollectButton(secondsLeft) {
+        if (secondsLeft > 0) {
+          collectBtn.disabled = true;
+          collectBtnText.textContent = "⏰";
+          timerText.textContent = formatTime(secondsLeft);
+          timerText.style.color = "#ff8866";
+          cooldownSpan.textContent = formatTime(secondsLeft);
+          cooldownSpan.style.color = "#ff8866";
+        } else {
+          collectBtn.disabled = false;
+          collectBtnText.textContent = "💰 Collect Taxes";
+          timerText.textContent = "";
+          cooldownSpan.textContent = "✅";
+          cooldownSpan.style.color = "#66ff66";
+          if (taxCountdownInterval) {
+            clearInterval(taxCountdownInterval);
+            taxCountdownInterval = null;
+          }
+        }
+      }
 
       if (secondsUntilNextTax > 0) {
-        collectBtn.disabled = true;
-        collectBtn.textContent = "⏰ " + formatTime(secondsUntilNextTax);
-        collectBtn.style.opacity = "0.5";
-        cooldownSpan.textContent = formatTime(secondsUntilNextTax);
-        cooldownSpan.style.color = "#ff8866";
-        if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
-        window.taxCountdownInterval = setInterval(function() {
+        updateCollectButton(secondsUntilNextTax);
+        
+        taxCountdownInterval = setInterval(function() {
           var newTimeSince = now() - state.town.lastTaxCollect;
           var newSecondsLeft = Math.max(0, DAY_LENGTH_SECONDS - newTimeSince);
-          if (newSecondsLeft <= 0) {
-            if (collectBtn) {
-              collectBtn.disabled = false;
-              collectBtn.textContent = "💰 " + taxAmount;
-              collectBtn.style.opacity = "1";
-              cooldownSpan.textContent = "✅";
-              cooldownSpan.style.color = "#66ff66";
-            }
-            if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
-          } else {
-            if (collectBtn) collectBtn.textContent = "⏰ " + formatTime(newSecondsLeft);
-            cooldownSpan.textContent = formatTime(newSecondsLeft);
-          }
+          updateCollectButton(newSecondsLeft);
         }, 1000);
       } else {
-        collectBtn.disabled = false;
-        collectBtn.textContent = "💰 " + taxAmount;
-        collectBtn.style.opacity = "1";
-        cooldownSpan.textContent = "✅";
-        cooldownSpan.style.color = "#66ff66";
-        if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+        updateCollectButton(0);
       }
     }
 
     function closeTownModal() {
       document.getElementById("townModal").classList.add("hidden");
-      if (window.taxCountdownInterval) clearInterval(window.taxCountdownInterval);
+      if (taxCountdownInterval) {
+        clearInterval(taxCountdownInterval);
+        taxCountdownInterval = null;
+      }
     }
 
     function collectTaxes() {
+      console.log('💰 Collect Taxes called!');
       var timeSinceLastTax = now() - state.town.lastTaxCollect;
       if (timeSinceLastTax < DAY_LENGTH_SECONDS) {
         var remaining = DAY_LENGTH_SECONDS - timeSinceLastTax;
-        showModalMessage("townModalMessage", "⏰ " + formatTime(remaining), true);
+        showTownPopup("⏰ " + formatTime(remaining) + " until next tax!", "⏰", true);
         return;
       }
       var taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
       state.coins += taxAmount;
       state.town.lastTaxCollect = now();
-      showModalMessage("townModalMessage", "💰 +" + taxAmount, false);
-      save();
+      showTownPopup("💰 +" + taxAmount + " coins collected!", "💰", false);
+      saveToParent();
       render();
-      syncCoinsToParent();
       openTownModal();
     }
 
     function investInTown() {
+      console.log('📈 Invest in Town called!');
       var cost = Math.floor(state.town.prosperity * 500);
       if (state.coins < cost) {
-        showModalMessage("townModalMessage", "❌ Need " + cost, true);
+        showTownPopup("❌ Need " + cost + " coins to invest!", "❌", true);
         return;
       }
       state.coins -= cost;
       state.town.prosperity += 0.5;
       var popGrowth = Math.floor(Math.random() * 5) + 1;
       state.town.population += popGrowth;
-      showModalMessage("townModalMessage", "✅ " + cost + " → 📈" + state.town.prosperity.toFixed(1) + " 👥+" + popGrowth, false);
-      save();
+      showTownPopup("✅ " + cost + " → 📈 " + state.town.prosperity.toFixed(1) + " 👥+" + popGrowth, "📈", false);
+      saveToParent();
       render();
-      syncCoinsToParent();
       openTownModal();
     }
 
@@ -1072,7 +1608,7 @@
         }
       }
       setMessage("✨ " + revived + " revived!");
-      save();
+      saveToParent();
       render();
     }
 
@@ -1080,20 +1616,19 @@
     function hireMasterFarmer() {
       var cost = 100;
       if (state.coins < cost) {
-        showModalMessage("townModalMessage", "❌ Need " + cost + " coins to hire the Master Farmer!", true);
+        showTownPopup("❌ Need " + cost + " coins to hire the Master Farmer!", "❌", true);
         return;
       }
       if (masterFarmerActive) {
-        showModalMessage("townModalMessage", "⚠️ Master Farmer is already working! Let him finish his day.", true);
+        showTownPopup("⚠️ Master Farmer is already working! Let him finish his day.", "⚠️", true);
         return;
       }
       state.coins -= cost;
       startMasterFarmer();
       var dayLengthHours = DAY_LENGTH_SECONDS / 3600;
-      showModalMessage("townModalMessage", "✅ Master Farmer hired for " + dayLengthHours + " hours! He will continuously tend to your crops!", false);
-      save();
+      showTownPopup("✅ Master Farmer hired for " + dayLengthHours + " hours!", "👨‍🌾", false);
+      saveToParent();
       render();
-      syncCoinsToParent();
       openTownModal();
     }
 
@@ -1139,7 +1674,6 @@
               state.xp -= xpForLevel(state.level);
               state.level++;
               showLevelPopup(state.level);
-              syncLevelToParent();
             }
             tile.cropId = null;
             tile.plantedAt = 0;
@@ -1152,9 +1686,8 @@
               updateFarmerStatus("🌾 Harvested " + crop.name + " (" + tile.quality + ")! " + hoursRemaining + "h left");
             }
             workDone = true;
-            save();
+            saveToParent();
             render();
-            syncCoinsToParent();
             updateSiloModal();
             break;
           }
@@ -1189,7 +1722,7 @@
                 t.watered = true;
                 updateFarmerStatus("💧 Watered tile " + (j + 1) + "! " + hoursRemaining + "h left");
                 workDone = true;
-                save();
+                saveToParent();
                 render();
                 break;
               } else {
@@ -1216,7 +1749,7 @@
                 tile2.plantedAt = currentTime / 1000 - crop2.growSeconds + 5;
                 updateFarmerStatus("💀✨ Revived " + crop2.name + " on tile " + (k + 1) + "! " + hoursRemaining + "h left");
                 workDone = true;
-                save();
+                saveToParent();
                 render();
                 break;
               }
@@ -1249,9 +1782,8 @@
                 tile3.watered = false;
                 updateFarmerStatus("🌱 Planted " + crop3.name + " on tile " + (l + 1) + "! " + hoursRemaining + "h left");
                 workDone = true;
-                save();
+                saveToParent();
                 render();
-                syncCoinsToParent();
                 break;
               } else {
                 farmerPaused = true;
@@ -1335,31 +1867,36 @@
     }
 
     // ── INITIALIZE ──
-    load();
-    initWell(state);
-    initTiles();
-    createFarm();
-    updateWeather();
-    updateMarket();
-    render();
-    setMessage("🌾 Welcome! Click tiles to plant crops!");
-    setInterval(tick, 1000);
+    loadFromParent();
 
-    if (tutorialSeen !== "true") {
-      setTimeout(function() {
-        if (tileElements && tileElements.length > 0) {
-          startTutorial();
-        } else {
-          setTimeout(startTutorial, 500);
+    setTimeout(function() {
+      if (!state.tiles.length) {
+        console.log('🌾 No state from parent, using defaults');
+        state.coins = 100;
+        initTiles();
+        createFarm();
+        updateWeather();
+        updateMarket();
+        render();
+        setMessage("🌾 Welcome! Click tiles to plant crops!");
+        setInterval(tick, 1000);
+        
+        if (tutorialSeen !== "true") {
+          setTimeout(function() {
+            if (tileElements && tileElements.length > 0) {
+              startTutorial();
+            } else {
+              setTimeout(startTutorial, 500);
+            }
+          }, 1000);
         }
-      }, 1000);
-    }
+      }
+    }, 1000);
 
-    // Make state accessible for debugging
     window.state = state;
-    window.save = save;
+    window.saveToParent = saveToParent;
+    window.loadFromParent = loadFromParent;
     window.render = render;
-    window.syncCoinsToParent = syncCoinsToParent;
     window.selectedSeed = selectedSeed;
   </script>
 </body>

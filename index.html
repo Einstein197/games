@@ -648,7 +648,21 @@
       level: 1
     };
 
-    function save() { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }
+    function save() { 
+      // Load existing data to preserve farm data
+      let data = {};
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (raw) data = JSON.parse(raw);
+      } catch(e) {}
+      
+      // Update only the main fields
+      data.coins = state.coins;
+      data.xp = state.xp;
+      data.level = state.level;
+      
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data)); 
+    }
 
     function load() {
       var raw = localStorage.getItem(SAVE_KEY);
@@ -725,35 +739,185 @@
       faucetSection.style.display = "none";
     }
 
-    // ── Faucet Complete Listener ──
     window.addEventListener("message", function(event) {
-      console.log('📨 Message received:', event.data);
-      
-      if (event.data && event.data.type === "faucet-complete") {
-        console.log('💧 Faucet claimed!');
-        faucetSection.style.display = "none";
-        state.coins += 100;
-        
-        var iframe = document.getElementById('farmIframe');
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage({ 
-            type: 'faucet-water', 
-            water: 20 
-          }, '*');
-        }
-        
-        save();
-        render();
-        toast("🎁 +100 coins! 💧 +20 water! Enjoy!", "success");
-        
-        setTimeout(function() {
-          window.location.href = "https://kryptonlegend.fun";
-        }, 3000);
+  // Faucet complete
+  if (event.data && event.data.type === "faucet-complete") {
+    document.getElementById("faucetFrame").style.display = "none";
+    state.coins += 100;
+    state.water.current = Math.min(state.water.current + 20, state.water.max);
+    save();
+    render();
+    setMessage("🎁 +100 coins! 💧 +20 water!");
+    setTimeout(function() {
+      window.location.href = "https://kryptonlegend.fun";
+    }, 3000);
+  }
+  
+  // Barn sell - ADD COINS (not override)
+  if (event.data && event.data.type === "barn-sell") {
+    if (event.data.coins) {
+      state.coins += event.data.coins;
+      save();
+      render();
+      setMessage("💰 Barn sold products for " + event.data.coins + " coins!");
+    }
+  }
+  
+  // Mill sell
+  if (event.data && event.data.type === "mill-sell") {
+    if (event.data.coins) {
+      state.coins += event.data.coins;
+      save();
+      render();
+      setMessage("💰 Feed Mill sold products for " + event.data.coins + " coins!");
+    }
+  }
+  
+  // Greenhouse sell
+  if (event.data && event.data.type === "greenhouse-sell") {
+    if (event.data.coins) {
+      state.coins += event.data.coins;
+      save();
+      render();
+      setMessage("💰 Greenhouse sold crops for " + event.data.coins + " coins!");
+    }
+  }
+  
+  // Greenhouse harvest
+  if (event.data && event.data.type === "greenhouse-harvest") {
+    if (event.data.count) {
+      setMessage("🌿 Harvested " + event.data.count + " crops from greenhouse!");
+    }
+  }
+  
+  // Mill upgrade request
+  if (event.data && event.data.type === "mill-upgrade") {
+    if (state.coins >= event.data.cost) {
+      state.coins -= event.data.cost;
+      save();
+      render();
+      if (event.source) {
+        event.source.postMessage({ type: 'mill-confirm', success: true, upgrade: true }, '*');
       }
-    });
+      setMessage("⬆️ Feed Mill upgraded!");
+    } else {
+      if (event.source) {
+        event.source.postMessage({ type: 'mill-confirm', success: false }, '*');
+      }
+      setMessage("❌ Not enough coins for upgrade!");
+    }
+  }
+  
+  // Greenhouse upgrade request
+  if (event.data && event.data.type === "greenhouse-upgrade") {
+    if (state.coins >= event.data.cost) {
+      state.coins -= event.data.cost;
+      save();
+      render();
+      if (event.source) {
+        event.source.postMessage({ type: 'greenhouse-confirm', success: true, upgrade: true }, '*');
+      }
+      setMessage("⬆️ Greenhouse upgraded!");
+    } else {
+      if (event.source) {
+        event.source.postMessage({ type: 'greenhouse-confirm', success: false }, '*');
+      }
+      setMessage("❌ Not enough coins for upgrade!");
+    }
+  }
+  
+  // Silo data request - send crops to feed mill
+  if (event.data && event.data.type === 'silo-request') {
+    // Send silo data to the iframe
+    const iframe = document.getElementById('feedmillIframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: 'silo-data',
+        wheat: state.silo.stored.wheat || 0,
+        corn: state.silo.stored.corn || 0
+      }, '*');
+    }
+  }
+});
 
     // ── Message handling from iframes ──
     window.addEventListener('message', function(event) {
+      console.log('📨 Parent received message:', event.data);
+      
+      // ── FARM COMMUNICATION ──
+      
+      // Farm requesting state
+      if (event.data && event.data.type === 'farm-request-state') {
+        const iframe = document.getElementById('farmIframe');
+        if (iframe && iframe.contentWindow) {
+          // Load farm data from localStorage if it exists
+          const raw = localStorage.getItem(SAVE_KEY);
+          let farmData = {};
+          if (raw) {
+            try {
+              const data = JSON.parse(raw);
+              if (data.farm) {
+                farmData = data.farm;
+              }
+            } catch(e) {}
+          }
+          
+          iframe.contentWindow.postMessage({
+            type: 'farm-load-state',
+            state: {
+              coins: state.coins,
+              xp: farmData.xp || 0,
+              level: farmData.level || 1,
+              unlockedSize: farmData.unlockedSize || 3,
+              day: farmData.day || 1,
+              seasonIndex: farmData.seasonIndex || 0,
+              weatherIndex: farmData.weatherIndex || 0,
+              lastDayTick: farmData.lastDayTick || Math.floor(Date.now() / 1000),
+              tiles: farmData.tiles || [],
+              soil: farmData.soil || [],
+              machinery: farmData.machinery || { tractor: 0, harvester: 0 },
+              market: farmData.market || { prices: {}, demand: {} },
+              town: farmData.town || { population: 10, prosperity: 1, lastTaxCollect: Math.floor(Date.now() / 1000) },
+              water: farmData.water || { current: 20, max: 20 },
+              silo: farmData.silo || { capacity: 100, stored: {} },
+              well: farmData.well || { level: 0, lastUpdate: Date.now() }
+            }
+          }, '*');
+          console.log('📤 Sent farm state to iframe');
+        }
+      }
+      
+      // Farm saving state
+      if (event.data && event.data.type === 'farm-save-state') {
+        if (event.data.state) {
+          // Load existing data
+          let mainData = {};
+          const raw = localStorage.getItem(SAVE_KEY);
+          if (raw) {
+            try {
+              mainData = JSON.parse(raw);
+            } catch(e) {}
+          }
+          
+          // Update farm data
+          mainData.farm = event.data.state;
+          mainData.coins = event.data.state.coins;
+          mainData.xp = event.data.state.xp;
+          mainData.level = event.data.state.level;
+          
+          localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
+          console.log('📥 Farm state saved:', mainData.farm);
+          
+          // Update parent state
+          state.coins = event.data.state.coins;
+          state.xp = event.data.state.xp;
+          state.level = event.data.state.level;
+          render();
+        }
+      }
+      
+      // ── COIN UPDATES ──
+      
       if (event.data && event.data.type === 'coin-update') {
         state.coins = event.data.coins;
         save();
@@ -761,12 +925,16 @@
         console.log('💰 Coins updated from child:', state.coins);
       }
       
+      // ── BARN ──
+      
       if (event.data && event.data.type === 'barn-sell') {
         state.coins += event.data.coins;
         save();
         render();
         toast('💰 +' + event.data.coins + ' coins from Barn!', 'success');
       }
+      
+      // ── GREENHOUSE ──
       
       if (event.data && event.data.type === 'greenhouse-harvest') {
         console.log('🌿 Greenhouse harvest:', event.data.count);
@@ -796,12 +964,16 @@
         }
       }
       
+      // ── RESIZE ──
+      
       if (event.data && event.data.type === 'resize-iframe') {
         const iframe = document.getElementById('greenhouseFrame');
         if (iframe) {
           iframe.style.height = event.data.height + 'px';
         }
       }
+      
+      // ── LEVEL UP ──
       
       if (event.data && event.data.type === 'level-up') {
         state.level = event.data.level;
