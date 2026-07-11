@@ -478,53 +478,55 @@ setInterval(sendHeight, 300);
   }
 
   async function unlock() {
-    const uid = getUidFromUrl();
-    if (!uid) {
-      showToast("Missing Discord ID in URL.", true);
-      setStatus("No Discord ID found. Open this link from the bot.", "error");
-      return;
-    }
-
-    unlockBtn.disabled = true;
-    unlockBtn.classList.add("disabled");
-    btnLabel.textContent = "Unlocking…";
-
-    try {
-      // Write to KV
-      const res = await fetch(unlockEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid })
-      });
-
-      if (!res.ok) throw new Error("Non‑OK response");
-
-      // Confirm KV write
-      const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
-      const checkData = await checkRes.json();
-
-      if (checkData.verified) {
-        setStatus("Verified. You can now use faucet in Discord.", "ok");
-        btnLabel.textContent = "Faucet unlocked";
-        showToast("Faucet unlocked. Go back to Discord.");
-
-        // Tell parent page to hide faucet iframe
-        if (window.parent !== window) {
-          window.parent.postMessage({
-            type: "faucet-complete"
-          }, "*");
-        }
-      }
-
-    } catch (err) {
-      console.error(err);
-      setStatus("Something went wrong. Try again.", "error");
-      btnLabel.textContent = "Unlock faucet";
-      unlockBtn.disabled = false;
-      unlockBtn.classList.remove("disabled");
-      showToast("Error unlocking faucet. Try again.", true);
-    }
+  const uid = getUidFromUrl();
+  if (!uid) {
+    showToast("Missing Discord ID in URL.", true);
+    setStatus("No Discord ID found. Open this link from the bot.", "error");
+    return;
   }
+
+  unlockBtn.disabled = true;
+  unlockBtn.classList.add("disabled");
+  btnLabel.textContent = "Unlocking…";
+
+  try {
+    // Write to KV
+    const res = await fetch(unlockEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid })
+    });
+
+    if (!res.ok) throw new Error("Non‑OK response");
+
+    // Confirm KV write
+    const checkRes = await fetch(`${checkEndpoint}?uid=${uid}`);
+    const checkData = await checkRes.json();
+
+    if (checkData.verified) {
+      setStatus("Verified. You can now use faucet in Discord.", "ok");
+      btnLabel.textContent = "Faucet unlocked";
+      showToast("Faucet unlocked. Go back to Discord.");
+
+      // ===== FIX: Send both coins AND water =====
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: "faucet-complete",
+          coins: 100,
+          water: 20
+        }, "*");
+      }
+    }
+
+  } catch (err) {
+    console.error(err);
+    setStatus("Something went wrong. Try again.", "error");
+    btnLabel.textContent = "Unlock faucet";
+    unlockBtn.disabled = false;
+    unlockBtn.classList.remove("disabled");
+    showToast("Error unlocking faucet. Try again.", true);
+  }
+}
 
   function init() {
     const uid = getUidFromUrl();

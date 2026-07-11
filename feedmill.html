@@ -544,6 +544,18 @@
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: 'request-silo' }, '*');
     }
+
+    // Add to message listener
+    if (event.data && event.data.type === 'silo-update') {
+      sharedSilo.wheat = event.data.wheat || 0;
+      sharedSilo.corn = event.data.corn || 0;
+      render();
+    }
+
+    // Refresh silo data every 30 seconds
+    setInterval(() => {
+      window.parent.postMessage({ type: 'request-silo' }, '*');
+    }, 30000);
     
     // Sync coins to parent after loading
     setTimeout(function() {

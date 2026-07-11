@@ -186,17 +186,9 @@
   </div>
   
   <script>
-    // Auto-resize iframe
-    function resizeIframe() {
-      if (window.parent && window.parent !== window) {
-        const height = document.documentElement.scrollHeight;
-        window.parent.postMessage({ 
-          type: 'resize-iframe', 
-          height: height 
-        }, '*');
-      }
-    }
-
+    // ==================== GREENHOUSE STATE ====================
+    const GREENHOUSE_KEY = "krypton_greenhouse_data";
+    
     let plants = {
       tomato: { planted: false, ready: false, plantedAt: 0, growTime: 300, count: 0 },
       pepper: { planted: false, ready: false, plantedAt: 0, growTime: 480, count: 0 },
@@ -207,12 +199,108 @@
     let harvests = 0;
     let level = 1;
     let cropStock = {};
-    
+    let growthTimers = {};
+
+    // ==================== SAVE / LOAD ====================
+    function saveGreenhouse() {
+      try {
+        const data = {
+          plants: plants,
+          harvests: harvests,
+          level: level,
+          cropStock: cropStock,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(GREENHOUSE_KEY, JSON.stringify(data));
+        console.log('🌿 Greenhouse saved');
+      } catch (e) {
+        console.log('Save error:', e);
+      }
+    }
+
+    function loadGreenhouse() {
+      try {
+        const raw = localStorage.getItem(GREENHOUSE_KEY);
+        if (!raw) return;
+        
+        const data = JSON.parse(raw);
+        plants = data.plants || plants;
+        harvests = data.harvests || 0;
+        level = data.level || 1;
+        cropStock = data.cropStock || {};
+        
+        // Check if any plants should have finished growing
+        for (const [key, plant] of Object.entries(plants)) {
+          if (plant.planted) {
+            const elapsed = (Date.now() - plant.plantedAt) / 1000;
+            if (elapsed >= plant.growTime) {
+              plant.ready = true;
+              harvests++;
+            } else {
+              // Resume growth timer
+              scheduleGrowthCheck(key);
+            }
+          }
+        }
+        
+        console.log('🌿 Greenhouse loaded');
+      } catch (e) {
+        console.log('Load error:', e);
+      }
+    }
+
+    // ==================== GROWTH TIMERS ====================
+    function scheduleGrowthCheck(type) {
+      const plant = plants[type];
+      if (!plant.planted || plant.ready) return;
+      
+      const elapsed = (Date.now() - plant.plantedAt) / 1000;
+      const remaining = Math.max(0, plant.growTime - elapsed);
+      
+      if (remaining <= 0) {
+        plant.ready = true;
+        harvests++;
+        showPopup('🌾 ' + type.charAt(0).toUpperCase() + type.slice(1) + ' is ready to harvest!', '🌾', 'success');
+        updateUI();
+        saveGreenhouse();
+        return;
+      }
+      
+      // Clear existing timer
+      if (growthTimers[type]) {
+        clearTimeout(growthTimers[type]);
+      }
+      
+      // Set new timer
+      growthTimers[type] = setTimeout(() => {
+        if (plant.planted && !plant.ready) {
+          plant.ready = true;
+          harvests++;
+          showPopup('🌾 ' + type.charAt(0).toUpperCase() + type.slice(1) + ' is ready to harvest!', '🌾', 'success');
+          updateUI();
+          saveGreenhouse();
+        }
+      }, remaining * 1000);
+    }
+
+    // ==================== UI FUNCTIONS ====================
+    function resizeIframe() {
+      if (window.parent && window.parent !== window) {
+        const height = document.documentElement.scrollHeight;
+        window.parent.postMessage({ 
+          type: 'resize-iframe', 
+          height: height 
+        }, '*');
+      }
+    }
+
     function updateUI() {
       let total = 0;
       for (const [key, plant] of Object.entries(plants)) {
         if (plant.planted) total++;
         const statusEl = document.getElementById(key + 'Status');
+        if (!statusEl) continue;
+        
         if (plant.ready) {
           statusEl.textContent = '🌾 Ready to harvest!';
           statusEl.style.color = '#ffd700';
@@ -231,10 +319,10 @@
       document.getElementById('harvestCount').textContent = harvests;
       document.getElementById('greenhouseLevel').textContent = 'Lv ' + level;
       
-      // Resize after UI update
       setTimeout(resizeIframe, 100);
+      saveGreenhouse();
     }
-    
+
     function showPopup(message, icon = '🌱', btnType = 'success') {
       const overlay = document.getElementById('popupOverlay');
       const msgEl = document.getElementById('popupMessage');
@@ -256,12 +344,13 @@
       overlay.classList.add('show');
       setTimeout(resizeIframe, 100);
     }
-    
+
     function closePopup() {
       document.getElementById('popupOverlay').classList.remove('show');
       setTimeout(resizeIframe, 100);
     }
-    
+
+    // ==================== GAME FUNCTIONS ====================
     function plantCrop(type) {
       const plant = plants[type];
       if (plant.planted) {
@@ -269,7 +358,8 @@
         return;
       }
       
-      if (Object.values(plants).filter(p => p.planted).length >= level * 2) {
+      const plantedCount = Object.values(plants).filter(p => p.planted).length;
+      if (plantedCount >= level * 2) {
         showPopup('❌ Greenhouse full! Upgrade to grow more.', '❌', 'error');
         return;
       }
@@ -282,16 +372,9 @@
       showPopup('🌱 Planted ' + type.charAt(0).toUpperCase() + type.slice(1) + '!', '🌱', 'success');
       updateUI();
       
-      setTimeout(() => {
-        if (plant.planted && !plant.ready) {
-          plant.ready = true;
-          harvests++;
-          updateUI();
-          showPopup('🌾 ' + type.charAt(0).toUpperCase() + type.slice(1) + ' is ready to harvest!', '🌾', 'success');
-        }
-      }, plant.growTime * 1000);
+      scheduleGrowthCheck(type);
     }
-    
+
     function harvestAll() {
       let harvested = 0;
       for (const [key, plant] of Object.entries(plants)) {
@@ -300,6 +383,12 @@
           plant.ready = false;
           cropStock[key] = (cropStock[key] || 0) + 1;
           harvested++;
+          
+          // Clear timer if any
+          if (growthTimers[key]) {
+            clearTimeout(growthTimers[key]);
+            delete growthTimers[key];
+          }
         }
       }
       
@@ -314,7 +403,7 @@
       }
       updateUI();
     }
-    
+
     function upgradeGreenhouse() {
       const cost = level * 500;
       showPopup('⬆️ Upgrade to Lv ' + (level + 1) + ' costs ' + cost + ' coins.', '⬆️', 'info');
@@ -322,7 +411,7 @@
         window.parent.postMessage({ type: 'greenhouse-upgrade', cost: cost }, '*');
       }
     }
-    
+
     function sellCrops() {
       let total = 0;
       let items = [];
@@ -346,10 +435,28 @@
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'greenhouse-sell', coins: total }, '*');
       }
+      updateUI();
     }
+
+    // ==================== LISTEN FOR UPGRADE CONFIRMATION ====================
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'greenhouse-upgrade-approved') {
+        level++;
+        showPopup('⬆️ Greenhouse upgraded to Lv ' + level + '!', '⬆️', 'success');
+        updateUI();
+      }
+    });
+
+    // ==================== INITIALIZE ====================
+    window.addEventListener('load', function() {
+      loadGreenhouse();
+      updateUI();
+      resizeIframe();
+      
+      // Auto-save every 30 seconds
+      setInterval(saveGreenhouse, 30000);
+    });
     
-    // Initial resize and listen for changes
-    window.addEventListener('load', resizeIframe);
     window.addEventListener('resize', resizeIframe);
     
     // Observe DOM changes
@@ -357,8 +464,6 @@
       const observer = new ResizeObserver(resizeIframe);
       observer.observe(document.body);
     }
-    
-    updateUI();
   </script>
 </body>
 </html>

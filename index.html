@@ -703,6 +703,10 @@
         });
       }
     }
+    // Wait for crops.js to load
+    window.addEventListener('load', function() {
+      initSeedSelect();
+    });
 
     function syncSeedToFarm() {
       var seedSelect = document.getElementById('seedSelect');
@@ -751,7 +755,45 @@
   if (event.data && event.data.type === "faucet-complete") {
     document.getElementById("faucetFrame").style.display = "none";
     state.coins += 100;
-    state.water.current = Math.min(state.water.current + 20, state.water.max);
+    // ===== FIX: Update water in farmData =====
+    // Load farm data from localStorage
+    let farmData = {};
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.farm) {
+          farmData = data.farm;
+        }
+      }
+    } catch(e) {}
+
+    // Ensure water exists
+    if (!farmData.water) {
+      farmData.water = { current: 20, max: 20 };
+    }
+
+    // Add water (cap at max)
+    farmData.water.current = Math.min(farmData.water.current + 20, farmData.water.max);
+
+    // Save back to localStorage
+    let mainData = {};
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) mainData = JSON.parse(raw);
+    } catch(e) {}
+    mainData.farm = farmData;
+    mainData.coins = state.coins;
+    localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
+
+    // Update the farm iframe so it shows the new water
+    const iframe = document.getElementById('farmIframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: 'faucet-water',
+        water: 20
+      }, '*');
+    }
     save();
     render();
     setMessage("🎁 +100 coins! 💧 +20 water!");
