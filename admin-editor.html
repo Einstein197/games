@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Save Editor - Krypton SimFarm</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a12;
+      color: #eee;
+      font-family: system-ui, sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #1a1a2a;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 30px;
+    }
+    h1 { color: #ffd700; border-bottom: 2px solid #ffd700; padding-bottom: 10px; }
+    h2 { color: #ffaa44; margin: 20px 0 10px; }
+    .row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin: 10px 0;
+    }
+    .col {
+      flex: 1;
+      min-width: 200px;
+    }
+    label {
+      display: block;
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0a0a12;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #eee;
+      font-size: 14px;
+      margin-top: 4px;
+      box-sizing: border-box;
+      font-family: monospace;
+    }
+    input:focus, textarea:focus {
+      border-color: #ffd700;
+      outline: none;
+    }
+    textarea {
+      min-height: 60px;
+      font-size: 12px;
+      resize: vertical;
+    }
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px 10px 10px 0;
+    }
+    .btn:hover { transform: scale(1.02); }
+    .btn-primary { background: #4a7c2a; color: white; }
+    .btn-primary:hover { background: #5a9c3a; }
+    .btn-warning { background: #ffaa44; color: #1a1a1a; }
+    .btn-warning:hover { background: #ffbb55; }
+    .btn-danger { background: #8b3a2a; color: white; }
+    .btn-danger:hover { background: #a84a3a; }
+    .btn-info { background: #2a4a7c; color: white; }
+    .btn-info:hover { background: #3a5a9c; }
+    .btn-success { background: #2a7c4a; color: white; }
+    .btn-success:hover { background: #3a9c5a; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      background: #0a0a12;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 8px;
+      background: #1a1a2a;
+      border-radius: 6px;
+    }
+    .stat-item .value { font-size: 22px; font-weight: bold; color: #ffd700; }
+    .stat-item .label { font-size: 10px; color: #888; text-transform: uppercase; }
+    .status {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 10px 0;
+      display: none;
+    }
+    .status.show { display: block; }
+    .status.success { background: #1a3a2a; color: #66ff66; border: 1px solid #2a5a3a; }
+    .status.error { background: #3a1a1a; color: #ff6666; border: 1px solid #5a2a2a; }
+    .status.info { background: #1a2a3a; color: #66ccff; border: 1px solid #2a4a5a; }
+    .file-info {
+      background: #0a0a12;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      border: 1px dashed #444;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .file-info strong { color: #ffd700; }
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .preset-btn {
+      padding: 6px 14px;
+      background: #1a1a2a;
+      border: 1px solid #333;
+      border-radius: 20px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .preset-btn:hover {
+      border-color: #ffd700;
+      color: #ffd700;
+      background: #2a2a3a;
+    }
+    .preset-btn.active {
+      border-color: #ffd700;
+      color: #ffd700;
+      background: #2a2a3a;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 15px; }
+      .row { flex-direction: column; }
+      .col { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🛠️ Save File Editor - Krypton SimFarm</h1>
+  <p style="color: #94a3b8; margin: 5px 0 15px;">
+    Edit a player's save data and generate a file they can import.
+  </p>
+
+  <!-- Status Messages -->
+  <div id="statusMsg" class="status"></div>
+
+  <!-- Import Existing Save -->
+  <div style="background: #0a0a12; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px dashed #444;">
+    <h3 style="color:#94a3b8; margin-bottom:10px;">📥 Load Existing Save File</h3>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <input type="file" id="fileInput" accept=".json" style="flex:1; min-width:200px; padding:8px; background:#0a0a12; border:1px solid #333; border-radius:6px; color:#eee;">
+      <button class="btn btn-info" onclick="loadFromFile()">📂 Load File</button>
+      <button class="btn btn-info" onclick="loadFromClipboard()">📋 Paste from Clipboard</button>
+    </div>
+  </div>
+
+  <!-- Player Info -->
+  <div class="row">
+    <div class="col">
+      <label>👤 Player Name</label>
+      <input type="text" id="playerName" placeholder="e.g., Player123" value="">
+    </div>
+    <div class="col">
+      <label>🆔 Player ID (optional)</label>
+      <input type="text" id="playerId" placeholder="e.g., discord_12345" value="">
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+  <div class="stat-item">
+    <div class="value" id="displayCoins">0</div>
+    <div class="label">💰 Coins</div>
+  </div>
+  <div class="stat-item">
+    <div class="value" id="displayLevel">1</div>
+    <div class="label">⭐ Level</div>
+  </div>
+  <div class="stat-item">
+    <div class="value" id="displayXP">0</div>
+    <div class="label">✨ XP</div>
+  </div>
+  <div class="stat-item">
+    <div class="value" id="displayWater">20/20</div>
+    <div class="label">💧 Water</div>
+  </div>
+  <div class="stat-item">
+    <div class="value" id="displayPopulation">10</div>
+    <div class="label">👥 Population</div>
+  </div>
+  <div class="stat-item">
+    <div class="value" id="displayProsperity">1.0</div>
+    <div class="label">📈 Prosperity</div>
+  </div>
+  <div class="stat-item">
+    <div class="value" id="displayTownInvest">0</div>
+    <div class="label">🏛️ Town Invest</div>
+  </div>
+</div>
+
+  <!-- Presets -->
+  <label>⚡ Quick Presets</label>
+  <div class="presets">
+    <button class="preset-btn" onclick="applyPreset('starter')">🌱 Starter (100 coins)</button>
+    <button class="preset-btn" onclick="applyPreset('farmer')">👨‍🌾 Farmer (1000 coins, Lv5)</button>
+    <button class="preset-btn" onclick="applyPreset('rich')">💰 Rich (10000 coins, Lv10)</button>
+    <button class="preset-btn" onclick="applyPreset('god')">👑 God Mode (99999 coins, Lv99)</button>
+    <button class="preset-btn" onclick="applyPreset('debug')">🐛 Debug (unlock all)</button>
+  </div>
+
+  <!-- Edit Fields -->
+  <div class="row">
+    <div class="col">
+      <label>💰 Coins</label>
+      <input type="number" id="coins" value="100" oninput="updateDisplay()">
+    </div>
+    <div class="col">
+      <label>⭐ Level (1-99)</label>
+      <input type="number" id="level" value="1" min="1" max="99" oninput="updateDisplay()">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <label>✨ XP</label>
+      <input type="number" id="xp" value="0" oninput="updateDisplay()">
+    </div>
+    <div class="col">
+      <label>🌾 Unlocked Size (3-12)</label>
+      <input type="number" id="unlockedSize" value="3" min="3" max="12" oninput="updateDisplay()">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <label>💧 Water Current</label>
+      <input type="number" id="waterCurrent" value="20" oninput="updateDisplay()">
+    </div>
+    <div class="col">
+      <label>💧 Water Max</label>
+      <input type="number" id="waterMax" value="20" oninput="updateDisplay()">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <label>👥 Town Population</label>
+      <input type="number" id="population" value="10" oninput="updateDisplay()">
+    </div>
+    <div class="col">
+      <label>📈 Town Prosperity</label>
+      <input type="number" id="prosperity" value="1.0" step="0.1" oninput="updateDisplay()">
+    </div>
+  </div>
+  <!-- Town Investment -->
+  <div class="row">
+    <div class="col">
+      <label>🏛️ Town Buildings Level</label>
+      <input type="number" id="townBuildings" value="0" min="0" max="10" oninput="updateDisplay()">
+    </div>
+    <div class="col">
+      <label>📊 Town Investment Level</label>
+      <input type="number" id="townInvestment" value="0" min="0" max="10" oninput="updateDisplay()">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <label>🏗️ Silo Capacity</label>
+      <input type="number" id="siloCapacity" value="100" oninput="updateDisplay()">
+    </div>
+    <div class="col">
+      <label>🚰 Well Level</label>
+      <input type="number" id="wellLevel" value="0" min="0" max="10" oninput="updateDisplay()">
+    </div>
+  </div>
+
+  <!-- Silo Stored -->
+  <label>🌾 Silo Stored (JSON format)</label>
+  <textarea id="siloStored" rows="2" oninput="buildJSON()">{"wheat":0,"corn":0}</textarea>
+
+  <!-- Farm Data (advanced) -->
+  <label>🌱 Farm Data (advanced - JSON)</label>
+  <textarea id="farmData" rows="3" oninput="buildJSON()">{"tiles":[],"soil":[]}</textarea>
+
+  <!-- Actions -->
+  <div class="btn-group">
+    <button class="btn btn-success" onclick="generateFile()">📤 Generate Save File</button>
+    <button class="btn btn-warning" onclick="copyToClipboard()">📋 Copy JSON</button>
+    <button class="btn btn-info" onclick="resetToDefault()">🔄 Reset Defaults</button>
+    <button class="btn btn-danger" onclick="clearAll()">🗑️ Clear All</button>
+  </div>
+
+  <!-- Instructions -->
+  <div class="file-info">
+    <strong>📖 How to use:</strong><br>
+    1. Edit the values above to set the player's data<br>
+    2. Click <strong>"Generate Save File"</strong> to download a .json file<br>
+    3. Send the file to the player<br>
+    4. Player opens the file in their game (use the import button)<br>
+    5. Player refreshes the page - data is updated! 🎉
+  </div>
+
+  <!-- Generated JSON Preview -->
+  <label>📄 JSON Preview</label>
+  <textarea id="jsonPreview" rows="8" readonly style="background:#0a0a12; color:#94a3b8;"></textarea>
+
+</div>
+
+<script>
+// ──────────────────────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────────────────────
+
+let currentData = {};
+
+// ──────────────────────────────────────────────────────────────
+// UI FUNCTIONS
+// ──────────────────────────────────────────────────────────────
+
+function updateDisplay() {
+  const coins = document.getElementById('coins').value || 0;
+  const level = document.getElementById('level').value || 1;
+  const xp = document.getElementById('xp').value || 0;
+  const waterCurrent = document.getElementById('waterCurrent').value || 0;
+  const waterMax = document.getElementById('waterMax').value || 20;
+  const population = document.getElementById('population').value || 10;
+  const prosperity = document.getElementById('prosperity').value || 1.0;
+  const townInvest = document.getElementById('townInvestment').value || 0;
+
+  document.getElementById('displayCoins').textContent = coins;
+  document.getElementById('displayLevel').textContent = level;
+  document.getElementById('displayXP').textContent = xp;
+  document.getElementById('displayWater').textContent = waterCurrent + '/' + waterMax;
+  document.getElementById('displayPopulation').textContent = population;
+  document.getElementById('displayProsperity').textContent = prosperity;
+  document.getElementById('displayTownInvest').textContent = townInvest;
+  
+  buildJSON();
+}
+
+function showStatus(message, type = 'info') {
+  const el = document.getElementById('statusMsg');
+  el.textContent = message;
+  el.className = 'status show ' + type;
+  setTimeout(() => { el.className = 'status'; }, 5000);
+}
+
+// ──────────────────────────────────────────────────────────────
+// PRESETS
+// ──────────────────────────────────────────────────────────────
+
+function applyPreset(name) {
+  const presets = {
+    starter: { coins: 100, level: 1, xp: 0, unlockedSize: 3, waterCurrent: 20, waterMax: 20, population: 10, prosperity: 1.0, wellLevel: 0, siloCapacity: 100, townBuildings: 0, townInvestment: 0 },
+    farmer: { coins: 1000, level: 5, xp: 0, unlockedSize: 5, waterCurrent: 30, waterMax: 40, population: 15, prosperity: 1.5, wellLevel: 1, siloCapacity: 150, townBuildings: 1, townInvestment: 1 },
+    rich: { coins: 10000, level: 10, xp: 0, unlockedSize: 8, waterCurrent: 50, waterMax: 80, population: 25, prosperity: 2.5, wellLevel: 3, siloCapacity: 300, townBuildings: 3, townInvestment: 3 },
+    god: { coins: 99999, level: 99, xp: 0, unlockedSize: 12, waterCurrent: 200, waterMax: 200, population: 100, prosperity: 10.0, wellLevel: 10, siloCapacity: 1000, townBuildings: 10, townInvestment: 10 },
+    debug: { coins: 9999, level: 20, xp: 0, unlockedSize: 12, waterCurrent: 99, waterMax: 99, population: 50, prosperity: 5.0, wellLevel: 5, siloCapacity: 500, townBuildings: 5, townInvestment: 5 }
+  };
+
+  const preset = presets[name];
+  if (!preset) return;
+
+  document.getElementById('coins').value = preset.coins;
+  document.getElementById('level').value = preset.level;
+  document.getElementById('xp').value = preset.xp;
+  document.getElementById('unlockedSize').value = preset.unlockedSize;
+  document.getElementById('waterCurrent').value = preset.waterCurrent;
+  document.getElementById('waterMax').value = preset.waterMax;
+  document.getElementById('population').value = preset.population;
+  document.getElementById('prosperity').value = preset.prosperity;
+  document.getElementById('wellLevel').value = preset.wellLevel;
+  document.getElementById('siloCapacity').value = preset.siloCapacity;
+  document.getElementById('townBuildings').value = preset.townBuildings || 0;
+  document.getElementById('townInvestment').value = preset.townInvestment || 0;
+
+  // Highlight active preset
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    if (b.textContent.includes(name)) b.classList.add('active');
+  });
+
+  updateDisplay();
+  showStatus('✅ Applied preset: ' + name, 'success');
+}
+
+// ──────────────────────────────────────────────────────────────
+// BUILD JSON
+// ──────────────────────────────────────────────────────────────
+
+function buildJSON() {
+  try {
+    const siloStored = JSON.parse(document.getElementById('siloStored').value || '{"wheat":0,"corn":0}');
+    const farmData = JSON.parse(document.getElementById('farmData').value || '{"tiles":[],"soil":[]}');
+    
+    const data = {
+      coins: parseInt(document.getElementById('coins').value) || 0,
+      xp: parseInt(document.getElementById('xp').value) || 0,
+      level: parseInt(document.getElementById('level').value) || 1,
+      unlockedSize: parseInt(document.getElementById('unlockedSize').value) || 3,
+      day: 1,
+      seasonIndex: 0,
+      weatherIndex: 0,
+      lastDayTick: Math.floor(Date.now() / 1000),
+      tiles: farmData.tiles || [],
+      soil: farmData.soil || [],
+      machinery: { tractor: 0, harvester: 0 },
+      market: { prices: {}, demand: {} },
+      town: {
+        population: parseInt(document.getElementById('population').value) || 10,
+        prosperity: parseFloat(document.getElementById('prosperity').value) || 1.0,
+        lastTaxCollect: Math.floor(Date.now() / 1000),
+        buildings: parseInt(document.getElementById('townBuildings').value) || 0,
+        investment: parseInt(document.getElementById('townInvestment').value) || 0
+      },
+      water: {
+        current: parseInt(document.getElementById('waterCurrent').value) || 20,
+        max: parseInt(document.getElementById('waterMax').value) || 20
+      },
+      silo: {
+        capacity: parseInt(document.getElementById('siloCapacity').value) || 100,
+        stored: siloStored
+      },
+      well: {
+        level: parseInt(document.getElementById('wellLevel').value) || 0,
+        lastUpdate: Date.now()
+      },
+      farmer: { active: false, endTime: 0, paused: false, pauseReason: "" }
+    };
+
+    currentData = data;
+    document.getElementById('jsonPreview').value = JSON.stringify(data, null, 2);
+    return data;
+  } catch (e) {
+    console.error('Build JSON error:', e);
+    return null;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// GENERATE FILE
+// ──────────────────────────────────────────────────────────────
+
+function generateFile() {
+  const data = buildJSON();
+  if (!data) {
+    showStatus('❌ Error building JSON data', 'error');
+    return;
+  }
+  
+  const playerName = document.getElementById('playerName').value || 'player';
+  const playerId = document.getElementById('playerId').value || 'unknown';
+
+  // Add metadata
+  const exportData = {
+    _meta: {
+      playerName: playerName,
+      playerId: playerId,
+      exportedAt: new Date().toISOString(),
+      version: '1.0',
+      type: 'krypton_save_data'
+    },
+    data: data
+  };
+
+  const json = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const filename = `krypton_save_${playerName}_${new Date().toISOString().slice(0,10)}.json`;
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showStatus(`✅ File generated: ${filename}`, 'success');
+  document.getElementById('jsonPreview').value = json;
+}
+
+// ──────────────────────────────────────────────────────────────
+// COPY TO CLIPBOARD
+// ──────────────────────────────────────────────────────────────
+
+function copyToClipboard() {
+  const data = buildJSON();
+  if (!data) {
+    showStatus('❌ Error building JSON data', 'error');
+    return;
+  }
+  
+  const json = JSON.stringify(data, null, 2);
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(json).then(() => {
+      showStatus('📋 Copied to clipboard!', 'success');
+    }).catch(() => {
+      fallbackCopy(json);
+    });
+  } else {
+    fallbackCopy(json);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.getElementById('jsonPreview');
+  textarea.value = text;
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    showStatus('📋 Copied to clipboard!', 'success');
+  } catch (e) {
+    showStatus('❌ Could not copy. Select the text manually.', 'error');
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// LOAD FROM FILE
+// ──────────────────────────────────────────────────────────────
+
+function loadFromFile() {
+  const input = document.getElementById('fileInput');
+  const file = input.files[0];
+  if (!file) {
+    showStatus('❌ Please select a file first', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+
+      // Check if it's our format with metadata
+      if (parsed._meta && parsed.data) {
+        loadDataIntoUI(parsed.data);
+        document.getElementById('playerName').value = parsed._meta.playerName || '';
+        document.getElementById('playerId').value = parsed._meta.playerId || '';
+        showStatus('✅ File loaded successfully!', 'success');
+      } else {
+        // Try loading as raw game data
+        loadDataIntoUI(parsed);
+        showStatus('✅ Raw game data loaded!', 'success');
+      }
+    } catch (err) {
+      showStatus('❌ Invalid file: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ──────────────────────────────────────────────────────────────
+// LOAD FROM CLIPBOARD
+// ──────────────────────────────────────────────────────────────
+
+function loadFromClipboard() {
+  if (navigator.clipboard) {
+    navigator.clipboard.readText().then(text => {
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed._meta && parsed.data) {
+          loadDataIntoUI(parsed.data);
+          document.getElementById('playerName').value = parsed._meta.playerName || '';
+          document.getElementById('playerId').value = parsed._meta.playerId || '';
+        } else {
+          loadDataIntoUI(parsed);
+        }
+        showStatus('✅ Data loaded from clipboard!', 'success');
+      } catch (err) {
+        showStatus('❌ Invalid JSON: ' + err.message, 'error');
+      }
+    }).catch(() => {
+      showStatus('❌ Could not read clipboard. Paste manually.', 'error');
+    });
+  } else {
+    showStatus('❌ Clipboard API not supported. Use file upload.', 'error');
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// LOAD DATA INTO UI
+// ──────────────────────────────────────────────────────────────
+
+function loadDataIntoUI(data) {
+  document.getElementById('coins').value = data.coins || 0;
+  document.getElementById('level').value = data.level || 1;
+  document.getElementById('xp').value = data.xp || 0;
+  document.getElementById('unlockedSize').value = data.unlockedSize || 3;
+
+  if (data.water) {
+    document.getElementById('waterCurrent').value = data.water.current || 20;
+    document.getElementById('waterMax').value = data.water.max || 20;
+  }
+
+  if (data.town) {
+    document.getElementById('population').value = data.town.population || 10;
+    document.getElementById('prosperity').value = data.town.prosperity || 1.0;
+    document.getElementById('townBuildings').value = data.town.buildings || 0;
+    document.getElementById('townInvestment').value = data.town.investment || 0;
+  }
+
+  if (data.silo) {
+    document.getElementById('siloCapacity').value = data.silo.capacity || 100;
+    document.getElementById('siloStored').value = JSON.stringify(data.silo.stored || { wheat: 0, corn: 0 });
+  }
+
+  if (data.well) {
+    document.getElementById('wellLevel').value = data.well.level || 0;
+  }
+
+  if (data.tiles || data.soil) {
+    document.getElementById('farmData').value = JSON.stringify({
+      tiles: data.tiles || [],
+      soil: data.soil || []
+    });
+  }
+
+  updateDisplay();
+  showStatus('✅ Data loaded successfully!', 'success');
+}
+
+// ──────────────────────────────────────────────────────────────
+// RESET / CLEAR
+// ──────────────────────────────────────────────────────────────
+
+function resetToDefault() {
+  document.getElementById('coins').value = 100;
+  document.getElementById('level').value = 1;
+  document.getElementById('xp').value = 0;
+  document.getElementById('unlockedSize').value = 3;
+  document.getElementById('waterCurrent').value = 20;
+  document.getElementById('waterMax').value = 20;
+  document.getElementById('population').value = 10;
+  document.getElementById('prosperity').value = 1.0;
+  document.getElementById('siloCapacity').value = 100;
+  document.getElementById('siloStored').value = '{"wheat":0,"corn":0}';
+  document.getElementById('wellLevel').value = 0;
+  document.getElementById('farmData').value = '{"tiles":[],"soil":[]}';
+  document.getElementById('townBuildings').value = 0;
+  document.getElementById('townInvestment').value = 0;
+  updateDisplay();
+  showStatus('🔄 Reset to defaults', 'info');
+}
+
+function clearAll() {
+  if (confirm('⚠️ Clear all fields?')) {
+    document.getElementById('coins').value = '';
+    document.getElementById('level').value = '';
+    document.getElementById('xp').value = '';
+    document.getElementById('unlockedSize').value = '';
+    document.getElementById('waterCurrent').value = '';
+    document.getElementById('waterMax').value = '';
+    document.getElementById('population').value = '';
+    document.getElementById('prosperity').value = '';
+    document.getElementById('siloCapacity').value = '';
+    document.getElementById('siloStored').value = '{}';
+    document.getElementById('wellLevel').value = '';
+    document.getElementById('farmData').value = '{}';
+    document.getElementById('townBuildings').value = '';
+    document.getElementById('townInvestment').value = '';
+    updateDisplay();
+    showStatus('🗑️ Cleared all fields', 'info');
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────────────────────
+
+// Make all functions globally accessible
+window.generateFile = generateFile;
+window.copyToClipboard = copyToClipboard;
+window.loadFromFile = loadFromFile;
+window.loadFromClipboard = loadFromClipboard;
+window.applyPreset = applyPreset;
+window.resetToDefault = resetToDefault;
+window.clearAll = clearAll;
+window.updateDisplay = updateDisplay;
+window.buildJSON = buildJSON;
+
+// Initialize
+updateDisplay();
+console.log('🛠️ Admin Save Editor loaded!');
+console.log('📋 Edit data, then click "Generate Save File"');
+</script>
+
+</body>
+</html>

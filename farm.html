@@ -7,565 +7,9 @@
   <link rel="stylesheet" href="farm.css">
   <script src="js/crops.js"></script>
   <script src="js/well.js"></script>
-  <style>
-    /* ── Building Styles ── */
-    .buildings-container {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin: 20px auto;
-      flex-wrap: wrap;
-      padding: 15px 20px;
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(28px);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 30px;
-      max-width: 900px;
-    }
-
-    .silo-building, .well-building, .water-building, .town-building {
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.3s ease;
-      background: linear-gradient(145deg, #1a1a2a, #0a0a1a);
-      padding: 16px 14px 12px 14px;
-      border-radius: 20px;
-      border: 2px solid;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      min-width: 100px;
-      position: relative;
-      overflow: hidden;
-    }
-    .silo-building::before, .well-building::before, .water-building::before, .town-building::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
-    }
-    .silo-building:hover::before, .well-building:hover::before, 
-    .water-building:hover::before, .town-building:hover::before {
-      opacity: 1;
-    }
-
-    .silo-building { border-color: #8b5a2b; background: linear-gradient(145deg, #2a2418, #1a1a0a); }
-    .well-building { border-color: #4488aa; background: linear-gradient(145deg, #1a2a3a, #0a1a2a); }
-    .water-building { border-color: #66ffcc; background: linear-gradient(145deg, #1a3a3a, #0a2a2a); }
-    .town-building { border-color: #ffaa66; background: linear-gradient(145deg, #2a2a3a, #1a1a2a); }
-
-    .silo-building:hover, .well-building:hover, .water-building:hover, .town-building:hover {
-      transform: translateY(-6px) scale(1.02);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
-    }
-
-    .silo-building:hover { border-color: #ffd700; box-shadow: 0 8px 25px rgba(255, 215, 0, 0.2); }
-    .well-building:hover { border-color: #88ccff; box-shadow: 0 8px 25px rgba(136, 204, 255, 0.2); }
-    .water-building:hover { border-color: #66ffcc; box-shadow: 0 8px 25px rgba(102, 255, 204, 0.2); }
-    .town-building:hover { border-color: #ffd700; box-shadow: 0 8px 25px rgba(255, 170, 102, 0.2); }
-
-    .building-image {
-      width: 70px;
-      height: 70px;
-      display: block;
-      margin: 0 auto;
-      object-fit: contain;
-      filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
-      border-radius: 12px;
-      transition: transform 0.3s ease;
-    }
-    .silo-building:hover .building-image,
-    .well-building:hover .building-image,
-    .water-building:hover .building-image,
-    .town-building:hover .building-image {
-      transform: scale(1.05) rotate(-2deg);
-    }
-
-    .building-icon-label {
-      font-size: 24px;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .usage-text, .well-text, .water-text, .town-text {
-      font-size: 11px;
-      margin-top: 8px;
-      font-weight: bold;
-      background: rgba(0,0,0,0.6);
-      padding: 4px 10px;
-      border-radius: 20px;
-      text-align: center;
-      font-family: monospace;
-    }
-    .silo-building .usage-text { color: #ffd966; }
-    .well-building .well-text { color: #88ccff; }
-    .water-building .water-text { color: #66ffcc; }
-    .town-building .town-text { color: #ffaa66; }
-
-    .building-progress-bar {
-      width: 100%;
-      height: 4px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 2px;
-      margin-top: 6px;
-      overflow: hidden;
-    }
-    .building-progress-fill {
-      height: 100%;
-      border-radius: 2px;
-      transition: width 0.8s ease;
-      width: 0%;
-    }
-    .silo-building .building-progress-fill { background: linear-gradient(90deg, #8b5a2b, #ffd700); }
-    .well-building .building-progress-fill { background: linear-gradient(90deg, #4488aa, #88ccff); }
-    .water-building .building-progress-fill { background: linear-gradient(90deg, #4488aa, #66ffcc); }
-    .town-building .building-progress-fill { background: linear-gradient(90deg, #ffaa66, #ffd700); }
-
-    .building-label {
-      font-size: 10px;
-      color: #aaa;
-      margin-top: 6px;
-      letter-spacing: 1px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    /* ── Town Modal ── */
-    #townModal .collect-btn {
-      background: linear-gradient(145deg, #ffaa44, #ff8800);
-      color: #1a1a1a;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin: 5px;
-      font-weight: bold;
-      font-size: 16px;
-      transition: all 0.3s ease;
-      width: 100%;
-      max-width: 220px;
-      box-shadow: 0 4px 15px rgba(255, 170, 68, 0.3);
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    #townModal .collect-btn:hover:not(:disabled) {
-      transform: scale(1.05);
-      box-shadow: 0 6px 25px rgba(255, 170, 68, 0.5);
-    }
-    #townModal .collect-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-      background: linear-gradient(145deg, #444, #222);
-      color: #888;
-      box-shadow: none;
-      border: 1px solid #333;
-    }
-    #townModal .collect-btn .timer-text {
-      font-size: 14px;
-      color: #ff8866;
-      font-weight: normal;
-      min-width: 60px;
-    }
-    #townModal .collect-btn:disabled .timer-text {
-      color: #666;
-    }
-    #townModal .invest-btn {
-      background: linear-gradient(145deg, #4a7c2a, #2a5a1a);
-      color: white;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      margin: 5px;
-      font-size: 16px;
-      font-weight: bold;
-      transition: all 0.3s ease;
-      width: 100%;
-      max-width: 220px;
-      box-shadow: 0 4px 15px rgba(74, 124, 42, 0.3);
-    }
-    #townModal .invest-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 25px rgba(74, 124, 42, 0.5);
-    }
-    #townModal .close-town {
-      background: linear-gradient(145deg, #8b3a2a, #5a1a1a);
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.3s ease;
-    }
-    #townModal .close-town:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(139, 58, 42, 0.4);
-    }
-
-    .town-content .button-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .modal-message {
-      background: #0a1a2a;
-      padding: 10px;
-      border-radius: 8px;
-      margin: 10px;
-      font-size: 12px;
-      color: #ffcc66;
-      text-align: center;
-      display: none;
-    }
-
-    /* ── Town Popup ── */
-    .town-popup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: linear-gradient(145deg, #1a1a2a, #2a2a3d);
-      border: 2px solid #ffaa44;
-      border-radius: 16px;
-      padding: 30px;
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-      z-index: 2000;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-      animation: popIn 0.3s ease;
-      display: none;
-    }
-    .town-popup.show {
-      display: block;
-    }
-    .town-popup .popup-icon {
-      font-size: 48px;
-      display: block;
-      margin-bottom: 15px;
-    }
-    .town-popup .popup-message {
-      color: #eee;
-      font-size: 18px;
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-    .town-popup .popup-btn {
-      background: linear-gradient(145deg, #4a7c2a, #2a5a1a);
-      color: white;
-      border: none;
-      padding: 10px 30px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .town-popup .popup-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(74, 124, 42, 0.3);
-    }
-    .town-popup .popup-btn.error {
-      background: linear-gradient(145deg, #8b3a2a, #5a1a1a);
-    }
-    .town-popup .popup-btn.error:hover {
-      box-shadow: 0 4px 15px rgba(255, 102, 102, 0.3);
-    }
-    .town-popup-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 1999;
-      display: none;
-    }
-    .town-popup-overlay.show {
-      display: block;
-    }
-
-    @keyframes popIn {
-      from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 767px) {
-    /* Town Modal Mobile Scroll Fix */
-    .town-modal {
-      align-items: flex-start;
-      padding: 10px 0;
-    }
-    
-    #townModal .town-content {
-      max-height: 85vh;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 15px;
-      border-radius: 16px;
-      margin: 10px;
-      width: 95%;
-    }
-    
-    /* Custom scrollbar for mobile */
-    #townModal .town-content::-webkit-scrollbar {
-      width: 4px;
-    }
-    
-    #townModal .town-content::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 2px;
-    }
-    
-    #townModal .town-content::-webkit-scrollbar-thumb {
-      background: #4a4a6a;
-      border-radius: 2px;
-    }
-    
-    #townModal .town-stats div {
-      font-size: 13px;
-      margin: 4px 0;
-    }
-    
-    #townModal .workers-section h3 {
-      font-size: 14px;
-      margin: 8px 0;
-    }
-    
-    #townModal .worker-card-single {
-      padding: 10px;
-      margin: 6px 0;
-    }
-    
-    #townModal .worker-card-single .worker-desc {
-      font-size: 12px;
-    }
-    
-    #townModal .worker-card-single button {
-      padding: 8px 12px;
-      font-size: 13px;
-      min-height: 38px;
-    }
-    
-    #townModal .button-group {
-      gap: 6px;
-      margin-top: 10px;
-    }
-    
-    .buildings-container { gap: 10px; padding: 10px; }
-    .silo-building, .well-building, .water-building, .town-building { 
-        min-width: 70px; 
-        padding: 10px 8px 8px 8px; 
-    }
-    .building-image { width: 50px; height: 50px; }
-    .building-icon-label { font-size: 20px; }
-    
-    #townModal .collect-btn, #townModal .invest-btn { 
-        max-width: 100%; 
-        font-size: 14px; 
-        padding: 10px 16px; 
-        min-height: 44px; 
-    }
-    
-    /* Feed Mill specific - make recipe cards 2 columns on tablet */
-    .recipe-grid { 
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 12px; 
-    }
-    .container { padding: 15px; }
-    .silo-stats { gap: 10px; padding: 15px; }
-    .feed-display { grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .btn { min-width: 80px; }
-    }
-
-    @media (max-width: 480px) {
-    #townModal .town-content {
-      max-height: 90vh;
-      padding: 12px;
-      margin: 8px;
-      width: 96%;
-    }
-    
-    #townModal .town-stats div {
-      font-size: 12px;
-      margin: 3px 0;
-    }
-    
-    #townModal .worker-card-single {
-      padding: 8px;
-    }
-    
-    #townModal .worker-card-single .worker-desc {
-      font-size: 11px;
-    }
-    
-    #townModal .collect-btn, 
-    #townModal .invest-btn {
-      font-size: 12px;
-      padding: 8px 12px;
-      min-height: 38px;
-    }
-    
-    #townModal .worker-card-single button {
-      font-size: 12px;
-      padding: 6px 10px;
-      min-height: 34px;
-    }
-    
-    .buildings-container { gap: 6px; padding: 6px; }
-    .silo-building, .well-building, .water-building, .town-building { 
-        min-width: 55px; 
-        padding: 6px 4px 4px 4px; 
-    }
-    .building-image { width: 40px; height: 40px; }
-    .building-icon-label { font-size: 16px; }
-    .usage-text, .well-text, .water-text, .town-text { 
-        font-size: 9px; 
-        padding: 2px 6px; 
-    }
-    .building-label { font-size: 8px; }
-    
-    #townModal .collect-btn, #townModal .invest-btn { 
-        font-size: 12px; 
-        padding: 8px 12px; 
-        min-height: 38px; 
-    }
-    #townModal .collect-btn .timer-text { 
-        font-size: 11px; 
-        min-width: 40px; 
-    }
-    .town-popup { padding: 20px; }
-    .town-popup .popup-message { font-size: 15px; }
-    
-    /* Feed Mill specific - 2 columns on small phones */
-    .recipe-grid { 
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 8px; 
-    }
-    .recipe-card { padding: 8px 6px; }
-    .recipe-requires { font-size: 9px; }
-    .recipe-output { font-size: 10px; }
-    .process-btn { font-size: 11px; padding: 8px 6px; min-height: 38px; }
-    .feed-display { 
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 6px; 
-        padding: 10px 6px; 
-    }
-    .feed-item .label { font-size: 10px; }
-    .feed-item .value { font-size: 16px; }
-    .container { padding: 10px; }
-    .silo-stats { gap: 6px; padding: 10px 6px; }
-    .stat-value { font-size: 16px; }
-    .stat-label { font-size: 8px; }
-    .btn { 
-        min-width: 70px; 
-        padding: 10px 12px; 
-        font-size: 12px; 
-        min-height: 38px; 
-    }
-    .popup-box { padding: 15px; }
-    .popup-message { font-size: 15px; }
-    .popup-btn { font-size: 14px; padding: 10px 20px; min-height: 38px; }
-    }
-
-    /* Landscape phones */
-    @media (max-height: 500px) and (orientation: landscape) {
-    #townModal .town-content {
-      max-height: 80vh;
-      padding: 10px;
-    }
-    
-    .buildings-container { gap: 6px; padding: 6px; }
-    .silo-building, .well-building, .water-building, .town-building { 
-        min-width: 55px; 
-        padding: 6px 4px; 
-    }
-    .building-image { width: 35px; height: 35px; }
-    .container { padding: 10px 15px; }
-    .silo-stats { padding: 8px 12px; margin: 8px 0; }
-    .recipe-grid { 
-        grid-template-columns: repeat(4, 1fr); 
-        gap: 8px; 
-        margin: 8px 0; 
-    }
-    .recipe-card { padding: 6px 4px; }
-    .feed-display { padding: 6px 10px; margin: 8px 0; }
-    .actions { margin-top: 8px; }
-    .btn { 
-        padding: 6px 12px; 
-        font-size: 11px; 
-        min-height: 32px; 
-    }
-    .process-btn { 
-        padding: 4px 6px; 
-        min-height: 28px; 
-        font-size: 10px; 
-    }
-    }
-
-    /* Touch-friendly improvements */
-    @media (hover: none) and (pointer: coarse) {
-    .process-btn, .btn, .popup-btn { min-height: 44px; }
-    .recipe-card:active { transform: scale(0.96); }
-    .btn:active, .process-btn:active, .popup-btn:active { transform: scale(0.95); }
-    }
-
-    /* Responsive typography for Feed Mill */
-    h1 { font-size: clamp(20px, 5vw, 32px); }
-    .header p { font-size: clamp(12px, 2.5vw, 16px); }
-    .stat-value { font-size: clamp(18px, 4vw, 28px); }
-    .stat-label { font-size: clamp(9px, 1.8vw, 13px); }
-    .recipe-name { font-size: clamp(13px, 2.5vw, 18px); }
-    .recipe-requires { font-size: clamp(10px, 1.8vw, 13px); }
-    .recipe-output { font-size: clamp(11px, 2vw, 14px); }
-    .feed-item .label { font-size: clamp(9px, 1.6vw, 12px); }
-    .feed-item .value { font-size: clamp(16px, 3.5vw, 22px); }
-    .btn { font-size: clamp(13px, 2.5vw, 16px); }
-    .popup-message { font-size: clamp(15px, 3vw, 20px); }
-    .popup-btn { font-size: clamp(14px, 2.8vw, 18px); }
-
-    /* Town Modal scroll fix - ensure content doesn't overflow on desktop */
-    .town-modal {
-      align-items: flex-start;
-      padding: 20px 0;
-    }
-
-    #townModal .town-content {
-      max-height: 80vh;
-      overflow-y: auto;
-      padding: 20px;
-      scroll-behavior: smooth;
-    }
-
-    /* Custom scrollbar for desktop */
-    #townModal .town-content::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    #townModal .town-content::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 3px;
-    }
-
-    #townModal .town-content::-webkit-scrollbar-thumb {
-      background: #4a4a6a;
-      border-radius: 3px;
-    }
-
-    #townModal .town-content::-webkit-scrollbar-thumb:hover {
-      background: #5a5a8a;
-    }
-  </style>
+  <!-- Admin System -->
+  <script src="js/admin.js"></script>
+ 
 </head>
 <body>
 
@@ -785,7 +229,7 @@
         soil: [],
         machinery: { tractor: 0, harvester: 0 },
         market: { prices: {}, demand: {} },
-        town: { population: 10, prosperity: 1, lastTaxCollect: now() },
+        town: { population: 10, prosperity: 1, lastTaxCollect: 0 },
         water: { current: 20, max: 20 },
         silo: { capacity: 100, stored: {} },
         well: { level: 0, lastUpdate: Date.now() },
@@ -1780,51 +1224,19 @@
         statusDiv.innerHTML = "✨ Hire the Master Farmer to work for a full day (6 hours)!";
       }
 
-      var timeSinceLastTax = now() - state.town.lastTaxCollect;
-      var secondsUntilNextTax = Math.max(0, DAY_LENGTH_SECONDS - timeSinceLastTax);
-      var taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
-      var collectBtn = document.getElementById("collectTaxesBtn");
-      var cooldownSpan = document.getElementById("taxCooldown");
-      var collectBtnText = document.getElementById("collectBtnText");
-      var timerText = document.getElementById("collectTimerText");
-
+      // ===== TOWN TAX COUNTDOWN =====
+      updateTaxDisplay();
+      
+      // Clear any existing interval
       if (taxCountdownInterval) {
         clearInterval(taxCountdownInterval);
         taxCountdownInterval = null;
       }
 
-      function updateCollectButton(secondsLeft) {
-        if (secondsLeft > 0) {
-          collectBtn.disabled = true;
-          collectBtnText.textContent = "⏰";
-          timerText.textContent = formatTime(secondsLeft);
-          timerText.style.color = "#ff8866";
-          cooldownSpan.textContent = formatTime(secondsLeft);
-          cooldownSpan.style.color = "#ff8866";
-        } else {
-          collectBtn.disabled = false;
-          collectBtnText.textContent = "💰 Collect Taxes";
-          timerText.textContent = "";
-          cooldownSpan.textContent = "✅";
-          cooldownSpan.style.color = "#66ff66";
-          if (taxCountdownInterval) {
-            clearInterval(taxCountdownInterval);
-            taxCountdownInterval = null;
-          }
-        }
-      }
-
-      if (secondsUntilNextTax > 0) {
-        updateCollectButton(secondsUntilNextTax);
-        
-        taxCountdownInterval = setInterval(function() {
-          var newTimeSince = now() - state.town.lastTaxCollect;
-          var newSecondsLeft = Math.max(0, DAY_LENGTH_SECONDS - newTimeSince);
-          updateCollectButton(newSecondsLeft);
-        }, 1000);
-      } else {
-        updateCollectButton(0);
-      }
+      // Start countdown
+      taxCountdownInterval = setInterval(function() {
+        updateTaxDisplay();
+      }, 1000);
     }
 
     function closeTownModal() {
@@ -1837,36 +1249,171 @@
 
     function collectTaxes() {
       console.log('💰 Collect Taxes called!');
-      var timeSinceLastTax = now() - state.town.lastTaxCollect;
+      var currentTime = now();
+      var timeSinceLastTax = currentTime - state.town.lastTaxCollect;
+      
       if (timeSinceLastTax < DAY_LENGTH_SECONDS) {
         var remaining = DAY_LENGTH_SECONDS - timeSinceLastTax;
         showTownPopup("⏰ " + formatTime(remaining) + " until next tax!", "⏰", true);
         return;
       }
+      
       var taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
       state.coins += taxAmount;
-      state.town.lastTaxCollect = now();
+      state.town.lastTaxCollect = currentTime;
+      
       showTownPopup("💰 +" + taxAmount + " coins collected!", "💰", false);
+      
       saveToParent();
       render();
-      openTownModal();
+      
+      // Update the button immediately
+      updateTaxDisplay();
     }
 
+    function updateTaxDisplay() {
+      var collectBtn = document.getElementById("collectTaxesBtn");
+      var btnText = document.getElementById("collectBtnText");
+      var timerText = document.getElementById("collectTimerText");
+      var cooldownSpan = document.getElementById("taxCooldown");
+      
+      if (!collectBtn || !btnText || !timerText) {
+        return;
+      }
+      
+      var currentTime = now();
+      var timeSinceLastTax = currentTime - state.town.lastTaxCollect;
+      var secondsUntilNextTax = Math.max(0, DAY_LENGTH_SECONDS - timeSinceLastTax);
+      var taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
+      
+      if (secondsUntilNextTax > 0) {
+        // ===== NOT READY - GREYED OUT WITH COUNTDOWN =====
+        collectBtn.disabled = true;
+        collectBtn.style.opacity = "0.6";
+        collectBtn.style.cursor = "not-allowed";
+        collectBtn.style.background = "linear-gradient(145deg, #444, #222)";
+        collectBtn.style.color = "#888";
+        collectBtn.style.boxShadow = "none";
+        collectBtn.style.border = "1px solid #333";
+        
+        btnText.textContent = "⏰";
+        timerText.textContent = formatTime(secondsUntilNextTax);
+        timerText.style.color = "#ff8866";
+        timerText.style.display = "inline";
+        
+        if (cooldownSpan) {
+          cooldownSpan.textContent = formatTime(secondsUntilNextTax);
+          cooldownSpan.style.color = "#ff8866";
+        }
+      } else {
+        // ===== READY TO CLAIM - SHOW AMOUNT =====
+        collectBtn.disabled = false;
+        collectBtn.style.opacity = "1";
+        collectBtn.style.cursor = "pointer";
+        collectBtn.style.background = "linear-gradient(145deg, #ffaa44, #ff8800)";
+        collectBtn.style.color = "#1a1a1a";
+        collectBtn.style.boxShadow = "0 4px 15px rgba(255, 170, 68, 0.3)";
+        collectBtn.style.border = "none";
+        
+        btnText.textContent = "💰 Collect Taxes (" + taxAmount + " coins)";
+        timerText.textContent = "";
+        timerText.style.display = "none";
+        
+        if (cooldownSpan) {
+          cooldownSpan.textContent = "✅ Ready!";
+          cooldownSpan.style.color = "#66ff66";
+        }
+      }
+    }
+
+    function updateTaxButton(secondsLeft) {
+      var collectBtn = document.getElementById("collectTaxesBtn");
+      var btnText = document.getElementById("collectBtnText");
+      var timerText = document.getElementById("collectTimerText");
+      var cooldownSpan = document.getElementById("taxCooldown");
+      
+      if (!collectBtn || !btnText || !timerText) {
+        console.log('⚠️ Tax button elements not found!');
+        return;
+      }
+      
+      var taxAmount = Math.floor(state.town.population * 5 * state.town.prosperity);
+      
+      if (secondsLeft > 0) {
+        // ===== NOT READY - GREYED OUT WITH COUNTDOWN =====
+        collectBtn.disabled = true;
+        collectBtn.style.opacity = "0.6";
+        collectBtn.style.cursor = "not-allowed";
+        collectBtn.style.background = "linear-gradient(145deg, #444, #222)";
+        collectBtn.style.color = "#888";
+        collectBtn.style.boxShadow = "none";
+        collectBtn.style.border = "1px solid #333";
+        
+        btnText.textContent = "⏰";
+        timerText.textContent = formatTime(secondsLeft);
+        timerText.style.color = "#ff8866";
+        timerText.style.display = "inline";
+        
+        if (cooldownSpan) {
+          cooldownSpan.textContent = formatTime(secondsLeft);
+          cooldownSpan.style.color = "#ff8866";
+        }
+        
+        console.log('⏰ Tax not ready - ' + formatTime(secondsLeft) + ' remaining');
+      } else {
+        // ===== READY TO CLAIM - SHOW AMOUNT =====
+        collectBtn.disabled = false;
+        collectBtn.style.opacity = "1";
+        collectBtn.style.cursor = "pointer";
+        collectBtn.style.background = "linear-gradient(145deg, #ffaa44, #ff8800)";
+        collectBtn.style.color = "#1a1a1a";
+        collectBtn.style.boxShadow = "0 4px 15px rgba(255, 170, 68, 0.3)";
+        collectBtn.style.border = "none";
+        
+        btnText.textContent = "💰 Collect Taxes (" + taxAmount + " coins)";
+        timerText.textContent = "";
+        timerText.style.display = "none";
+        
+        if (cooldownSpan) {
+          cooldownSpan.textContent = "✅ Ready!";
+          cooldownSpan.style.color = "#66ff66";
+        }
+        
+        console.log('💰 Tax ready! Collect ' + taxAmount + ' coins');
+        
+        // Stop the interval since it's ready
+        if (taxCountdownInterval) {
+          clearInterval(taxCountdownInterval);
+          taxCountdownInterval = null;
+        }
+      }
+    }
+
+    // ── INVEST IN TOWN ──
     function investInTown() {
       console.log('📈 Invest in Town called!');
       var cost = Math.floor(state.town.prosperity * 500);
+      
       if (state.coins < cost) {
-        showTownPopup("❌ Need " + cost + " coins to invest!", "❌", true);
+        showTownPopup("❌ Need " + cost + " coins to invest! You have " + Math.floor(state.coins) + " coins.", "❌", true);
         return;
       }
+      
       state.coins -= cost;
       state.town.prosperity += 0.5;
       var popGrowth = Math.floor(Math.random() * 5) + 1;
       state.town.population += popGrowth;
-      showTownPopup("✅ " + cost + " → 📈 " + state.town.prosperity.toFixed(1) + " 👥+" + popGrowth, "📈", false);
+      
+      showTownPopup("✅ Invested " + cost + " coins! 📈 Prosperity: " + state.town.prosperity.toFixed(1) + " 👥 +" + popGrowth + " population!", "📈", false);
+      
       saveToParent();
       render();
-      openTownModal();
+      
+      // Refresh the modal to show updated values
+      closeTownModal();
+      setTimeout(function() {
+        openTownModal();
+      }, 300);
     }
 
     // ── WELL WATER UPDATE ──
