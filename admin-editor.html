@@ -473,8 +473,8 @@ function updateJSONPreviewDirect() {
   // Update the JSON preview
   document.getElementById('jsonPreview').value = JSON.stringify(exportData, null, 2);
   
-  // Debug log (optional - remove if too noisy)
-  // console.log('🔄 JSON updated for Level', playerLevel);
+  // ===== RETURN THE DATA =====
+  return exportData;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -498,7 +498,9 @@ function showStatus(message, type = 'info') {
 // ──────────────────────────────────────────────────────────────
 
 function buildJSON() {
-  return updateJSONPreviewDirect();
+  // Call updateJSONPreviewDirect and return its result
+  const data = updateJSONPreviewDirect();
+  return data;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -506,7 +508,17 @@ function buildJSON() {
 // ──────────────────────────────────────────────────────────────
 
 function generateFile() {
-  const data = buildJSON();
+  // ===== GET THE DATA FROM THE PREVIEW =====
+  const previewText = document.getElementById('jsonPreview').value;
+  let data;
+  
+  try {
+    data = JSON.parse(previewText);
+  } catch(e) {
+    // If preview is empty or invalid, rebuild it
+    data = updateJSONPreviewDirect();
+  }
+  
   const playerName = document.getElementById('playerName').value || 'player';
   const playerLevel = document.getElementById('playerLevel').value || 1;
 
@@ -519,7 +531,7 @@ function generateFile() {
       version: '1.0',
       type: 'krypton_save_data'
     },
-    data: data
+    data: data  // This contains the 'farm' object
   };
 
   const json = JSON.stringify(exportData, null, 2);
@@ -529,6 +541,7 @@ function generateFile() {
   filename = filename.replace('.json', '') + '.json';
 
   console.log('📁 Saving file:', filename);
+  console.log('📄 Data being saved:', data);
 
   if ('showSaveFilePicker' in window) {
     const opts = {
