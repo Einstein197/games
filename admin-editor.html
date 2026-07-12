@@ -360,7 +360,7 @@
   <!-- Filename -->
   <div class="filename-box">
     <label>📁 Filename:</label>
-    <input type="text" id="filenameInput" value="krypton_save_player" oninput="updateJSONPreviewDirect()">
+    <input type="text" id="filenameInput" value="player" oninput="updateJSONPreviewDirect()">
     <span class="ext">.json</span>
   </div>
 
@@ -472,7 +472,7 @@ function updateJSONPreviewDirect() {
 
   // Auto-update filename with level
   const playerName = document.getElementById('playerName').value || 'player';
-  document.getElementById('filenameInput').value = 'krypton_save_' + playerName + '_Lv' + playerLevel;
+  document.getElementById('filenameInput').value = playerName + '_Lv' + playerLevel;
 
   // ===== UPDATE GRID PREVIEW =====
   updateGridPreview(farmLand);
@@ -675,7 +675,7 @@ function resetAll() {
   document.getElementById('farmLand').value = 3;
   document.getElementById('playerName').value = '';
   document.getElementById('playerId').value = '';
-  document.getElementById('filenameInput').value = 'krypton_save_player';
+  document.getElementById('filenameInput').value = 'player';
   updateJSONPreviewDirect();
   showStatus('🔄 Reset to defaults', 'info');
 }
