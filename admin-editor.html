@@ -188,12 +188,35 @@
       font-family: monospace;
     }
 
+    .grid-preview {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 2px;
+      max-width: 300px;
+      margin: 10px auto;
+      background: #0a0a12;
+      padding: 5px;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+    .grid-preview .cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+      background: #1a2a1a;
+      border: 1px solid #2a3a2a;
+    }
+    .grid-preview .cell.unlocked {
+      background: #2a5a2a;
+      border-color: #4a8a4a;
+    }
+
     @media (max-width: 600px) {
       .container { padding: 15px; }
       .row { flex-direction: column; }
       .col { min-width: 100%; }
       .level-group .level-inputs .field { min-width: 100%; }
       .filename-box { flex-direction: column; align-items: stretch; }
+      .grid-preview { max-width: 200px; }
     }
   </style>
 </head>
@@ -314,6 +337,26 @@
     </div>
   </div>
 
+  <!-- Farm Land (Unlocked Size) -->
+  <div class="level-group" style="border-left-color: #4a7c2a;">
+    <div class="level-header">
+      <span class="icon">🌾</span>
+      <span class="name">Farm Land (Unlocked Size)</span>
+      <span class="badge">Manual</span>
+    </div>
+    <div class="level-inputs">
+      <div class="field">
+        <input type="number" id="farmLand" value="3" min="1" max="12" oninput="updateJSONPreviewDirect()">
+        <div class="hint">Size: <span id="farmLandDisplay">3</span>×<span id="farmLandDisplay2">3</span> (<span id="farmLandTiles">9</span> tiles)</div>
+      </div>
+    </div>
+    <!-- Grid Preview -->
+    <div style="margin-top:10px;">
+      <div style="color:#666; font-size:10px; text-align:center; margin-bottom:5px;">Farm Grid Preview</div>
+      <div class="grid-preview" id="gridPreview"></div>
+    </div>
+  </div>
+
   <!-- Filename -->
   <div class="filename-box">
     <label>📁 Filename:</label>
@@ -331,12 +374,13 @@
   <div class="file-info">
     <strong>📖 How it works:</strong><br>
     Each stat has its own level entry. Set them independently!<br>
-    • <strong>Player Level</strong> - Controls farm size<br>
+    • <strong>Player Level</strong> - Controls XP requirements<br>
     • <strong>Coins & XP</strong> - Manual<br>
     • <strong>Silo Level</strong> - Controls silo capacity<br>
     • <strong>Well Level</strong> - Controls well production<br>
     • <strong>Water Level</strong> - Controls water tank capacity<br>
-    • <strong>Town Level</strong> - Controls population & prosperity
+    • <strong>Town Level</strong> - Controls population & prosperity<br>
+    • <strong>Farm Land</strong> - Controls unlocked farm size (1-12)
   </div>
 
   <!-- JSON Preview -->
@@ -357,7 +401,7 @@ function getSiloCapacity(level) {
 }
 
 function getWellLevel(level) {
-  return Math.min(level);
+  return Math.min(level, 10);
 }
 
 function getWaterCapacity(level) {
@@ -399,8 +443,11 @@ function updateJSONPreviewDirect() {
   const townLevel = parseInt(document.getElementById('townLevel').value) || 1;
   const coins = parseInt(document.getElementById('coins').value) || 0;
   const xp = parseInt(document.getElementById('xp').value) || 0;
+  
+  // ===== FARM LAND (Unlocked Size) - Manual input =====
+  const farmLand = parseInt(document.getElementById('farmLand').value) || 3;
 
-  // Calculate values
+  // Calculate values (only used for auto-generated stats)
   const siloCapacity = getSiloCapacity(siloLevel);
   const wellLevelValue = getWellLevel(wellLevelInput);
   const waterCapacity = getWaterCapacity(waterLevel);
@@ -417,17 +464,25 @@ function updateJSONPreviewDirect() {
   document.getElementById('prosperityDisplay').textContent = prosperity;
   document.getElementById('farmSizeDisplay').textContent = farmSize;
   document.getElementById('farmSizeDisplay2').textContent = farmSize;
+  
+  // Farm land display
+  document.getElementById('farmLandDisplay').textContent = farmLand;
+  document.getElementById('farmLandDisplay2').textContent = farmLand;
+  document.getElementById('farmLandTiles').textContent = farmLand * farmLand;
 
   // Auto-update filename with level
   const playerName = document.getElementById('playerName').value || 'player';
   document.getElementById('filenameInput').value = 'krypton_save_' + playerName + '_Lv' + playerLevel;
+
+  // ===== UPDATE GRID PREVIEW =====
+  updateGridPreview(farmLand);
 
   // Build game data
   const gameData = {
     coins: coins,
     xp: xp,
     level: playerLevel,
-    unlockedSize: farmSize,
+    unlockedSize: farmLand,  // Use farmLand instead of farmSize
     day: 1,
     seasonIndex: 0,
     weatherIndex: 0,
@@ -463,7 +518,7 @@ function updateJSONPreviewDirect() {
     coins: coins,
     xp: xp,
     level: playerLevel,
-    unlockedSize: farmSize,
+    unlockedSize: farmLand,
     town: gameData.town,
     water: gameData.water,
     silo: gameData.silo,
@@ -475,6 +530,26 @@ function updateJSONPreviewDirect() {
   
   // ===== RETURN THE DATA =====
   return exportData;
+}
+
+// ──────────────────────────────────────────────────────────────
+// GRID PREVIEW
+// ──────────────────────────────────────────────────────────────
+
+function updateGridPreview(size) {
+  const container = document.getElementById('gridPreview');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  const gridSize = Math.min(12, Math.max(1, size || 3));
+  
+  for (let i = 0; i < gridSize; i++) {
+    for (let j = 0; j < gridSize; j++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell unlocked';
+      container.appendChild(cell);
+    }
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -597,6 +672,7 @@ function resetAll() {
   document.getElementById('wellLevel').value = 0;
   document.getElementById('waterLevel').value = 1;
   document.getElementById('townLevel').value = 1;
+  document.getElementById('farmLand').value = 3;
   document.getElementById('playerName').value = '';
   document.getElementById('playerId').value = '';
   document.getElementById('filenameInput').value = 'krypton_save_player';
