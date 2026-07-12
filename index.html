@@ -996,11 +996,71 @@
         if (raw) currentData = JSON.parse(raw);
       } catch(e) {}
       
-      // Override with imported data
+      // ===== FIX: Merge data properly =====
+      // If there's a 'farm' sub-object, merge it
+      if (data.farm) {
+        currentData.farm = { ...currentData.farm, ...data.farm };
+        delete data.farm; // Remove so we don't double-merge
+      }
+      
+      // Merge the rest of the data (coins, level, xp, silo, water, town, well, etc.)
       const merged = { ...currentData, ...data };
+      
+      // ===== IMPORTANT: If data has top-level silo, water, town, well, also put them in farm =====
+      if (!merged.farm) merged.farm = {};
+      
+      // Copy building data to farm sub-object if they exist at top level
+      if (merged.silo) merged.farm.silo = merged.silo;
+      if (merged.water) merged.farm.water = merged.water;
+      if (merged.town) merged.farm.town = merged.town;
+      if (merged.well) merged.farm.well = merged.well;
+      if (merged.coins !== undefined) merged.farm.coins = merged.coins;
+      if (merged.level !== undefined) merged.farm.level = merged.level;
+      if (merged.xp !== undefined) merged.farm.xp = merged.xp;
+      if (merged.unlockedSize !== undefined) merged.farm.unlockedSize = merged.unlockedSize;
       
       // Save to localStorage
       localStorage.setItem(SAVE_KEY, JSON.stringify(merged));
+      
+      // ===== FORCE FARM IFRAME TO RELOAD =====
+      const iframe = document.getElementById('farmIframe');
+      if (iframe) {
+        // Method 1: Reload the iframe
+        const src = iframe.src;
+        iframe.src = '';
+        setTimeout(() => {
+          iframe.src = src;
+        }, 100);
+        
+        // Method 2: Also send a direct message with the new data
+        setTimeout(() => {
+          if (iframe.contentWindow) {
+            const farmData = merged.farm || merged;
+            iframe.contentWindow.postMessage({
+              type: 'farm-load-state',
+              state: {
+                coins: farmData.coins || 100,
+                xp: farmData.xp || 0,
+                level: farmData.level || 1,
+                unlockedSize: farmData.unlockedSize || 3,
+                day: farmData.day || 1,
+                seasonIndex: farmData.seasonIndex || 0,
+                weatherIndex: farmData.weatherIndex || 0,
+                lastDayTick: farmData.lastDayTick || Math.floor(Date.now() / 1000),
+                tiles: farmData.tiles || [],
+                soil: farmData.soil || [],
+                machinery: farmData.machinery || { tractor: 0, harvester: 0 },
+                market: farmData.market || { prices: {}, demand: {} },
+                town: farmData.town || { population: 10, prosperity: 1, lastTaxCollect: Math.floor(Date.now() / 1000) },
+                water: farmData.water || { current: 20, max: 20 },
+                silo: farmData.silo || { capacity: 100, stored: {} },
+                well: farmData.well || { level: 0, lastUpdate: Date.now() },
+                farmer: farmData.farmer || { active: false, endTime: 0, paused: false, pauseReason: "" }
+              }
+            }, '*');
+          }
+        }, 300);
+      }
       
       showImportStatus('✅ Data imported successfully! Refreshing...', 'success');
       

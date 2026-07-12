@@ -1786,6 +1786,215 @@
     window.loadFromParent = loadFromParent;
     window.render = render;
     window.selectedSeed = selectedSeed;
+
+    // ── Refresh buildings from localStorage ──
+    function refreshBuildingsFromStorage() {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      
+      try {
+        const data = JSON.parse(raw);
+        const farmData = data.farm || data;
+        
+        // Update silo
+        if (farmData.silo) {
+          state.silo.capacity = farmData.silo.capacity || 100;
+          if (farmData.silo.stored) state.silo.stored = farmData.silo.stored;
+        }
+        
+        // Update well
+        if (farmData.well) {
+          state.well.level = farmData.well.level || 0;
+        }
+        
+        // Update water
+        if (farmData.water) {
+          state.water.max = farmData.water.max || 20;
+          state.water.current = farmData.water.current || 20;
+        }
+        
+        // Update town
+        if (farmData.town) {
+          state.town.population = farmData.town.population || 10;
+          state.town.prosperity = farmData.town.prosperity || 1;
+          if (farmData.town.lastTaxCollect) {
+            state.town.lastTaxCollect = farmData.town.lastTaxCollect;
+          }
+        }
+        
+        // Update player
+        if (farmData.coins !== undefined) state.coins = farmData.coins;
+        if (farmData.level !== undefined) state.level = farmData.level;
+        if (farmData.xp !== undefined) state.xp = farmData.xp;
+        if (farmData.unlockedSize !== undefined) state.unlockedSize = farmData.unlockedSize;
+        
+        console.log('🔄 Buildings refreshed from localStorage!', {
+          silo: state.silo.capacity,
+          well: state.well.level,
+          water: state.water.max,
+          townPop: state.town.population,
+          coins: state.coins,
+          level: state.level
+        });
+        
+        render();
+        renderUI();
+        saveToParent();
+        return true;
+      } catch(e) {
+        console.error('Refresh failed:', e);
+        return false;
+      }
+    }
+
+    // ── Force refresh from localStorage on demand ──
+    function forceRefresh() {
+      console.log('🔄 Force refreshing buildings...');
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) {
+        console.log('❌ No save data found');
+        return false;
+      }
+      
+      try {
+        const data = JSON.parse(raw);
+        const farmData = data.farm || data;
+        
+        // Update ALL state values
+        if (farmData.coins !== undefined) state.coins = farmData.coins;
+        if (farmData.xp !== undefined) state.xp = farmData.xp;
+        if (farmData.level !== undefined) state.level = farmData.level;
+        if (farmData.unlockedSize !== undefined) state.unlockedSize = farmData.unlockedSize;
+        
+        // Silo
+        if (farmData.silo) {
+          state.silo.capacity = farmData.silo.capacity || 100;
+          if (farmData.silo.stored) state.silo.stored = farmData.silo.stored;
+        }
+        
+        // Well
+        if (farmData.well) {
+          state.well.level = farmData.well.level || 0;
+          if (farmData.well.lastUpdate) state.well.lastUpdate = farmData.well.lastUpdate;
+        }
+        
+        // Water
+        if (farmData.water) {
+          state.water.max = farmData.water.max || 20;
+          state.water.current = farmData.water.current || 20;
+        }
+        
+        // Town
+        if (farmData.town) {
+          state.town.population = farmData.town.population || 10;
+          state.town.prosperity = farmData.town.prosperity || 1;
+          if (farmData.town.lastTaxCollect !== undefined) {
+            state.town.lastTaxCollect = farmData.town.lastTaxCollect;
+          }
+        }
+        
+        console.log('✅ Buildings force-refreshed from localStorage:', {
+          coins: state.coins,
+          level: state.level,
+          silo: state.silo.capacity,
+          well: state.well.level,
+          water: state.water.max,
+          townPop: state.town.population,
+          prosperity: state.town.prosperity
+        });
+        
+        // Re-render everything
+        render();
+        renderUI();
+        saveToParent();
+        
+        // Update modals if they're open
+        if (!document.getElementById('siloModal').classList.contains('hidden')) {
+          updateSiloModal();
+        }
+        if (!document.getElementById('wellModal').classList.contains('hidden')) {
+          openWellModal();
+        }
+        if (!document.getElementById('waterModal').classList.contains('hidden')) {
+          openWaterModal();
+        }
+        if (!document.getElementById('townModal').classList.contains('hidden')) {
+          openTownModal();
+        }
+        
+        return true;
+      } catch(e) {
+        console.error('Force refresh failed:', e);
+        return false;
+      }
+    }
+
+    // ── Listen for refresh messages from parent ──
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'refresh-buildings') {
+        console.log('📨 Received refresh-buildings message');
+        refreshBuildingsFromStorage();
+      }
+      if (event.data && event.data.type === 'force-refresh') {
+        console.log('📨 Received force-refresh message');
+        forceRefresh();
+        // Also re-request state from parent to sync
+        loadFromParent();
+      }
+    });
+
+    // Also try to refresh when the page loads (in case import happened before page load)
+    setTimeout(function() {
+      refreshBuildingsFromStorage();
+      forceRefresh();
+    }, 1000);
+
+    // ── Polling: Check for changes every 3 seconds ──
+    setInterval(function() {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) {
+        try {
+          const data = JSON.parse(raw);
+          const farmData = data.farm || data;
+          let needsRefresh = false;
+          
+          // Check if silo capacity changed
+          if (farmData.silo && farmData.silo.capacity !== state.silo.capacity) {
+            console.log('🔄 Detected silo change, refreshing...');
+            needsRefresh = true;
+          }
+          // Check if well level changed
+          if (farmData.well && farmData.well.level !== state.well.level) {
+            console.log('🔄 Detected well change, refreshing...');
+            needsRefresh = true;
+          }
+          // Check if water max changed
+          if (farmData.water && farmData.water.max !== state.water.max) {
+            console.log('🔄 Detected water change, refreshing...');
+            needsRefresh = true;
+          }
+          // Check if town population changed
+          if (farmData.town && farmData.town.population !== state.town.population) {
+            console.log('🔄 Detected town change, refreshing...');
+            needsRefresh = true;
+          }
+          // Check if coins changed
+          if (farmData.coins !== undefined && farmData.coins !== state.coins) {
+            console.log('🔄 Detected coins change, refreshing...');
+            needsRefresh = true;
+          }
+          // Check if level changed
+          if (farmData.level !== undefined && farmData.level !== state.level) {
+            console.log('🔄 Detected level change, refreshing...');
+            needsRefresh = true;
+          }
+          
+          if (needsRefresh) {
+            forceRefresh();
+          }
+        } catch(e) {}
+      }
+    }, 3000);
   </script>
 </body>
 </html>
