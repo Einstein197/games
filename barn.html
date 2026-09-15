@@ -673,6 +673,18 @@
           console.log('💰 Barn coins updated from parent:', state.coins);
         }
       }
+
+      // Receive feed sent over from the Feed Mill
+      if (event.data && event.data.type === 'feed-update') {
+        state.feedStock.hay = (state.feedStock.hay || 0) + (event.data.hay || 0);
+        state.feedStock.grain = (state.feedStock.grain || 0) + (event.data.grain || 0);
+        state.feedStock.mixed = (state.feedStock.mixed || 0) + (event.data.mixed || 0);
+        state.feedStock.pellets = (state.feedStock.pellets || 0) + (event.data.pellets || 0);
+        save();
+        render();
+        showPopup('📦 Received feed from the Mill!', '📦', 'success');
+        console.log('🌾 Barn feedStock updated:', state.feedStock);
+      }
     });
     
     // Make state globally accessible for console
