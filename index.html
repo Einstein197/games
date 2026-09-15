@@ -1400,14 +1400,23 @@
       
       // Silo data request - send crops to feed mill
       if (event.data && event.data.type === 'request-silo') {
-        // Send silo data to the iframe
         const iframe = document.getElementById('feedmillIframe');
         if (iframe && iframe.contentWindow) {
+          let farmData = {};
+          try {
+            const raw = localStorage.getItem(SAVE_KEY);
+            if (raw) {
+              const data = JSON.parse(raw);
+              if (data.farm) farmData = data.farm;
+            }
+          } catch(e) {}
+          const silo = (farmData.silo && farmData.silo.stored) || {};
           iframe.contentWindow.postMessage({
-            type: 'silo-data',
-            wheat: state.silo.stored.wheat || 0,
-            corn: state.silo.stored.corn || 0
+            type: 'silo-update',
+            wheat: silo.wheat || 0,
+            corn: silo.corn || 0
           }, '*');
+          console.log('🌾 Sent live silo data to mill:', silo);
         }
       }
     });
