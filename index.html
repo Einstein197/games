@@ -1399,7 +1399,7 @@
       }
       
       // Silo data request - send crops to feed mill
-      if (event.data && event.data.type === 'silo-request') {
+      if (event.data && event.data.type === 'request-silo') {
         // Send silo data to the iframe
         const iframe = document.getElementById('feedmillIframe');
         if (iframe && iframe.contentWindow) {
