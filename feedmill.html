@@ -246,15 +246,17 @@
           };
         }
         
-        // ===== FIX: Look for silo data in the correct location =====
-        // The main Farm saves silo at data.silo.stored
-        if (data.silo && data.silo.stored) {
-          sharedSilo.wheat = data.silo.stored.wheat || 0;
-          sharedSilo.corn = data.silo.stored.corn || 0;
-        } else if (data.farm && data.farm.silo && data.farm.silo.stored) {
-          // Fallback: some versions might save under farm
+        // ===== FIX: Check the current data location FIRST =====
+        // farm.html is the live source of truth and saves silo at data.farm.silo.stored.
+        // A legacy flat data.silo may still be lingering in old saves, so it's only
+        // used as a last-resort fallback now instead of shadowing the real data.
+        if (data.farm && data.farm.silo && data.farm.silo.stored) {
           sharedSilo.wheat = data.farm.silo.stored.wheat || 0;
           sharedSilo.corn = data.farm.silo.stored.corn || 0;
+        } else if (data.silo && data.silo.stored) {
+          // Legacy fallback: old saves stored silo flat, before the farm.* refactor
+          sharedSilo.wheat = data.silo.stored.wheat || 0;
+          sharedSilo.corn = data.silo.stored.corn || 0;
         } else {
           // If no silo data found, default to 0
           sharedSilo.wheat = 0;
@@ -545,12 +547,9 @@
       window.parent.postMessage({ type: 'request-silo' }, '*');
     }
 
-    // Add to message listener
-    if (event.data && event.data.type === 'silo-update') {
-      sharedSilo.wheat = event.data.wheat || 0;
-      sharedSilo.corn = event.data.corn || 0;
-      render();
-    }
+    // (The real 'silo-update' handler already lives inside the
+    // window.addEventListener('message', ...) block above — this
+    // stray duplicate used to crash on init and was removed.)
 
     // Refresh silo data every 30 seconds
     setInterval(() => {
