@@ -1176,6 +1176,21 @@
         toast('💰 +' + event.data.coins + ' coins from Barn!', 'success');
       }
       
+      // Relay feed sent from the Feed Mill to the Barn
+      if (event.data && event.data.type === 'feed-update') {
+        const barnIframe = document.getElementById('barnIframe');
+        if (barnIframe && barnIframe.contentWindow) {
+          barnIframe.contentWindow.postMessage({
+            type: 'feed-update',
+            hay: event.data.hay || 0,
+            grain: event.data.grain || 0,
+            mixed: event.data.mixed || 0,
+            pellets: event.data.pellets || 0
+          }, '*');
+          console.log('🌾 Relayed feed to barn:', event.data);
+        }
+      }
+      
       // ── GREENHOUSE ──
       
       if (event.data && event.data.type === 'greenhouse-harvest') {
