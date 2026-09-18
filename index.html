@@ -38,6 +38,14 @@
       --topbar-h:      64px;
     }
 
+    /* ── Prevent the document itself from scrolling — .pages-wrap
+       is the only scrollable region (fixes the double-scrollbar bug) ── */
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
     /* ── Background Orbs ── */
     .bg-orb {
       position: fixed;
@@ -63,12 +71,16 @@
     }
 
     /* ── AADS Banner Ad ── */
+    :root { --ad-banner-h: 140px; } /* 10px + 120px iframe + 10px margins */
     #frame {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
       margin-top: 10px;
       margin-bottom: 10px;
-      width: 80%;
-      position: relative;
-      z-index: 99998;
+      width: 100%;
+      z-index: 100000; /* above the sidebar/topbar (z-index:100/50) and modals */
     }
     #frame iframe {
       border: 0;
@@ -82,7 +94,13 @@
     }
 
     /* ── App Shell ── */
-    .app-shell { display:flex; height:100vh; position:relative; z-index:1; }
+    .app-shell {
+      display:flex;
+      height: calc(100vh - var(--ad-banner-h));
+      margin-top: var(--ad-banner-h);
+      position:relative;
+      z-index:1;
+    }
 
     /* ── Sidebar ── */
     .sidebar {
