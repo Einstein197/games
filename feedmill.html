@@ -40,6 +40,8 @@
     .recipe-name { font-size: 16px; font-weight: bold; color: #66ddff; }
     .recipe-requires { font-size: 12px; color: #ffaa44; margin-top: 4px; }
     .recipe-output { font-size: 14px; color: #66ff66; margin-top: 4px; }
+    .recipe-stock { font-size: 13px; color: #88ccff; margin-top: 8px; }
+    .recipe-stock span { color: #ffd700; font-weight: bold; }
     .process-btn { background: #2a4a7c; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
     .process-btn:hover { background: #3a5a9c; }
     .feed-display { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; }
@@ -149,15 +151,16 @@
     <div class="recipe-grid">
       <div class="recipe-card">
         <span class="recipe-icon">🌾</span>
-        <div class="recipe-name">Hay</div>
+        <div class="recipe-name">Hay <span id="hayStock">0</span></div>
         <div class="recipe-requires">Requires: 5 Wheat from Silo</div>
         <div class="recipe-output">Produces: 10 Hay</div>
+        
         <button class="process-btn" onclick="processFeed('hay')">Process Hay</button>
       </div>
       
       <div class="recipe-card">
         <span class="recipe-icon">🌽</span>
-        <div class="recipe-name">Grain</div>
+        <div class="recipe-name">Grain <span id="grainStock">0</span></div>
         <div class="recipe-requires">Requires: 3 Corn from Silo</div>
         <div class="recipe-output">Produces: 8 Grain</div>
         <button class="process-btn" onclick="processFeed('grain')">Process Grain</button>
@@ -165,7 +168,7 @@
       
       <div class="recipe-card">
         <span class="recipe-icon">🍲</span>
-        <div class="recipe-name">Mixed Feed</div>
+        <div class="recipe-name">Mixed Feed <span id="mixedStock">0</span></div>
         <div class="recipe-requires">Requires: 2 Hay + 2 Grain</div>
         <div class="recipe-output">Produces: 6 Mixed Feed</div>
         <button class="process-btn" onclick="processFeed('mixed')">Process Mixed</button>
@@ -173,18 +176,11 @@
       
       <div class="recipe-card">
         <span class="recipe-icon">🔵</span>
-        <div class="recipe-name">Feed Pellets</div>
+        <div class="recipe-name">Pellets <span id="pelletsStock">0</span></div>
         <div class="recipe-requires">Requires: 4 Mixed Feed</div>
         <div class="recipe-output">Produces: 4 Pellets</div>
         <button class="process-btn" onclick="processFeed('pellets')">Process Pellets</button>
       </div>
-    </div>
-    
-    <div class="feed-display">
-      <div class="feed-item"><div class="label">🌾 Hay</div><div class="value" id="hayStock">0</div></div>
-      <div class="feed-item"><div class="label">🌽 Grain</div><div class="value" id="grainStock">0</div></div>
-      <div class="feed-item"><div class="label">🍲 Mixed</div><div class="value" id="mixedStock">0</div></div>
-      <div class="feed-item"><div class="label">🔵 Pellets</div><div class="value" id="pelletsStock">0</div></div>
     </div>
     
     <div class="actions">
