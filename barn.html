@@ -119,6 +119,11 @@
     .btn-collect-animal:hover { background: #3a9c5a; }
     .btn-sell-animal { background: #7c2a2a; color: #ff6666; }
     .btn-sell-animal:hover { background: #9c3a3a; }
+    .buy-sell-row { display: flex; gap: 6px; margin-top: 8px; }
+    .buy-sell-row .buy-btn { flex: 1; width: auto; margin-top: 0; }
+    .buy-sell-row .btn-sell-livestock { flex: 1; margin: 0; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; transition: background 0.2s; }
+    .btn-sell-livestock { background: #7c2a2a; color: #ff6666; }
+    .btn-sell-livestock:hover { background: #9c3a3a; }
     
     /* Popup overlay */
     .popup-overlay {
@@ -218,7 +223,10 @@
           <div class="animal-product">🥛 Produces: Milk</div>
           <div class="animal-count" id="cowCount">Owned: 0</div>
           <div class="animal-status" id="cowStatus">⚫ None</div>
-          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('cow')">Buy Cow</button>
+          <div class="buy-sell-row">
+            <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('cow')">Buy Cow</button>
+            <button class="btn-sell-livestock" onclick="event.stopPropagation(); sellAnimal('cow')">Sell Cow</button>
+          </div>
           <div class="animal-actions">
             <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('cow')">🌾 Feed</button>
             <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('cow')">🧺 Collect</button>
@@ -236,7 +244,10 @@
           <div class="animal-product">🥓 Produces: Pork</div>
           <div class="animal-count" id="pigCount">Owned: 0</div>
           <div class="animal-status" id="pigStatus">⚫ None</div>
-          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('pig')">Buy Pig</button>
+          <div class="buy-sell-row">
+            <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('pig')">Buy Pig</button>
+            <button class="btn-sell-livestock" onclick="event.stopPropagation(); sellAnimal('pig')">Sell Pig</button>
+          </div>
           <div class="animal-actions">
             <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('pig')">🌾 Feed</button>
             <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('pig')">🧺 Collect</button>
@@ -254,7 +265,10 @@
           <div class="animal-product">🥚 Produces: Eggs</div>
           <div class="animal-count" id="chickenCount">Owned: 0</div>
           <div class="animal-status" id="chickenStatus">⚫ None</div>
-          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('chicken')">Buy Chicken</button>
+          <div class="buy-sell-row">
+            <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('chicken')">Buy Chicken</button>
+            <button class="btn-sell-livestock" onclick="event.stopPropagation(); sellAnimal('chicken')">Sell Chicken</button>
+          </div>
           <div class="animal-actions">
             <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('chicken')">🌾 Feed</button>
             <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('chicken')">🧺 Collect</button>
@@ -272,7 +286,10 @@
           <div class="animal-product">🧶 Produces: Wool</div>
           <div class="animal-count" id="sheepCount">Owned: 0</div>
           <div class="animal-status" id="sheepStatus">⚫ None</div>
-          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('sheep')">Buy Sheep</button>
+          <div class="buy-sell-row">
+            <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('sheep')">Buy Sheep</button>
+            <button class="btn-sell-livestock" onclick="event.stopPropagation(); sellAnimal('sheep')">Sell Sheep</button>
+          </div>
           <div class="animal-actions">
             <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('sheep')">🌾 Feed</button>
             <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('sheep')">🧺 Collect</button>
@@ -290,7 +307,10 @@
           <div class="animal-product">🏇 Produces: Ride</div>
           <div class="animal-count" id="horseCount">Owned: 0</div>
           <div class="animal-status" id="horseStatus">⚫ None</div>
-          <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('horse')">Buy Horse</button>
+          <div class="buy-sell-row">
+            <button class="buy-btn" onclick="event.stopPropagation(); buyAnimal('horse')">Buy Horse</button>
+            <button class="btn-sell-livestock" onclick="event.stopPropagation(); sellAnimal('horse')">Sell Horse</button>
+          </div>
           <div class="animal-actions">
             <button class="btn-feed-animal" onclick="event.stopPropagation(); feedAnimal('horse')">🌾 Feed</button>
             <button class="btn-collect-animal" onclick="event.stopPropagation(); collectAnimal('horse')">🧺 Collect</button>
@@ -503,6 +523,36 @@
         }, '*');
       }
     }
+
+    // Sell one animal back for half of what it cost to buy
+    function sellAnimal(type) {
+      const animal = state.animals[type];
+      if (animal.count === 0) {
+        showPopup('❌ You don\'t have any ' + type + 's to sell!', '❌', 'error');
+        return;
+      }
+
+      const refund = Math.floor(animal.cost / 2);
+      state.coins += refund;
+      animal.count -= 1;
+
+      // If that was the last one, clear its feed/cooldown state too
+      if (animal.count === 0) {
+        animal.fed = false;
+        animal.readyAt = 0;
+      }
+
+      save();
+      render();
+      showPopup('💵 Sold 1 ' + type + ' for ' + refund + ' coins (half price).', '💵', 'success');
+
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'coin-update',
+          coins: state.coins
+        }, '*');
+      }
+    }
     
     // Feed a specific animal type
     function feedAnimal(type) {
@@ -558,9 +608,25 @@
       animal.fed = false;
       animal.readyAt = 0;
       
+      // Auto re-feed right away if there's enough feed on hand, so collecting
+      // starts the next cooldown immediately instead of needing a second tap
+      const feedType = animal.feed;
+      const needed = animal.count * animal.feedAmount;
+      let refed = false;
+      if (state.feedStock[feedType] >= needed) {
+        state.feedStock[feedType] -= needed;
+        animal.fed = true;
+        animal.readyAt = Math.floor(Date.now() / 1000) + (animal.produceSeconds || 0);
+        refed = true;
+      }
+      
       save();
       render();
-      showPopup('🧺 Collected ' + animal.count + ' ' + animal.product + ' from ' + type + 's!', '🧺', 'success');
+      if (refed) {
+        showPopup('🧺 Collected ' + animal.count + ' ' + animal.product + '! Re-fed — ready in ' + (animal.produceSeconds || 0) + 's.', '🧺', 'success');
+      } else {
+        showPopup('🧺 Collected ' + animal.count + ' ' + animal.product + '! Not enough ' + feedType + ' to re-feed automatically.', '🧺', 'success');
+      }
     }
     
     // Sell products from a specific animal type
@@ -628,6 +694,7 @@
     // Collect all products (kept for backward compatibility)
     function collectProducts() {
       let totalCollected = 0;
+      let totalRefed = 0;
       
       const nowTs = Math.floor(Date.now() / 1000);
       for (const [type, animal] of Object.entries(state.animals)) {
@@ -637,12 +704,22 @@
           totalCollected += animal.count;
           animal.fed = false;
           animal.readyAt = 0;
+          
+          // Auto re-feed if there's enough feed on hand
+          const feedType = animal.feed;
+          const needed = animal.count * animal.feedAmount;
+          if (state.feedStock[feedType] >= needed) {
+            state.feedStock[feedType] -= needed;
+            animal.fed = true;
+            animal.readyAt = nowTs + (animal.produceSeconds || 0);
+            totalRefed += animal.count;
+          }
         }
       }
       
       if (totalCollected > 0) {
         save();
-        showPopup('🧺 Collected products from ' + totalCollected + ' animals!', '🧺', 'success');
+        showPopup('🧺 Collected from ' + totalCollected + ' animals!' + (totalRefed > 0 ? ' Re-fed ' + totalRefed + ' of them.' : ''), '🧺', 'success');
       } else {
         showPopup('⚠️ No animals fed! Feed them first.', '⚠️', 'info');
       }
@@ -713,6 +790,7 @@
     window.load = load;
     window.render = render;
     window.feedAnimal = feedAnimal;
+    window.sellAnimal = sellAnimal;
     window.collectAnimal = collectAnimal;
     window.sellAnimalProducts = sellAnimalProducts;
     
