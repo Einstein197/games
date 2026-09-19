@@ -58,10 +58,19 @@
       transition: max-height 0.3s ease, opacity 0.3s ease;
       opacity: 0;
     }
-    .animal-card.active .animal-details,
-    .animal-card:hover .animal-details {
+    .animal-card.active .animal-details {
       max-height: 400px;
       opacity: 1;
+    }
+    /* Hover-to-expand is a nice bonus for mouse users, but on touchscreens the
+       browser fakes ':hover' only until you tap elsewhere (like a popup's OK
+       button) — which was collapsing the card right after feed/collect/sell.
+       Restrict it to devices that actually have a real pointer. */
+    @media (hover: hover) and (pointer: fine) {
+      .animal-card:hover .animal-details {
+        max-height: 400px;
+        opacity: 1;
+      }
     }
     
     .animal-cost { font-size: 14px; color: #66ff66; margin-top: 2px; }
@@ -309,11 +318,11 @@
     let state = {
       coins: 0,
       animals: {
-        cow: { count: 0, cost: 500, feed: 'hay', feedAmount: 3, product: 'milk', productPrice: 10, fed: false },
-        pig: { count: 0, cost: 300, feed: 'grain', feedAmount: 2, product: 'pork', productPrice: 15, fed: false },
-        chicken: { count: 0, cost: 100, feed: 'grain', feedAmount: 1, product: 'eggs', productPrice: 5, fed: false },
-        sheep: { count: 0, cost: 400, feed: 'hay', feedAmount: 2, product: 'wool', productPrice: 12, fed: false },
-        horse: { count: 0, cost: 1800, feed: 'hay', feedAmount: 4, product: 'ride', productPrice: 20, fed: false }
+        cow: { count: 0, cost: 500, feed: 'hay', feedAmount: 3, product: 'milk', productPrice: 10, fed: false, readyAt: 0, produceSeconds: 120 },
+        pig: { count: 0, cost: 300, feed: 'grain', feedAmount: 2, product: 'pork', productPrice: 15, fed: false, readyAt: 0, produceSeconds: 90 },
+        chicken: { count: 0, cost: 100, feed: 'grain', feedAmount: 1, product: 'eggs', productPrice: 5, fed: false, readyAt: 0, produceSeconds: 30 },
+        sheep: { count: 0, cost: 400, feed: 'hay', feedAmount: 2, product: 'wool', productPrice: 12, fed: false, readyAt: 0, produceSeconds: 100 },
+        horse: { count: 0, cost: 1800, feed: 'hay', feedAmount: 4, product: 'ride', productPrice: 20, fed: false, readyAt: 0, produceSeconds: 180 }
       },
       feedStock: { hay: 0, grain: 0, mixed: 0, pellets: 0 },
       products: { milk: 0, pork: 0, eggs: 0, wool: 0, ride: 0 },
@@ -358,6 +367,7 @@
               if (data.barn.animals[key]) {
                 animal.count = data.barn.animals[key].count || 0;
                 animal.fed = data.barn.animals[key].fed || false;
+                animal.readyAt = data.barn.animals[key].readyAt || 0;
               }
             }
           }
@@ -396,7 +406,11 @@
         
         const statusEl = document.getElementById(key + 'Status');
         if (statusEl) {
-          if (animal.fed && animal.count > 0) {
+          const remaining = (animal.readyAt || 0) - Math.floor(Date.now() / 1000);
+          if (animal.fed && animal.count > 0 && remaining > 0) {
+            statusEl.textContent = '⏳ Ready in ' + remaining + 's';
+            statusEl.style.color = '#ffaa44';
+          } else if (animal.fed && animal.count > 0) {
             statusEl.textContent = '🟢 Fed & Ready!';
             statusEl.style.color = '#66ff66';
           } else if (animal.count > 0) {
@@ -513,10 +527,11 @@
       
       state.feedStock[feedType] -= needed;
       animal.fed = true;
+      animal.readyAt = Math.floor(Date.now() / 1000) + (animal.produceSeconds || 0);
       
       save();
       render();
-      showPopup('🌾 Fed ' + animal.count + ' ' + type + '(s)!', '🌾', 'success');
+      showPopup('🌾 Fed ' + animal.count + ' ' + type + '(s)! Ready in ' + (animal.produceSeconds || 0) + 's.', '🌾', 'success');
     }
     
     // Collect products from a specific animal type
@@ -532,9 +547,16 @@
         return;
       }
       
+      const remaining = (animal.readyAt || 0) - Math.floor(Date.now() / 1000);
+      if (remaining > 0) {
+        showPopup('⏳ Not ready yet! ' + remaining + 's left.', '⏳', 'info');
+        return;
+      }
+      
       const productKey = animal.product;
       state.products[productKey] = (state.products[productKey] || 0) + animal.count;
       animal.fed = false;
+      animal.readyAt = 0;
       
       save();
       render();
@@ -582,6 +604,7 @@
           if (state.feedStock[feedType] >= needed) {
             state.feedStock[feedType] -= needed;
             animal.fed = true;
+            animal.readyAt = Math.floor(Date.now() / 1000) + (animal.produceSeconds || 0);
             totalFed += animal.count;
           } else {
             missingFeed.push(type + ' (need ' + needed + ' ' + feedType + ', have ' + state.feedStock[feedType] + ')');
@@ -606,12 +629,14 @@
     function collectProducts() {
       let totalCollected = 0;
       
+      const nowTs = Math.floor(Date.now() / 1000);
       for (const [type, animal] of Object.entries(state.animals)) {
-        if (animal.count > 0 && animal.fed) {
+        if (animal.count > 0 && animal.fed && nowTs >= (animal.readyAt || 0)) {
           const productKey = animal.product;
           state.products[productKey] = (state.products[productKey] || 0) + animal.count;
           totalCollected += animal.count;
           animal.fed = false;
+          animal.readyAt = 0;
         }
       }
       
@@ -698,6 +723,25 @@
     
     // Auto-save every 30 seconds
     setInterval(save, 30000);
+
+    // Keep the "Ready in Xs" countdown ticking without re-running the
+    // whole render() (which would also re-fire the iframe resize every second)
+    setInterval(function() {
+      const now = Math.floor(Date.now() / 1000);
+      for (const [key, animal] of Object.entries(state.animals)) {
+        if (!(animal.fed && animal.count > 0)) continue;
+        const statusEl = document.getElementById(key + 'Status');
+        if (!statusEl) continue;
+        const remaining = (animal.readyAt || 0) - now;
+        if (remaining > 0) {
+          statusEl.textContent = '⏳ Ready in ' + remaining + 's';
+          statusEl.style.color = '#ffaa44';
+        } else if (statusEl.textContent !== '🟢 Fed & Ready!') {
+          statusEl.textContent = '🟢 Fed & Ready!';
+          statusEl.style.color = '#66ff66';
+        }
+      }
+    }, 1000);
     
     // Observe DOM changes for resize
     if (window.ResizeObserver) {

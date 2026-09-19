@@ -44,6 +44,31 @@
     .recipe-stock span { color: #ffd700; font-weight: bold; }
     .process-btn { background: #2a4a7c; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
     .process-btn:hover { background: #3a5a9c; }
+    .qty-row { display: flex; gap: 6px; margin-top: 10px; }
+    .qty-input {
+      flex: 1;
+      min-width: 0;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid #3a3a5a;
+      border-radius: 6px;
+      color: #eee;
+      text-align: center;
+      padding: 6px 4px;
+      font-size: 13px;
+    }
+    .qty-input:focus { outline: none; border-color: #66ddff; }
+    .qty-max-btn {
+      background: #3a3a5a;
+      color: #ffd700;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .qty-max-btn:hover { background: #4a4a7a; }
     .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
     .btn { padding: 10px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; font-size: 14px; }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
@@ -184,6 +209,10 @@
         <div class="recipe-name">Hay <span id="hayStock">0</span></div>
         <div class="recipe-requires">Requires: 5 Wheat from Silo</div>
         <div class="recipe-output">Produces: 10 Hay</div>
+        <div class="qty-row">
+          <input type="number" class="qty-input" id="qty_hay" min="1" value="1">
+          <button class="qty-max-btn" onclick="setMaxQty('hay')">Max</button>
+        </div>
         <button class="process-btn" onclick="processFeed('hay', this)">Process Hay</button>
       </div>
       
@@ -192,6 +221,10 @@
         <div class="recipe-name">Grain <span id="grainStock">0</span></div>
         <div class="recipe-requires">Requires: 3 Corn from Silo</div>
         <div class="recipe-output">Produces: 8 Grain</div>
+        <div class="qty-row">
+          <input type="number" class="qty-input" id="qty_grain" min="1" value="1">
+          <button class="qty-max-btn" onclick="setMaxQty('grain')">Max</button>
+        </div>
         <button class="process-btn" onclick="processFeed('grain', this)">Process Grain</button>
       </div>
       
@@ -200,6 +233,10 @@
         <div class="recipe-name">Mixed Feed <span id="mixedStock">0</span></div>
         <div class="recipe-requires">Requires: 2 Hay + 2 Grain</div>
         <div class="recipe-output">Produces: 6 Mixed Feed</div>
+        <div class="qty-row">
+          <input type="number" class="qty-input" id="qty_mixed" min="1" value="1">
+          <button class="qty-max-btn" onclick="setMaxQty('mixed')">Max</button>
+        </div>
         <button class="process-btn" onclick="processFeed('mixed', this)">Process Mixed</button>
       </div>
       
@@ -208,6 +245,10 @@
         <div class="recipe-name">Pellets <span id="pelletsStock">0</span></div>
         <div class="recipe-requires">Requires: 4 Mixed Feed</div>
         <div class="recipe-output">Produces: 4 Pellets</div>
+        <div class="qty-row">
+          <input type="number" class="qty-input" id="qty_pellets" min="1" value="1">
+          <button class="qty-max-btn" onclick="setMaxQty('pellets')">Max</button>
+        </div>
         <button class="process-btn" onclick="processFeed('pellets', this)">Process Pellets</button>
       </div>
     </div>
@@ -449,38 +490,77 @@
       }
     }
     
+    // ==================== RECIPES (shared by processFeed & setMaxQty) ====================
+    const RECIPES = {
+      hay: { requires: { wheat: 5 }, produces: { hay: 10 } },
+      grain: { requires: { corn: 3 }, produces: { grain: 8 } },
+      mixed: { requires: { hay: 2, grain: 2 }, produces: { mixed: 6 } },
+      pellets: { requires: { mixed: 4 }, produces: { pellets: 4 } }
+    };
+
+    // Wheat/corn come from the shared silo; hay/grain/mixed come from the
+    // mill's own processed stock. (Recipes that need hay/grain/mixed used to
+    // always read 0 from sharedSilo, which is why Mixed/Pellets could never
+    // be processed at all — this routes each ingredient to where it actually lives.)
+    function getAvailableAmount(ingredient) {
+      if (ingredient === 'wheat' || ingredient === 'corn') {
+        return sharedSilo[ingredient] || 0;
+      }
+      return state.feedmill.feed[ingredient] || 0;
+    }
+
+    function consumeIngredient(ingredient, amount) {
+      if (ingredient === 'wheat' || ingredient === 'corn') {
+        sharedSilo[ingredient] = (sharedSilo[ingredient] || 0) - amount;
+      } else {
+        state.feedmill.feed[ingredient] = (state.feedmill.feed[ingredient] || 0) - amount;
+      }
+    }
+
+    // Fill the quantity box with the most you can currently afford
+    function setMaxQty(type) {
+      const recipe = RECIPES[type];
+      if (!recipe) return;
+      let max = Infinity;
+      for (const [ingredient, amount] of Object.entries(recipe.requires)) {
+        const available = getAvailableAmount(ingredient);
+        max = Math.min(max, Math.floor(available / amount));
+      }
+      if (!isFinite(max) || max < 0) max = 0;
+      const input = document.getElementById('qty_' + type);
+      if (input) input.value = Math.max(max, 1);
+    }
+
     // ==================== PROCESS FEED FROM SHARED SILO ====================
     function processFeed(type, btnEl) {
-      const recipes = {
-        hay: { requires: { wheat: 5 }, produces: { hay: 10 } },
-        grain: { requires: { corn: 3 }, produces: { grain: 8 } },
-        mixed: { requires: { hay: 2, grain: 2 }, produces: { mixed: 6 } },
-        pellets: { requires: { mixed: 4 }, produces: { pellets: 4 } }
-      };
-      
-      const recipe = recipes[type];
+      const recipe = RECIPES[type];
       if (!recipe) return;
+
+      const qtyInput = document.getElementById('qty_' + type);
+      let qty = qtyInput ? parseInt(qtyInput.value, 10) : 1;
+      if (!qty || qty < 1) qty = 1;
 
       // The card for this type, used to anchor the popup near where you clicked
       const card = (btnEl && btnEl.closest('.recipe-card'))
         || document.getElementById(FEED_CARD_IDS[type]);
       const icon = FEED_ICONS[type] || '🏭';
       
-      // Check shared silo for required crops
-      for (const [crop, amount] of Object.entries(recipe.requires)) {
-        const stored = sharedSilo[crop] || 0;
-        if (stored < amount) {
-          showPopup('❌ Not enough ' + crop + ' in silo! Need ' + amount + ', have ' + stored + '.', icon, 'error', card);
+      // Check for enough of each ingredient to cover the full requested quantity
+      for (const [ingredient, amount] of Object.entries(recipe.requires)) {
+        const needed = amount * qty;
+        const available = getAvailableAmount(ingredient);
+        if (available < needed) {
+          showPopup('❌ Not enough ' + ingredient + '! Need ' + needed + ' for x' + qty + ', have ' + available + '.', icon, 'error', card);
           return;
         }
       }
       
-      // Remove from shared silo
-      for (const [crop, amount] of Object.entries(recipe.requires)) {
-        sharedSilo[crop] = (sharedSilo[crop] || 0) - amount;
+      // Consume ingredients (scaled by qty), from wherever they actually live
+      for (const [ingredient, amount] of Object.entries(recipe.requires)) {
+        consumeIngredient(ingredient, amount * qty);
       }
       
-      // Notify parent about silo change
+      // Notify parent about silo change (only meaningful if wheat/corn were used)
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({
           type: 'silo-use',
@@ -502,13 +582,15 @@
         }
       } catch(e) {}
       
-      // Add to feed
+      // Add to feed (scaled by qty)
+      let producedAmt = 0;
       for (const [feedType, amount] of Object.entries(recipe.produces)) {
-        state.feedmill.feed[feedType] = (state.feedmill.feed[feedType] || 0) + amount;
+        const total = amount * qty;
+        state.feedmill.feed[feedType] = (state.feedmill.feed[feedType] || 0) + total;
+        producedAmt = total; // only one output per recipe currently
       }
       
-      const produced = Object.values(recipe.produces)[0];
-      showPopup('✅ Processed ' + type + '! Produced ' + produced + ' ' + type + '.', icon, 'success', card);
+      showPopup('✅ Processed x' + qty + ' ' + type + '! Produced ' + producedAmt + ' ' + type + '.', icon, 'success', card);
       save();
       render();
     }
