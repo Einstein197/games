@@ -856,6 +856,30 @@
       
       // Update dropdown
       document.getElementById('buildingSelect').value = building;
+      
+      // The iframe we just switched to may have been sitting hidden
+      // (display:none) since page load — some browsers report scrollHeight
+      // as 0 for hidden iframes, so the earlier per-building resize fix could
+      // have locked it at a near-zero height while nobody was looking.
+      // Re-measure it now that it's actually visible.
+      var iframeIds = { farm: 'farmIframe', barn: 'barnIframe', feedmill: 'feedmillIframe', greenhouse: 'greenhouseFrame' };
+      var activeIframe = document.getElementById(iframeIds[building]);
+      if (activeIframe) {
+        setTimeout(function() {
+          try {
+            var doc = activeIframe.contentWindow && activeIframe.contentWindow.document;
+            if (doc && doc.documentElement) {
+              var h = doc.documentElement.scrollHeight;
+              if (h > 0) {
+                activeIframe.style.height = h + 'px';
+              }
+            }
+          } catch (e) {
+            // Cross-origin or not-yet-loaded — harmless, the iframe's own
+            // resize-iframe postMessage will correct it shortly anyway.
+          }
+        }, 50);
+      }
     }
 
     // ── Format numbers ──
