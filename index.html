@@ -75,11 +75,11 @@
     #frame {
       position: fixed;
       top: 0;
-      left: 100px;
+      left: 0;
       right: 0;
       margin-top: 10px;
       margin-bottom: 10px;
-      width: 80%;
+      width: 100%;
       z-index: 100000; /* above the sidebar/topbar (z-index:100/50) and modals */
     }
     #frame iframe {
@@ -231,6 +231,9 @@
     .building-iframe {
       width: 100%;
       height: 600px;
+      min-height: 400px; /* safety floor — a stray/stale resize-iframe message
+                             reporting 0 (seen happening under file:// testing)
+                             can no longer visually collapse the building */
       border: none;
       border-radius: var(--radius-sm);
       background: var(--glass);
@@ -861,23 +864,15 @@
       // (display:none) since page load — some browsers report scrollHeight
       // as 0 for hidden iframes, so the earlier per-building resize fix could
       // have locked it at a near-zero height while nobody was looking.
-      // Re-measure it now that it's actually visible.
+      // Ask it to re-measure and re-report its own height now that it's visible
+      // (postMessage instead of reading contentWindow.document directly, since
+      // direct cross-frame DOM access can be silently blocked depending on how
+      // the page is being served, e.g. opened locally without a dev server).
       var iframeIds = { farm: 'farmIframe', barn: 'barnIframe', feedmill: 'feedmillIframe', greenhouse: 'greenhouseFrame' };
       var activeIframe = document.getElementById(iframeIds[building]);
-      if (activeIframe) {
+      if (activeIframe && activeIframe.contentWindow) {
         setTimeout(function() {
-          try {
-            var doc = activeIframe.contentWindow && activeIframe.contentWindow.document;
-            if (doc && doc.documentElement) {
-              var h = doc.documentElement.scrollHeight;
-              if (h > 0) {
-                activeIframe.style.height = h + 'px';
-              }
-            }
-          } catch (e) {
-            // Cross-origin or not-yet-loaded — harmless, the iframe's own
-            // resize-iframe postMessage will correct it shortly anyway.
-          }
+          activeIframe.contentWindow.postMessage({ type: 'request-resize' }, '*');
         }, 50);
       }
     }
@@ -1277,7 +1272,13 @@
         for (const id of candidateIds) {
           const iframe = document.getElementById(id);
           if (iframe && iframe.contentWindow === event.source) {
-            iframe.style.height = event.data.height + 'px';
+            // A hidden iframe (display:none) can report scrollHeight as 0 —
+            // that's noise, not a real content size, so ignore it here.
+            // The CSS min-height on .building-iframe is the backstop in case
+            // a bogus value ever slips through anyway.
+            if (event.data.height > 20) {
+              iframe.style.height = event.data.height + 'px';
+            }
             break;
           }
         }

@@ -762,6 +762,13 @@
     
     // Listen for coin updates from parent
     window.addEventListener('message', function(event) {
+      // Parent is asking us to re-measure — happens right when this iframe
+      // becomes visible after being hidden (hidden iframes can report a
+      // bogus, often 0, scrollHeight while nobody can see them)
+      if (event.data && event.data.type === 'request-resize') {
+        resizeIframe();
+      }
+
       if (event.data && event.data.type === 'coin-update') {
         if (event.data.coins !== undefined) {
           state.coins = event.data.coins;

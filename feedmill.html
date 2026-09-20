@@ -643,6 +643,13 @@
     window.addEventListener('message', function(event) {
       console.log('🏭 Feedmill received message:', event.data);
       
+      // Parent is asking us to re-measure — happens right when this iframe
+      // becomes visible after being hidden, since a hidden iframe can report
+      // a bogus (often 0) scrollHeight while nobody can see it
+      if (event.data && event.data.type === 'request-resize') {
+        resizeIframe();
+      }
+      
       // Handle coin updates from parent
       if (event.data && event.data.type === 'coin-update') {
         if (event.data.coins !== undefined) {
