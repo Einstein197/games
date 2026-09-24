@@ -569,15 +569,20 @@
         }, '*');
       }
       
-      // Also save silo data to localStorage so it persists
+      // Also save silo data to localStorage so it persists — the real,
+      // live silo lives at mainData.farm.silo.stored (farm.html is the
+      // source of truth); the old flat mainData.silo location is legacy
+      // and was silently swallowing this write before, since it usually
+      // doesn't exist, so consumption was never actually being saved
       try {
         const raw = localStorage.getItem(SAVE_KEY);
         if (raw) {
           const mainData = JSON.parse(raw);
-          if (mainData.silo && mainData.silo.stored) {
-            mainData.silo.stored.wheat = sharedSilo.wheat || 0;
-            mainData.silo.stored.corn = sharedSilo.corn || 0;
-          }
+          if (!mainData.farm) mainData.farm = {};
+          if (!mainData.farm.silo) mainData.farm.silo = {};
+          if (!mainData.farm.silo.stored) mainData.farm.silo.stored = {};
+          mainData.farm.silo.stored.wheat = sharedSilo.wheat || 0;
+          mainData.farm.silo.stored.corn = sharedSilo.corn || 0;
           localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
         }
       } catch(e) {}

@@ -1467,6 +1467,35 @@
         }
       }
       
+      // Mill consumed wheat/corn from the silo — persist it (this message
+      // was previously going completely unhandled, so processing feed never
+      // actually saved the reduced silo amount anywhere real) and push a
+      // live update into the farm iframe so it reflects immediately if
+      // you're already on that tab, not just after a fresh reload.
+      if (event.data && event.data.type === 'silo-use') {
+        let mainData = {};
+        try {
+          const raw = localStorage.getItem(SAVE_KEY);
+          if (raw) mainData = JSON.parse(raw);
+        } catch(e) {}
+        if (!mainData.farm) mainData.farm = {};
+        if (!mainData.farm.silo) mainData.farm.silo = {};
+        if (!mainData.farm.silo.stored) mainData.farm.silo.stored = {};
+        mainData.farm.silo.stored.wheat = event.data.wheat || 0;
+        mainData.farm.silo.stored.corn = event.data.corn || 0;
+        localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
+        console.log('🌾 Silo consumption from mill saved to farm.silo:', mainData.farm.silo.stored);
+        
+        const farmIframe = document.getElementById('farmIframe');
+        if (farmIframe && farmIframe.contentWindow) {
+          farmIframe.contentWindow.postMessage({
+            type: 'silo-sync',
+            wheat: event.data.wheat || 0,
+            corn: event.data.corn || 0
+          }, '*');
+        }
+      }
+      
       // Silo data request - send crops to feed mill
       if (event.data && event.data.type === 'request-silo') {
         const iframe = document.getElementById('feedmillIframe');
