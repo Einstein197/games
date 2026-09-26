@@ -71,7 +71,7 @@
     }
 
     /* ── AADS Banner Ad ── */
-    :root { --ad-banner-h: 140px; } /* 10px + 120px iframe + 10px margins */
+    :root { --ad-banner-h: 270px; } /* 10px + 250px iframe + 10px margins */
     #frame {
       position: fixed;
       top: 0;
@@ -86,7 +86,7 @@
       border: 0;
       padding: 0;
       width: 70%;
-      height: 120px;
+      height: 250px;
       border-radius: 12px;
       overflow: auto;
       display: block;
@@ -1489,7 +1489,7 @@
         const farmIframe = document.getElementById('farmIframe');
         if (farmIframe && farmIframe.contentWindow) {
           farmIframe.contentWindow.postMessage({
-            type: 'silo-sync',
+            type: 'silo-use',
             wheat: event.data.wheat || 0,
             corn: event.data.corn || 0
           }, '*');
