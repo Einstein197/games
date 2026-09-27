@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>🌾 Farm</title>
   <link rel="stylesheet" href="farm.css">
+  <style>
+    html, body { overflow: hidden; } /* only the outer page (index.html) should ever scroll */
+  </style>
   <script src="js/crops.js"></script>
   <script src="js/well.js"></script>
   <!-- Admin System -->
@@ -1061,6 +1064,18 @@
       updateWellWater();
       renderTiles();
       renderUI();
+      setTimeout(resizeIframe, 100);
+    }
+
+    // ── Auto-resize iframe (mirrors barn.html / feedmill.html) ──
+    function resizeIframe() {
+      if (window.parent && window.parent !== window) {
+        const height = document.documentElement.scrollHeight;
+        window.parent.postMessage({
+          type: 'resize-iframe',
+          height: height
+        }, '*');
+      }
     }
 
     function tick() {
@@ -1080,8 +1095,9 @@
       checkTutorialAction("openSilo", null);
       document.getElementById("siloModal").classList.remove("hidden");
       updateSiloModal();
+      setTimeout(resizeIframe, 100);
     }
-    function closeSiloModal() { document.getElementById("siloModal").classList.add("hidden"); }
+    function closeSiloModal() { document.getElementById("siloModal").classList.add("hidden"); setTimeout(resizeIframe, 100); }
 
     function updateSiloModal() {
       document.getElementById("modalSiloUsed").textContent = siloUsed();
@@ -1132,8 +1148,9 @@
         upgradeBtn.style.display = "inline-block";
         upgradeBtn.innerHTML = "⬆️ (" + getWellCost(state.well.level + 1) + ")";
       }
+      setTimeout(resizeIframe, 100);
     }
-    function closeWellModal() { document.getElementById("wellModal").classList.add("hidden"); }
+    function closeWellModal() { document.getElementById("wellModal").classList.add("hidden"); setTimeout(resizeIframe, 100); }
 
     function buyWell() {
       var cost = getWellCost(1);
@@ -1170,8 +1187,9 @@
       var expandCost = state.water.max * 100;
       var expandBtn = document.getElementById("expandWaterTankBtn");
       expandBtn.innerHTML = "⬆️ Expand Tank (" + expandCost + "💰)";
+      setTimeout(resizeIframe, 100);
     }
-    function closeWaterModal() { document.getElementById("waterModal").classList.add("hidden"); }
+    function closeWaterModal() { document.getElementById("waterModal").classList.add("hidden"); setTimeout(resizeIframe, 100); }
 
     function expandWaterTank() {
       var cost = state.water.max * 100;
@@ -1237,6 +1255,8 @@
       taxCountdownInterval = setInterval(function() {
         updateTaxDisplay();
       }, 1000);
+
+      setTimeout(resizeIframe, 100);
     }
 
     function closeTownModal() {
@@ -1245,6 +1265,7 @@
         clearInterval(taxCountdownInterval);
         taxCountdownInterval = null;
       }
+      setTimeout(resizeIframe, 100);
     }
 
     function collectTaxes() {
@@ -1941,6 +1962,9 @@
         // Also re-request state from parent to sync
         loadFromParent();
       }
+      if (event.data && event.data.type === 'request-resize') {
+        resizeIframe();
+      }
     });
 
     // Also try to refresh when the page loads (in case import happened before page load)
@@ -1995,6 +2019,14 @@
         } catch(e) {}
       }
     }, 3000);
+
+    // ── Keep the iframe height in sync as content changes (grid expand,
+    //    modal open/close, tutorial popup, etc.) so the outer page is the
+    //    only thing that ever needs to scroll ──
+    if (window.ResizeObserver) {
+      const observer = new ResizeObserver(function() { resizeIframe(); });
+      observer.observe(document.body);
+    }
   </script>
 </body>
 </html>

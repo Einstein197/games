@@ -34,41 +34,18 @@
     .stat-value { font-size: 24px; font-weight: bold; color: #ffd700; }
     .stat-label { font-size: 12px; color: #8888aa; text-transform: uppercase; letter-spacing: 1px; }
     .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-    .recipe-card { background: linear-gradient(145deg, #1a1a2a, #0a0a1a); border: 2px solid #3a3a5a; border-radius: 12px; padding: 15px; text-align: center; transition: all 0.3s ease; position: relative; }
+    .recipe-card { background: linear-gradient(145deg, #1a1a2a, #0a0a1a); border: 2px solid #3a3a5a; border-radius: 12px; padding: 15px; text-align: center; transition: all 0.3s ease; }
     .recipe-card:hover { transform: translateY(-5px); border-color: #66ddff; box-shadow: 0 6px 20px rgba(102, 221, 255, 0.2); }
     .recipe-icon { font-size: 36px; display: block; margin-bottom: 8px; }
     .recipe-name { font-size: 16px; font-weight: bold; color: #66ddff; }
     .recipe-requires { font-size: 12px; color: #ffaa44; margin-top: 4px; }
     .recipe-output { font-size: 14px; color: #66ff66; margin-top: 4px; }
-    .recipe-stock { font-size: 13px; color: #88ccff; margin-top: 8px; }
-    .recipe-stock span { color: #ffd700; font-weight: bold; }
     .process-btn { background: #2a4a7c; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
     .process-btn:hover { background: #3a5a9c; }
-    .qty-row { display: flex; gap: 6px; margin-top: 10px; }
-    .qty-input {
-      flex: 1;
-      min-width: 0;
-      background: rgba(0,0,0,0.35);
-      border: 1px solid #3a3a5a;
-      border-radius: 6px;
-      color: #eee;
-      text-align: center;
-      padding: 6px 4px;
-      font-size: 13px;
-    }
-    .qty-input:focus { outline: none; border-color: #66ddff; }
-    .qty-max-btn {
-      background: #3a3a5a;
-      color: #ffd700;
-      border: none;
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .qty-max-btn:hover { background: #4a4a7a; }
+    .feed-display { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; }
+    .feed-item { text-align: center; }
+    .feed-item .label { color: #88ccff; font-size: 11px; }
+    .feed-item .value { color: #ffd700; font-size: 18px; font-weight: bold; }
     .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
     .btn { padding: 10px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; font-size: 14px; }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
@@ -93,12 +70,6 @@
     .popup-overlay.show {
       display: flex;
     }
-    /* Anchored mode: popup sits next to the card that triggered it,
-       instead of a full-screen dark modal in the center */
-    .popup-overlay.anchored {
-      background: transparent;
-      pointer-events: none; /* let clicks pass through everywhere except the box itself */
-    }
     .popup-box {
       background: linear-gradient(145deg, #1a1a2a, #2a2a3d);
       border: 2px solid #4a4a6a;
@@ -109,15 +80,6 @@
       text-align: center;
       box-shadow: 0 8px 32px rgba(0,0,0,0.8);
       animation: popIn 0.3s ease;
-      pointer-events: auto;
-    }
-    .popup-box.anchored {
-      position: fixed;
-      margin: 0;
-      max-width: 280px;
-      width: max-content;
-      padding: 18px 20px;
-      text-align: left;
     }
     @keyframes popIn {
       from { transform: scale(0.8); opacity: 0; }
@@ -128,24 +90,11 @@
       display: block;
       margin-bottom: 15px;
     }
-    .popup-box.anchored .popup-icon {
-      font-size: 28px;
-      display: inline-block;
-      margin: 0 8px 0 0;
-      vertical-align: middle;
-    }
     .popup-message {
       color: #eee;
       font-size: 18px;
       margin-bottom: 20px;
       line-height: 1.5;
-    }
-    .popup-box.anchored .popup-message {
-      display: inline-block;
-      vertical-align: middle;
-      font-size: 14px;
-      margin-bottom: 12px;
-      width: calc(100% - 44px);
     }
     .popup-btn {
       background: linear-gradient(145deg, #2a4a7c, #1a3a5a);
@@ -157,12 +106,6 @@
       font-weight: bold;
       cursor: pointer;
       transition: all 0.3s ease;
-    }
-    .popup-box.anchored .popup-btn {
-      display: block;
-      width: 100%;
-      padding: 6px 16px;
-      font-size: 13px;
     }
     .popup-btn:hover {
       transform: scale(1.05);
@@ -204,53 +147,44 @@
     </div>
     
     <div class="recipe-grid">
-      <div class="recipe-card" id="cardHay">
+      <div class="recipe-card">
         <span class="recipe-icon">🌾</span>
-        <div class="recipe-name">Hay <span id="hayStock">0</span></div>
+        <div class="recipe-name">Hay</div>
         <div class="recipe-requires">Requires: 5 Wheat from Silo</div>
         <div class="recipe-output">Produces: 10 Hay</div>
-        <div class="qty-row">
-          <input type="number" class="qty-input" id="qty_hay" min="1" value="1">
-          <button class="qty-max-btn" onclick="setMaxQty('hay')">Max</button>
-        </div>
-        <button class="process-btn" onclick="processFeed('hay', this)">Process Hay</button>
+        <button class="process-btn" onclick="processFeed('hay')">Process Hay</button>
       </div>
       
-      <div class="recipe-card" id="cardGrain">
+      <div class="recipe-card">
         <span class="recipe-icon">🌽</span>
-        <div class="recipe-name">Grain <span id="grainStock">0</span></div>
+        <div class="recipe-name">Grain</div>
         <div class="recipe-requires">Requires: 3 Corn from Silo</div>
         <div class="recipe-output">Produces: 8 Grain</div>
-        <div class="qty-row">
-          <input type="number" class="qty-input" id="qty_grain" min="1" value="1">
-          <button class="qty-max-btn" onclick="setMaxQty('grain')">Max</button>
-        </div>
-        <button class="process-btn" onclick="processFeed('grain', this)">Process Grain</button>
+        <button class="process-btn" onclick="processFeed('grain')">Process Grain</button>
       </div>
       
-      <div class="recipe-card" id="cardMixed">
+      <div class="recipe-card">
         <span class="recipe-icon">🍲</span>
-        <div class="recipe-name">Mixed Feed <span id="mixedStock">0</span></div>
+        <div class="recipe-name">Mixed Feed</div>
         <div class="recipe-requires">Requires: 2 Hay + 2 Grain</div>
         <div class="recipe-output">Produces: 6 Mixed Feed</div>
-        <div class="qty-row">
-          <input type="number" class="qty-input" id="qty_mixed" min="1" value="1">
-          <button class="qty-max-btn" onclick="setMaxQty('mixed')">Max</button>
-        </div>
-        <button class="process-btn" onclick="processFeed('mixed', this)">Process Mixed</button>
+        <button class="process-btn" onclick="processFeed('mixed')">Process Mixed</button>
       </div>
       
-      <div class="recipe-card" id="cardPellets">
+      <div class="recipe-card">
         <span class="recipe-icon">🔵</span>
-        <div class="recipe-name">Pellets <span id="pelletsStock">0</span></div>
+        <div class="recipe-name">Feed Pellets</div>
         <div class="recipe-requires">Requires: 4 Mixed Feed</div>
         <div class="recipe-output">Produces: 4 Pellets</div>
-        <div class="qty-row">
-          <input type="number" class="qty-input" id="qty_pellets" min="1" value="1">
-          <button class="qty-max-btn" onclick="setMaxQty('pellets')">Max</button>
-        </div>
-        <button class="process-btn" onclick="processFeed('pellets', this)">Process Pellets</button>
+        <button class="process-btn" onclick="processFeed('pellets')">Process Pellets</button>
       </div>
+    </div>
+    
+    <div class="feed-display">
+      <div class="feed-item"><div class="label">🌾 Hay</div><div class="value" id="hayStock">0</div></div>
+      <div class="feed-item"><div class="label">🌽 Grain</div><div class="value" id="grainStock">0</div></div>
+      <div class="feed-item"><div class="label">🍲 Mixed</div><div class="value" id="mixedStock">0</div></div>
+      <div class="feed-item"><div class="label">🔵 Pellets</div><div class="value" id="pelletsStock">0</div></div>
     </div>
     
     <div class="actions">
@@ -261,7 +195,7 @@
 
   <!-- Popup -->
   <div class="popup-overlay" id="popupOverlay">
-    <div class="popup-box" id="popupBox">
+    <div class="popup-box">
       <span class="popup-icon" id="popupIcon">🏭</span>
       <div class="popup-message" id="popupMessage">Hello!</div>
       <button class="popup-btn" id="popupBtn" onclick="closePopup()">OK</button>
@@ -283,11 +217,6 @@
 
     // Silo data from the main game (shared)
     let sharedSilo = { wheat: 0, corn: 0 };
-
-    // Icon + card lookup for each thing the mill processes,
-    // so popups can match what was actually clicked
-    const FEED_ICONS = { hay: '🌾', grain: '🌽', mixed: '🍲', pellets: '🔵' };
-    const FEED_CARD_IDS = { hay: 'cardHay', grain: 'cardGrain', mixed: 'cardMixed', pellets: 'cardPellets' };
 
     // ==================== FIXED LOAD FUNCTION ====================
     function load() {
@@ -317,17 +246,15 @@
           };
         }
         
-        // ===== FIX: Check the current data location FIRST =====
-        // farm.html is the live source of truth and saves silo at data.farm.silo.stored.
-        // A legacy flat data.silo may still be lingering in old saves, so it's only
-        // used as a last-resort fallback now instead of shadowing the real data.
-        if (data.farm && data.farm.silo && data.farm.silo.stored) {
-          sharedSilo.wheat = data.farm.silo.stored.wheat || 0;
-          sharedSilo.corn = data.farm.silo.stored.corn || 0;
-        } else if (data.silo && data.silo.stored) {
-          // Legacy fallback: old saves stored silo flat, before the farm.* refactor
+        // ===== FIX: Look for silo data in the correct location =====
+        // The main Farm saves silo at data.silo.stored
+        if (data.silo && data.silo.stored) {
           sharedSilo.wheat = data.silo.stored.wheat || 0;
           sharedSilo.corn = data.silo.stored.corn || 0;
+        } else if (data.farm && data.farm.silo && data.farm.silo.stored) {
+          // Fallback: some versions might save under farm
+          sharedSilo.wheat = data.farm.silo.stored.wheat || 0;
+          sharedSilo.corn = data.farm.silo.stored.corn || 0;
         } else {
           // If no silo data found, default to 0
           sharedSilo.wheat = 0;
@@ -393,12 +320,9 @@
       }
     }
 
-    // ==================== POPUP FUNCTIONS ====================
-    // anchorEl (optional): if given, the popup shows as a small box right
-    // next to that element instead of a full-screen centered modal.
-    function showPopup(message, icon = '🏭', btnType = 'success', anchorEl = null) {
+    // Popup functions
+    function showPopup(message, icon = '🏭', btnType = 'success') {
       const overlay = document.getElementById('popupOverlay');
-      const box = document.getElementById('popupBox');
       const msgEl = document.getElementById('popupMessage');
       const iconEl = document.getElementById('popupIcon');
       const btnEl = document.getElementById('popupBtn');
@@ -415,54 +339,12 @@
         btnEl.classList.add('success');
       }
       
-      if (anchorEl) {
-        overlay.classList.add('anchored');
-        box.classList.add('anchored');
-        positionAnchoredPopup(box, anchorEl);
-      } else {
-        overlay.classList.remove('anchored');
-        box.classList.remove('anchored');
-        box.style.top = '';
-        box.style.left = '';
-      }
-      
       overlay.classList.add('show');
-    }
-
-    function positionAnchoredPopup(box, anchorEl) {
-      const rect = anchorEl.getBoundingClientRect();
-      // Measure the box off-screen first so we know its real size at this content length
-      box.style.visibility = 'hidden';
-      box.style.left = '0px';
-      box.style.top = '0px';
-      const boxRect = box.getBoundingClientRect();
-
-      let left = rect.left + (rect.width / 2) - (boxRect.width / 2);
-      let top = rect.bottom + 10;
-
-      // If it would run off the bottom of the viewport, show it above the card instead
-      if (top + boxRect.height > window.innerHeight - 10) {
-        top = rect.top - boxRect.height - 10;
-      }
-      // Clamp horizontally so it never runs off either edge
-      left = Math.max(10, Math.min(left, window.innerWidth - boxRect.width - 10));
-      top = Math.max(10, top);
-
-      box.style.left = left + 'px';
-      box.style.top = top + 'px';
-      box.style.visibility = 'visible';
     }
     
     function closePopup() {
       document.getElementById('popupOverlay').classList.remove('show');
     }
-
-    // Close an anchored popup if you click outside of it
-    document.getElementById('popupOverlay').addEventListener('click', function(e) {
-      if (e.target === this && this.classList.contains('anchored')) {
-        closePopup();
-      }
-    });
 
     // Update UI
     function render() {
@@ -490,77 +372,33 @@
       }
     }
     
-    // ==================== RECIPES (shared by processFeed & setMaxQty) ====================
-    const RECIPES = {
-      hay: { requires: { wheat: 5 }, produces: { hay: 10 } },
-      grain: { requires: { corn: 3 }, produces: { grain: 8 } },
-      mixed: { requires: { hay: 2, grain: 2 }, produces: { mixed: 6 } },
-      pellets: { requires: { mixed: 4 }, produces: { pellets: 4 } }
-    };
-
-    // Wheat/corn come from the shared silo; hay/grain/mixed come from the
-    // mill's own processed stock. (Recipes that need hay/grain/mixed used to
-    // always read 0 from sharedSilo, which is why Mixed/Pellets could never
-    // be processed at all — this routes each ingredient to where it actually lives.)
-    function getAvailableAmount(ingredient) {
-      if (ingredient === 'wheat' || ingredient === 'corn') {
-        return sharedSilo[ingredient] || 0;
-      }
-      return state.feedmill.feed[ingredient] || 0;
-    }
-
-    function consumeIngredient(ingredient, amount) {
-      if (ingredient === 'wheat' || ingredient === 'corn') {
-        sharedSilo[ingredient] = (sharedSilo[ingredient] || 0) - amount;
-      } else {
-        state.feedmill.feed[ingredient] = (state.feedmill.feed[ingredient] || 0) - amount;
-      }
-    }
-
-    // Fill the quantity box with the most you can currently afford
-    function setMaxQty(type) {
-      const recipe = RECIPES[type];
-      if (!recipe) return;
-      let max = Infinity;
-      for (const [ingredient, amount] of Object.entries(recipe.requires)) {
-        const available = getAvailableAmount(ingredient);
-        max = Math.min(max, Math.floor(available / amount));
-      }
-      if (!isFinite(max) || max < 0) max = 0;
-      const input = document.getElementById('qty_' + type);
-      if (input) input.value = Math.max(max, 1);
-    }
-
     // ==================== PROCESS FEED FROM SHARED SILO ====================
-    function processFeed(type, btnEl) {
-      const recipe = RECIPES[type];
-      if (!recipe) return;
-
-      const qtyInput = document.getElementById('qty_' + type);
-      let qty = qtyInput ? parseInt(qtyInput.value, 10) : 1;
-      if (!qty || qty < 1) qty = 1;
-
-      // The card for this type, used to anchor the popup near where you clicked
-      const card = (btnEl && btnEl.closest('.recipe-card'))
-        || document.getElementById(FEED_CARD_IDS[type]);
-      const icon = FEED_ICONS[type] || '🏭';
+    function processFeed(type) {
+      const recipes = {
+        hay: { requires: { wheat: 5 }, produces: { hay: 10 } },
+        grain: { requires: { corn: 3 }, produces: { grain: 8 } },
+        mixed: { requires: { hay: 2, grain: 2 }, produces: { mixed: 6 } },
+        pellets: { requires: { mixed: 4 }, produces: { pellets: 4 } }
+      };
       
-      // Check for enough of each ingredient to cover the full requested quantity
-      for (const [ingredient, amount] of Object.entries(recipe.requires)) {
-        const needed = amount * qty;
-        const available = getAvailableAmount(ingredient);
-        if (available < needed) {
-          showPopup('❌ Not enough ' + ingredient + '! Need ' + needed + ' for x' + qty + ', have ' + available + '.', icon, 'error', card);
+      const recipe = recipes[type];
+      if (!recipe) return;
+      
+      // Check shared silo for required crops
+      for (const [crop, amount] of Object.entries(recipe.requires)) {
+        const stored = sharedSilo[crop] || 0;
+        if (stored < amount) {
+          showPopup('❌ Not enough ' + crop + ' in silo! Need ' + amount + ', have ' + stored + '.', '❌', 'error');
           return;
         }
       }
       
-      // Consume ingredients (scaled by qty), from wherever they actually live
-      for (const [ingredient, amount] of Object.entries(recipe.requires)) {
-        consumeIngredient(ingredient, amount * qty);
+      // Remove from shared silo
+      for (const [crop, amount] of Object.entries(recipe.requires)) {
+        sharedSilo[crop] = (sharedSilo[crop] || 0) - amount;
       }
       
-      // Notify parent about silo change (only meaningful if wheat/corn were used)
+      // Notify parent about silo change
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({
           type: 'silo-use',
@@ -569,33 +407,26 @@
         }, '*');
       }
       
-      // Also save silo data to localStorage so it persists — the real,
-      // live silo lives at mainData.farm.silo.stored (farm.html is the
-      // source of truth); the old flat mainData.silo location is legacy
-      // and was silently swallowing this write before, since it usually
-      // doesn't exist, so consumption was never actually being saved
+      // Also save silo data to localStorage so it persists
       try {
         const raw = localStorage.getItem(SAVE_KEY);
         if (raw) {
           const mainData = JSON.parse(raw);
-          if (!mainData.farm) mainData.farm = {};
-          if (!mainData.farm.silo) mainData.farm.silo = {};
-          if (!mainData.farm.silo.stored) mainData.farm.silo.stored = {};
-          mainData.farm.silo.stored.wheat = sharedSilo.wheat || 0;
-          mainData.farm.silo.stored.corn = sharedSilo.corn || 0;
+          if (mainData.silo && mainData.silo.stored) {
+            mainData.silo.stored.wheat = sharedSilo.wheat || 0;
+            mainData.silo.stored.corn = sharedSilo.corn || 0;
+          }
           localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
         }
       } catch(e) {}
       
-      // Add to feed (scaled by qty)
-      let producedAmt = 0;
+      // Add to feed
       for (const [feedType, amount] of Object.entries(recipe.produces)) {
-        const total = amount * qty;
-        state.feedmill.feed[feedType] = (state.feedmill.feed[feedType] || 0) + total;
-        producedAmt = total; // only one output per recipe currently
+        state.feedmill.feed[feedType] = (state.feedmill.feed[feedType] || 0) + amount;
       }
       
-      showPopup('✅ Processed x' + qty + ' ' + type + '! Produced ' + producedAmt + ' ' + type + '.', icon, 'success', card);
+      const produced = Object.values(recipe.produces)[0];
+      showPopup('✅ Processed ' + type + '! Produced ' + produced + ' ' + type + '.', '✅', 'success');
       save();
       render();
     }
@@ -647,13 +478,6 @@
     // ==================== LISTEN FOR MESSAGES FROM PARENT ====================
     window.addEventListener('message', function(event) {
       console.log('🏭 Feedmill received message:', event.data);
-      
-      // Parent is asking us to re-measure — happens right when this iframe
-      // becomes visible after being hidden, since a hidden iframe can report
-      // a bogus (often 0) scrollHeight while nobody can see it
-      if (event.data && event.data.type === 'request-resize') {
-        resizeIframe();
-      }
       
       // Handle coin updates from parent
       if (event.data && event.data.type === 'coin-update') {
@@ -721,9 +545,12 @@
       window.parent.postMessage({ type: 'request-silo' }, '*');
     }
 
-    // (The real 'silo-update' handler already lives inside the
-    // window.addEventListener('message', ...) block above — this
-    // stray duplicate used to crash on init and was removed.)
+    // Add to message listener
+    if (event.data && event.data.type === 'silo-update') {
+      sharedSilo.wheat = event.data.wheat || 0;
+      sharedSilo.corn = event.data.corn || 0;
+      render();
+    }
 
     // Refresh silo data every 30 seconds
     setInterval(() => {
