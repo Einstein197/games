@@ -1086,6 +1086,16 @@
     window.addEventListener('message', function(event) {
       console.log('📨 Parent received message:', event.data);
       
+      // A building iframe is relaying a vertical touch drag — iframes are
+      // separate documents, so a touch that starts inside one never
+      // naturally scrolls the outer page on its own. Apply it here instead.
+      if (event.data && event.data.type === 'touch-scroll') {
+        const pagesWrap = document.querySelector('.pages-wrap');
+        if (pagesWrap) {
+          pagesWrap.scrollTop += event.data.deltaY;
+        }
+      }
+      
       // ── FARM COMMUNICATION ──
       
       // Farm requesting state

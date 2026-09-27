@@ -572,6 +572,30 @@
       const observer = new ResizeObserver(resizeIframe);
       observer.observe(document.body);
     }
+
+    // ── Touch-scroll relay ──
+    // Iframes are separate documents, so a touch drag that starts inside
+    // this one doesn't naturally scroll the OUTER page — the browser just
+    // keeps it local to this document. Forward the vertical drag distance
+    // to the parent so it can scroll the real page in sync, letting you
+    // scroll from anywhere on screen (not just the sliver outside the iframe).
+    (function() {
+      var lastY = null;
+      document.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) lastY = e.touches[0].clientY;
+      }, { passive: true });
+      document.addEventListener('touchmove', function(e) {
+        if (lastY === null || e.touches.length !== 1) return;
+        var currentY = e.touches[0].clientY;
+        var deltaY = lastY - currentY;
+        lastY = currentY;
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'touch-scroll', deltaY: deltaY }, '*');
+        }
+      }, { passive: true });
+      document.addEventListener('touchend', function() { lastY = null; }, { passive: true });
+    })();
+
   </script>
 </body>
 </html>
