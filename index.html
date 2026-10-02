@@ -38,6 +38,14 @@
       --topbar-h:      64px;
     }
 
+    /* ── Prevent the document itself from scrolling — .pages-wrap
+       is the only scrollable region (fixes the double-scrollbar bug) ── */
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
     /* ── Background Orbs ── */
     .bg-orb {
       position: fixed;
@@ -63,18 +71,23 @@
     }
 
     /* ── AADS Banner Ad ── */
+    /* ── AADS Banner Ad ── */
+    :root { --ad-banner-h: 170px; } /* 10px + 150px iframe + 10px margins */
     #frame {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
       margin-top: 10px;
       margin-bottom: 10px;
-      width: 80%;
-      position: relative;
-      z-index: 99998;
+      width: 100%;
+      z-index: 100000; /* above the sidebar/topbar (z-index:100/50) and modals */
     }
     #frame iframe {
       border: 0;
       padding: 0;
       width: 70%;
-      height: 120px;
+      height: 150px;
       border-radius: 12px;
       overflow: auto;
       display: block;
@@ -82,20 +95,26 @@
     }
 
     /* ── App Shell ── */
-    .app-shell { display:flex; height:100vh; position:relative; z-index:1; }
+    .app-shell {
+      display:flex;
+      height: calc(100vh - var(--ad-banner-h));
+      margin-top: var(--ad-banner-h);
+      position:relative;
+      z-index:1;
+    }
 
     /* ── Sidebar ── */
     .sidebar {
       width: var(--sidebar-w);
       flex-shrink: 0;
-      height: 100vh;
+      height: calc(100vh - var(--ad-banner-h));
       display: flex;
       flex-direction: column;
       padding: 24px 16px;
       border-right: 1px solid var(--glass-border);
       background: rgba(8,12,24,0.7);
       backdrop-filter: blur(20px);
-      position: fixed; top:0; left:0; z-index:100;
+      position: fixed; top: var(--ad-banner-h); left:0; z-index:100;
     }
     .sidebar-logo { display:flex; align-items:center; gap:10px; padding:8px 12px; margin-bottom:32px; }
     .logo-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--primary),var(--secondary)); border-radius:10px; display:flex; align-items:center; justify-content:center; }
@@ -152,7 +171,7 @@
     }
 
     /* ── Main Area ── */
-    .main-area { flex:1; display:flex; flex-direction:column; margin-left:var(--sidebar-w); min-height:100vh; }
+    .main-area { flex:1; display:flex; flex-direction:column; margin-left:var(--sidebar-w); min-height:0; }
 
     /* ── Topbar ── */
     .topbar {
@@ -213,9 +232,14 @@
     .building-iframe {
       width: 100%;
       height: 600px;
+      min-height: 400px; /* safety floor — a stray/stale resize-iframe message
+                             reporting 0 can no longer visually collapse the building */
       border: none;
       border-radius: var(--radius-sm);
       background: var(--glass);
+      touch-action: pan-y; /* let a vertical drag on the iframe be handled by
+                               the outer page's scroll, at the OS/compositor
+                               level rather than relying on JS touch events */
     }
 
     /* ── Top Bar (game controls) ── */
@@ -658,7 +682,7 @@
                 <iframe 
                   src="greenhouse.html" 
                   id="greenhouseFrame"
-                  style="border: none; width: 100%; overflow: hidden;"
+                  style="border: none; width: 100%; overflow: hidden; touch-action: pan-y;"
                   scrolling="no"
                   frameborder="0"
                 ></iframe>
@@ -838,6 +862,17 @@
       
       // Update dropdown
       document.getElementById('buildingSelect').value = building;
+      
+      // The iframe we just switched to may have been sitting hidden
+      // (display:none) since page load — hidden iframes can report a bogus
+      // (often 0) scrollHeight. Ask it to re-measure now that it's visible.
+      var iframeIds = { farm: 'farmIframe', barn: 'barnIframe', feedmill: 'feedmillIframe', greenhouse: 'greenhouseFrame' };
+      var activeIframe = document.getElementById(iframeIds[building]);
+      if (activeIframe && activeIframe.contentWindow) {
+        setTimeout(function() {
+          activeIframe.contentWindow.postMessage({ type: 'request-resize' }, '*');
+        }, 50);
+      }
     }
 
     // ── Format numbers ──
@@ -1153,15 +1188,20 @@
           
           // Update farm data
           mainData.farm = event.data.state;
-          mainData.coins = event.data.state.coins;
           mainData.xp = event.data.state.xp;
           mainData.level = event.data.state.level;
+          // Coins are intentionally NOT taken from farm's snapshot — coins
+          // are shared across every building (barn/mill spend/earn them too),
+          // so farm.html's own copy goes stale the moment another building
+          // changes the balance. The live index.html state.coins (updated
+          // only via the dedicated 'coin-update' message) is the single
+          // source of truth.
+          mainData.coins = state.coins;
           
           localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
           console.log('📥 Farm state saved:', mainData.farm);
           
           // Update parent state
-          state.coins = event.data.state.coins;
           state.xp = event.data.state.xp;
           state.level = event.data.state.level;
           render();
@@ -1184,6 +1224,21 @@
         save();
         render();
         toast('💰 +' + event.data.coins + ' coins from Barn!', 'success');
+      }
+      
+      // Relay feed sent from the Feed Mill to the Barn
+      if (event.data && event.data.type === 'feed-update') {
+        const barnIframe = document.getElementById('barnIframe');
+        if (barnIframe && barnIframe.contentWindow) {
+          barnIframe.contentWindow.postMessage({
+            type: 'feed-update',
+            hay: event.data.hay || 0,
+            grain: event.data.grain || 0,
+            mixed: event.data.mixed || 0,
+            pellets: event.data.pellets || 0
+          }, '*');
+          console.log('🌾 Relayed feed to barn:', event.data);
+        }
       }
       
       // ── GREENHOUSE ──
@@ -1219,9 +1274,17 @@
       // ── RESIZE ──
       
       if (event.data && event.data.type === 'resize-iframe') {
-        const iframe = document.getElementById('greenhouseFrame');
-        if (iframe) {
-          iframe.style.height = event.data.height + 'px';
+        const candidateIds = ['farmIframe', 'barnIframe', 'feedmillIframe', 'greenhouseFrame'];
+        for (const id of candidateIds) {
+          const iframe = document.getElementById(id);
+          if (iframe && iframe.contentWindow === event.source) {
+            // A hidden iframe (display:none) can report scrollHeight as 0 —
+            // that's noise, not a real content size, so ignore it here.
+            if (event.data.height > 20) {
+              iframe.style.height = event.data.height + 'px';
+            }
+            break;
+          }
         }
       }
       
@@ -1409,15 +1472,52 @@
       }
       
       // Silo data request - send crops to feed mill
+      // Mill consumed wheat/corn from the silo — persist it and push a
+      // live update into the farm iframe so it reflects immediately if
+      // you're already on that tab, not just after a fresh reload.
+      if (event.data && event.data.type === 'silo-use') {
+        let mainData = {};
+        try {
+          const raw = localStorage.getItem(SAVE_KEY);
+          if (raw) mainData = JSON.parse(raw);
+        } catch(e) {}
+        if (!mainData.farm) mainData.farm = {};
+        if (!mainData.farm.silo) mainData.farm.silo = {};
+        if (!mainData.farm.silo.stored) mainData.farm.silo.stored = {};
+        mainData.farm.silo.stored.wheat = event.data.wheat || 0;
+        mainData.farm.silo.stored.corn = event.data.corn || 0;
+        localStorage.setItem(SAVE_KEY, JSON.stringify(mainData));
+        console.log('🌾 Silo consumption from mill saved to farm.silo:', mainData.farm.silo.stored);
+        
+        const farmIframe = document.getElementById('farmIframe');
+        if (farmIframe && farmIframe.contentWindow) {
+          farmIframe.contentWindow.postMessage({
+            type: 'silo-use',
+            wheat: event.data.wheat || 0,
+            corn: event.data.corn || 0
+          }, '*');
+        }
+      }
+      
+      // Silo data request - send crops to feed mill
       if (event.data && event.data.type === 'request-silo') {
-        // Send silo data to the iframe
         const iframe = document.getElementById('feedmillIframe');
         if (iframe && iframe.contentWindow) {
+          let farmData = {};
+          try {
+            const raw = localStorage.getItem(SAVE_KEY);
+            if (raw) {
+              const data = JSON.parse(raw);
+              if (data.farm) farmData = data.farm;
+            }
+          } catch(e) {}
+          const silo = (farmData.silo && farmData.silo.stored) || {};
           iframe.contentWindow.postMessage({
-            type: 'silo-data',
-            wheat: state.silo.stored.wheat || 0,
-            corn: state.silo.stored.corn || 0
+            type: 'silo-update',
+            wheat: silo.wheat || 0,
+            corn: silo.corn || 0
           }, '*');
+          console.log('🌾 Sent live silo data to mill:', silo);
         }
       }
     });

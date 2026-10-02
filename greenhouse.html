@@ -6,6 +6,7 @@
   <title>🌿 Greenhouse</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { overflow: hidden; } /* only the outer page (index.html) should ever scroll */
     body { 
       background: transparent; 
       color: #eee; 
@@ -445,7 +446,32 @@
         showPopup('⬆️ Greenhouse upgraded to Lv ' + level + '!', '⬆️', 'success');
         updateUI();
       }
+      if (event.data && event.data.type === 'request-resize') {
+        resizeIframe();
+      }
     });
+
+    // ── Touch-scroll relay ──
+    // Iframes are separate documents, so a touch drag that starts inside
+    // this one doesn't naturally scroll the OUTER page. Forward the
+    // vertical drag distance to the parent so it can scroll the real page
+    // in sync, letting you scroll from anywhere on screen.
+    (function() {
+      var lastY = null;
+      document.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) lastY = e.touches[0].clientY;
+      }, { passive: true });
+      document.addEventListener('touchmove', function(e) {
+        if (lastY === null || e.touches.length !== 1) return;
+        var currentY = e.touches[0].clientY;
+        var deltaY = lastY - currentY;
+        lastY = currentY;
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'touch-scroll', deltaY: deltaY }, '*');
+        }
+      }, { passive: true });
+      document.addEventListener('touchend', function() { lastY = null; }, { passive: true });
+    })();
 
     // ==================== INITIALIZE ====================
     window.addEventListener('load', function() {
