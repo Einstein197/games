@@ -2028,6 +2028,10 @@
       observer.observe(document.body);
     }
 
+    // Safety net: re-report height periodically so the iframe self-corrects
+    // on its own if a specific content change was ever missed
+    setInterval(resizeIframe, 2000);
+
     // ── Touch-scroll relay ──
     // Iframes are separate documents, so a touch drag that starts inside
     // this one doesn't naturally scroll the OUTER page — the browser just

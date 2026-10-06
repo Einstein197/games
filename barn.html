@@ -810,6 +810,10 @@
     // Auto-save every 30 seconds
     setInterval(save, 30000);
 
+    // Safety net: re-report height periodically so the iframe self-corrects
+    // on its own if a specific content change was ever missed
+    setInterval(resizeIframe, 2000);
+
     // Keep the "Ready in Xs" countdown ticking without re-running the
     // whole render() (which would also re-fire the iframe resize every second)
     setInterval(function() {

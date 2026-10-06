@@ -232,8 +232,10 @@
     .building-iframe {
       width: 100%;
       height: 600px;
-      min-height: 400px; /* safety floor — a stray/stale resize-iframe message
-                             reporting 0 can no longer visually collapse the building */
+      min-height: 550px; /* safety floor — a stray/stale resize-iframe message
+                             reporting 0 (or too small) can no longer clip the
+                             building's content. Mill's content got taller
+                             after adding qty inputs, so this needs to clear that. */
       border: none;
       border-radius: var(--radius-sm);
       background: var(--glass);

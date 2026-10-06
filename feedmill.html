@@ -671,6 +671,13 @@
     
     setInterval(save, 30000);
     
+    // Safety net: re-report height every couple seconds regardless of what
+    // triggered a content change. ResizeObserver + explicit calls after
+    // render() should normally catch everything, but relying on tracking
+    // every single trigger point is fragile — this guarantees the iframe
+    // self-corrects on its own if content was ever clipped.
+    setInterval(resizeIframe, 2000);
+    
     if (window.ResizeObserver) {
       const observer = new ResizeObserver(resizeIframe);
       observer.observe(document.body);

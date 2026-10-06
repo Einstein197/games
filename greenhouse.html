@@ -490,6 +490,10 @@
       const observer = new ResizeObserver(resizeIframe);
       observer.observe(document.body);
     }
+
+    // Safety net: re-report height periodically so the iframe self-corrects
+    // on its own if a specific content change was ever missed
+    setInterval(resizeIframe, 2000);
   </script>
 </body>
 </html>
