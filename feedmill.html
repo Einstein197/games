@@ -595,6 +595,14 @@
 
       document.addEventListener('touchstart', function(e) {
         if (e.touches.length === 1) {
+          // Don't hijack touches on form controls — a drag/tap on the qty
+          // inputs needs to behave natively (focus, show the keyboard,
+          // text selection), not get treated as a page-scroll gesture.
+          var tag = e.target && e.target.tagName;
+          if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') {
+            startY = null;
+            return;
+          }
           startY = e.touches[0].clientY;
           lastY = startY;
           dragging = false;
