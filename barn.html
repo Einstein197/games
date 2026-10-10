@@ -566,11 +566,12 @@
       const boxRect = box.getBoundingClientRect();
 
       let left = rect.left + (rect.width / 2) - (boxRect.width / 2);
-      let top = rect.bottom + 10;
+      // Prefer sitting right on top of the button you tapped
+      let top = rect.top - boxRect.height - 10;
 
-      // Not enough room below? Show it above the button instead
-      if (top + boxRect.height > window.innerHeight - 10) {
-        top = rect.top - boxRect.height - 10;
+      // Not enough room above (button is near the top)? Put it below instead
+      if (top < 10) {
+        top = rect.bottom + 10;
       }
       // Keep it fully inside the frame horizontally
       left = Math.max(10, Math.min(left, window.innerWidth - boxRect.width - 10));
