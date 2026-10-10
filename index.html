@@ -928,6 +928,12 @@
     function initSeedSelect() {
       var seedSelect = document.getElementById('seedSelect');
       if (!seedSelect) return;
+      // Keep whatever is selected right now (this list also gets rebuilt on
+      // level-up); on first load fall back to the seed saved last time
+      var wanted = seedSelect.value;
+      if (!wanted) {
+        try { wanted = localStorage.getItem('selectedSeed'); } catch (e) {}
+      }
       seedSelect.innerHTML = '';
       if (typeof CROPS !== 'undefined') {
         CROPS.filter(function(crop) { 
@@ -939,6 +945,13 @@
           seedSelect.appendChild(opt);
         });
       }
+      // Re-select it if that seed is still available at your level
+      if (wanted) {
+        var stillThere = Array.prototype.some.call(seedSelect.options, function(o) {
+          return o.value === wanted;
+        });
+        if (stillThere) seedSelect.value = wanted;
+      }
     }
     // Wait for crops.js to load
     window.addEventListener('load', function() {
@@ -948,6 +961,10 @@
     function syncSeedToFarm() {
       var seedSelect = document.getElementById('seedSelect');
       if (!seedSelect) return;
+            // Remember the choice so it survives reloads
+      if (seedSelect.value) {
+        try { localStorage.setItem('selectedSeed', seedSelect.value); } catch (e) {}
+      }
       var iframe = document.getElementById('farmIframe');
       if (iframe && iframe.contentWindow) {
         iframe.contentWindow.postMessage({ 
@@ -1171,6 +1188,10 @@
             }
           }, '*');
           console.log('📤 Sent farm state to iframe');
+          // farm.html always starts on wheat, so tell it what's selected in
+          // the dropdown — otherwise after a reload the dropdown would show
+          // your saved seed while the farm planted wheat
+          syncSeedToFarm();
         }
       }
       
@@ -1330,6 +1351,7 @@
         localStorage.removeItem("krypton_simfarm_ultimate_barn");
         localStorage.removeItem("krypton_simfarm_ultimate_greenhouse");
         localStorage.removeItem("krypton_simfarm_ultimate_feedmill");
+        localStorage.removeItem("selectedSeed");
         localStorage.removeItem("tutorial_done");
         localStorage.removeItem("tutorial_completed");
         localStorage.removeItem("tutorial_skipped");
