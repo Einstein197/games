@@ -142,6 +142,41 @@
     .popup-overlay.show {
       display: flex;
     }
+    /* Anchored mode: popup appears right next to the button you tapped,
+       instead of dead-center in a (very tall) iframe where you'd have to
+       scroll to find it */
+    .popup-overlay.anchored {
+      background: transparent;
+      pointer-events: none;
+    }
+    .popup-box.anchored {
+      position: fixed;
+      margin: 0;
+      max-width: 280px;
+      width: max-content;
+      padding: 18px 20px;
+      text-align: left;
+      pointer-events: auto;
+    }
+    .popup-box.anchored .popup-icon {
+      font-size: 28px;
+      display: inline-block;
+      margin: 0 8px 0 0;
+      vertical-align: middle;
+    }
+    .popup-box.anchored .popup-message {
+      display: inline-block;
+      vertical-align: middle;
+      font-size: 14px;
+      margin-bottom: 12px;
+      width: calc(100% - 44px);
+    }
+    .popup-box.anchored .popup-btn {
+      display: block;
+      width: 100%;
+      padding: 6px 16px;
+      font-size: 13px;
+    }
     .popup-box {
       background: linear-gradient(145deg, #2a1a0a, #3d2a1a);
       border: 2px solid #5a3a2a;
@@ -324,7 +359,7 @@
 
   <!-- Popup -->
   <div class="popup-overlay" id="popupOverlay">
-    <div class="popup-box">
+    <div class="popup-box" id="popupBox">
       <span class="popup-icon" id="popupIcon">🌱</span>
       <div class="popup-message" id="popupMessage">Hello!</div>
       <button class="popup-btn" id="popupBtn" onclick="closePopup()">OK</button>
@@ -470,8 +505,18 @@
     }
 
     // Popup functions
-    function showPopup(message, icon = '🌱', btnType = 'success') {
+    // Remember the last button tapped (capture phase, so it still records
+    // even though the buttons call event.stopPropagation()). showPopup uses
+    // this to place the popup right where the player just tapped.
+    let lastTap = { el: null, t: 0 };
+    document.addEventListener('click', function(e) {
+      const btn = e.target && e.target.closest ? e.target.closest('button') : null;
+      lastTap = { el: btn, t: Date.now() };
+    }, true);
+
+    function showPopup(message, icon = '🌱', btnType = 'success', anchorEl = null) {
       const overlay = document.getElementById('popupOverlay');
+      const box = document.getElementById('popupBox');
       const msgEl = document.getElementById('popupMessage');
       const iconEl = document.getElementById('popupIcon');
       const btnEl = document.getElementById('popupBtn');
@@ -488,8 +533,52 @@
         btnEl.classList.add('success');
       }
       
+      // No explicit anchor? Use the card button that was tapped just now.
+      // (Popups that arrive on their own, like "feed received from the Mill",
+      // have no recent tap, so they stay centered.)
+      if (!anchorEl && lastTap.el && (Date.now() - lastTap.t) < 1500
+          && lastTap.el.closest('.animal-card')) {
+        anchorEl = lastTap.el;
+      }
+      
+      if (anchorEl) {
+        overlay.classList.add('anchored');
+        box.classList.add('anchored');
+        positionAnchoredPopup(box, anchorEl);
+      } else {
+        overlay.classList.remove('anchored');
+        box.classList.remove('anchored');
+        box.style.top = '';
+        box.style.left = '';
+        box.style.visibility = 'visible';
+      }
+      
       overlay.classList.add('show');
       setTimeout(resizeIframe, 100);
+    }
+
+    function positionAnchoredPopup(box, anchorEl) {
+      const rect = anchorEl.getBoundingClientRect();
+      // Measure the box first so we know its real size at this text length
+      box.style.visibility = 'hidden';
+      box.style.left = '0px';
+      box.style.top = '0px';
+      const boxRect = box.getBoundingClientRect();
+
+      let left = rect.left + (rect.width / 2) - (boxRect.width / 2);
+      let top = rect.bottom + 10;
+
+      // Not enough room below? Show it above the button instead
+      if (top + boxRect.height > window.innerHeight - 10) {
+        top = rect.top - boxRect.height - 10;
+      }
+      // Keep it fully inside the frame horizontally
+      left = Math.max(10, Math.min(left, window.innerWidth - boxRect.width - 10));
+      top = Math.max(10, top);
+
+      box.style.left = left + 'px';
+      box.style.top = top + 'px';
+      box.style.visibility = 'visible';
     }
     
     function closePopup() {
@@ -838,28 +927,52 @@
       const observer = new ResizeObserver(resizeIframe);
       observer.observe(document.body);
     }
-
     // ── Touch-scroll relay ──
     // Iframes are separate documents, so a touch drag that starts inside
-    // this one doesn't naturally scroll the OUTER page — the browser just
-    // keeps it local to this document. Forward the vertical drag distance
-    // to the parent so it can scroll the real page in sync, letting you
-    // scroll from anywhere on screen (not just the sliver outside the iframe).
+    // this one doesn't naturally scroll the OUTER page. The listeners below
+    // are deliberately NOT passive: once real vertical movement is detected,
+    // we call preventDefault() to take the gesture over ourselves. Without
+    // this, iOS attempts its own native handling first, which silently fails
+    // (the iframe itself can't scroll), and the gesture can get swallowed
+    // before ever producing consistent movement for the relay to forward.
     (function() {
+      var startY = null;
       var lastY = null;
+      var dragging = false;
+      var DEADZONE = 6; // px of movement before we commit to "this is a scroll"
+
       document.addEventListener('touchstart', function(e) {
-        if (e.touches.length === 1) lastY = e.touches[0].clientY;
+        if (e.touches.length === 1) {
+          startY = e.touches[0].clientY;
+          lastY = startY;
+          dragging = false;
+        }
       }, { passive: true });
+
       document.addEventListener('touchmove', function(e) {
-        if (lastY === null || e.touches.length !== 1) return;
+        if (startY === null || e.touches.length !== 1) return;
         var currentY = e.touches[0].clientY;
+
+        if (!dragging) {
+          if (Math.abs(currentY - startY) < DEADZONE) return; // still could be a tap
+          dragging = true; // committed: this is a scroll, not a tap
+        }
+
         var deltaY = lastY - currentY;
         lastY = currentY;
+
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: 'touch-scroll', deltaY: deltaY }, '*');
         }
+
+        e.preventDefault(); // take the gesture over so iOS stops trying to handle it itself
+      }, { passive: false });
+
+      document.addEventListener('touchend', function() {
+        startY = null;
+        lastY = null;
+        dragging = false;
       }, { passive: true });
-      document.addEventListener('touchend', function() { lastY = null; }, { passive: true });
     })();
 
   </script>
