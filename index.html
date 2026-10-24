@@ -71,7 +71,6 @@
     }
 
     /* ── AADS Banner Ad ── */
-    /* ── AADS Banner Ad ── */
     :root { --ad-banner-h: 170px; } /* 10px + 150px iframe + 10px margins */
     #frame {
       position: fixed;
@@ -92,6 +91,31 @@
       overflow: auto;
       display: block;
       margin: auto;
+    }
+
+    /* ── Rewarded Ad (Revive) overlay ──
+       Was a hidden iframe at the bottom of the page, which sits off-screen
+       because html/body are overflow:hidden — the ad was never visible.
+       Now it's a fixed, centered overlay that's only loaded when shown. */
+    #rewardedBackdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 100001; /* above the banner (100000) */
+    }
+    #rewardedFrame {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(92vw, 480px);
+      height: 320px;
+      border: 0;
+      border-radius: 12px;
+      background: #0a0a12;
+      z-index: 100002;
     }
 
     /* ── App Shell ── */
@@ -756,8 +780,13 @@
     </div>
   </nav>
 
-  <!-- Ads -->
-  <iframe src="https://acceptable.a-ads.com/2436395?rewarded=1" id="rewardedFrame" style="display:none;width:100%;height:400px;"></iframe>
+  <!-- Rewarded ad overlay (Revive). The ad only loads when the player clicks
+       Revive (see reviveAllWithAd), so it's never an invisible impression.
+       To track it separately from the banner, create a second ad unit in the
+       A-Ads dashboard and replace 2436395 in data-src with that unit's ID. -->
+  <div id="rewardedBackdrop"></div>
+  <iframe id="rewardedFrame" title="Ad"
+          data-src="//acceptable.a-ads.com/2436395/?size=Adaptive"></iframe>
 
   <!-- Import Modal -->
   <div id="importModal">
@@ -1322,12 +1351,29 @@
     });
 
     // ── Revive function ──
+    // The ad iframe is only given a src when the player clicks Revive, and is
+    // shown in a centered fixed overlay so it's actually on screen (the old
+    // hidden iframe sat below the fold, where html/body overflow:hidden meant
+    // nobody could ever see it). A-Ads has no "ad finished" callback, so the
+    // reward is granted after a fixed delay.
+    var reviveBusy = false;
     function reviveAllWithAd() {
+      if (reviveBusy) return;
+      reviveBusy = true;
+
       var frame = document.getElementById("rewardedFrame");
+      var back  = document.getElementById("rewardedBackdrop");
+      frame.src = frame.getAttribute("data-src"); // load only when shown
       frame.style.display = "block";
-      toast("📺 Watch ad...", "info");
+      back.style.display  = "block";
+      toast("📺 Watch the ad...", "info");
+
       setTimeout(function() {
         frame.style.display = "none";
+        back.style.display  = "none";
+        frame.src = "about:blank";
+        reviveBusy = false;
+
         var iframe = document.getElementById('farmIframe');
         if (iframe && iframe.contentWindow) {
           iframe.contentWindow.postMessage({ type: 'revive-crops' }, '*');
